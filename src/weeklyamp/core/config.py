@@ -15,6 +15,7 @@ from weeklyamp.core.models import (
     AIProvider,
     AppConfig,
     BeehiivConfig,
+    EmailConfig,
     NewsletterConfig,
     ScheduleConfig,
     SponsorSlotsConfig,
@@ -101,6 +102,18 @@ def load_config(config_path: Optional[str] = None) -> AppConfig:
         require_email=subs_data.get("require_email", True),
     )
 
+    # Email config with env overrides (GoHighLevel / Mailgun SMTP)
+    email_data = yaml_data.get("email", {})
+    email = EmailConfig(
+        enabled=os.getenv("WEEKLYAMP_EMAIL_ENABLED", str(email_data.get("enabled", False))).lower() in ("true", "1", "yes"),
+        smtp_host=os.getenv("WEEKLYAMP_SMTP_HOST", email_data.get("smtp_host", "")),
+        smtp_port=int(os.getenv("WEEKLYAMP_SMTP_PORT", email_data.get("smtp_port", 587))),
+        smtp_user=os.getenv("WEEKLYAMP_SMTP_USER", email_data.get("smtp_user", "")),
+        smtp_password=os.getenv("WEEKLYAMP_SMTP_PASSWORD", email_data.get("smtp_password", "")),
+        from_address=os.getenv("WEEKLYAMP_EMAIL_FROM", email_data.get("from_address", "")),
+        from_name=os.getenv("WEEKLYAMP_EMAIL_FROM_NAME", email_data.get("from_name", "TrueFans AMP")),
+    )
+
     # DB path
     db_path = os.getenv("WEEKLYAMP_DB_PATH", yaml_data.get("db_path", "data/weeklyamp.db"))
 
@@ -112,6 +125,7 @@ def load_config(config_path: Optional[str] = None) -> AppConfig:
         sponsor_slots=sponsor_slots,
         agents=agents,
         submissions=submissions,
+        email=email,
         db_path=db_path,
     )
 

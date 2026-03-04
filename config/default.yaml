@@ -43,11 +43,11 @@ submissions:
 
 email:
   enabled: false
-  smtp_host: ""
-  smtp_port: 587
-  smtp_user: ""
-  smtp_password: ""
-  from_address: ""
+  smtp_host: "smtp.mailgun.org"  # GoHighLevel uses Mailgun under the hood
+  smtp_port: 587                  # STARTTLS
+  smtp_user: ""                   # your-user@yourdomain.com (from GHL SMTP settings)
+  smtp_password: ""               # from GHL SMTP settings
+  from_address: ""                # your sending email address
   from_name: "TrueFans AMP"
 
 db_path: "data/weeklyamp.db"
