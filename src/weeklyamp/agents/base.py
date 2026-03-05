@@ -21,15 +21,23 @@ class AgentBase:
     default_persona: str = ""
     default_system_prompt: str = ""
 
-    def __init__(self, repo: Repository, config: Optional[AppConfig] = None) -> None:
+    def __init__(self, repo: Repository, config: Optional[AppConfig] = None, agent_id: Optional[int] = None) -> None:
         self.repo = repo
         self.config = config or load_config()
         self._agent_row: Optional[dict] = None
+        self._target_agent_id = agent_id
 
     def _ensure_agent(self) -> dict:
         """Get or create this agent's database record."""
         if self._agent_row:
             return self._agent_row
+
+        # If a specific agent_id was provided, load that record
+        if self._target_agent_id:
+            agent = self.repo.get_agent(self._target_agent_id)
+            if agent:
+                self._agent_row = agent
+                return agent
 
         agent = self.repo.get_agent_by_type(self.agent_type)
         if not agent:

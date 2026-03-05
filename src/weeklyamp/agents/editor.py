@@ -71,18 +71,21 @@ class EditorInChiefAgent(AgentBase):
         return {"sections": all_slugs, "issue_id": issue_id}
 
     def assign_sections(self, task_id: int, issue_id: Optional[int] = None) -> dict:
-        """Create writer tasks for each section in the issue."""
+        """Create writer tasks for each section, routing to specialist writers."""
         if not issue_id:
             return {"error": "No issue_id provided"}
 
-        writer = self.repo.get_agent_by_type("writer")
-        if not writer:
+        # Fallback writer if no specialist found
+        fallback_writer = self.repo.get_agent_by_type("writer")
+        if not fallback_writer:
             return {"error": "No writer agent found"}
 
         sections = self.repo.get_active_sections()
         created_tasks = []
 
         for sec in sections:
+            # Route to specialist writer for this section
+            writer = self.repo.get_writer_for_section(sec["slug"]) or fallback_writer
             t_id = self.repo.create_agent_task(
                 agent_id=writer["id"],
                 task_type="write_section",
@@ -90,7 +93,7 @@ class EditorInChiefAgent(AgentBase):
                 section_slug=sec["slug"],
                 priority=3,
             )
-            created_tasks.append({"task_id": t_id, "section": sec["slug"]})
+            created_tasks.append({"task_id": t_id, "section": sec["slug"], "writer": writer["name"]})
 
         self.log_output(task_id, "assignments", json.dumps(created_tasks))
         return {"assigned": len(created_tasks), "tasks": created_tasks}

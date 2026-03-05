@@ -86,8 +86,12 @@ class WriterAgent(AgentBase):
         wc_label = section.get("word_count_label", "medium")
         max_tokens = WORD_COUNT_MAX_TOKENS.get(wc_label, 1500)
 
-        # Generate
-        content, model = generate_draft(prompt, self.config, max_tokens_override=max_tokens)
+        # Get this agent's system prompt for persona injection
+        agent_row = self._ensure_agent()
+        agent_system_prompt = agent_row.get("system_prompt", "") if agent_row else ""
+
+        # Generate with persona
+        content, model = generate_draft(prompt, self.config, max_tokens_override=max_tokens, system_prompt=agent_system_prompt)
 
         # Save draft
         draft_id = self.repo.create_draft(

@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from weeklyamp.core.config import load_config
-from weeklyamp.core.database import init_database, seed_editions, seed_guest_contacts, seed_sections
+from weeklyamp.core.database import init_database, seed_agents, seed_editions, seed_guest_contacts, seed_sections
 from weeklyamp.research.sources import sync_sources_from_config
 from weeklyamp.web.security import (
     AuthMiddleware,
@@ -75,6 +75,7 @@ def create_app() -> FastAPI:
             seed_sections(db_path)
             seed_editions(db_path)
             seed_guest_contacts(db_path)
+            seed_agents(db_path)
             # Sync any new sources from sources.yaml into DB
             from weeklyamp.db.repository import Repository
             repo = Repository(db_path)

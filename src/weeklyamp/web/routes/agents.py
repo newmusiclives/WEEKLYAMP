@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 from fastapi import APIRouter, Form
 from fastapi.responses import HTMLResponse
 
@@ -11,6 +13,25 @@ from weeklyamp.web.deps import get_config, get_repo, render
 router = APIRouter()
 
 
+def _enrich_staff(staff: list[dict]) -> tuple[list[dict], list[dict]]:
+    """Split staff into leadership and writers, parsing config_json."""
+    leadership = []
+    writers = []
+    for agent in staff:
+        enriched = dict(agent)
+        try:
+            cfg = json.loads(agent.get("config_json") or "{}")
+        except (ValueError, TypeError):
+            cfg = {}
+        enriched["categories"] = cfg.get("categories", [])
+        enriched["sections"] = cfg.get("sections", [])
+        if agent.get("agent_type") == "writer":
+            writers.append(enriched)
+        else:
+            leadership.append(enriched)
+    return leadership, writers
+
+
 @router.get("/", response_class=HTMLResponse)
 async def agents_page():
     repo = get_repo()
@@ -18,8 +39,11 @@ async def agents_page():
     orchestrator = AgentOrchestrator(repo, config)
     staff = orchestrator.get_staff_status()
     pending_reviews = orchestrator.check_pending_reviews()
+    leadership, writers = _enrich_staff(staff)
     return render("agents.html",
         staff=staff,
+        leadership=leadership,
+        writers=writers,
         pending_reviews=pending_reviews,
     )
 
@@ -37,6 +61,13 @@ async def agent_detail(agent_id: int):
     agent = repo.get_agent(agent_id)
     if not agent:
         return render("partials/alert.html", message="Agent not found.", level="error")
+    agent = dict(agent)
+    try:
+        cfg = json.loads(agent.get("config_json") or "{}")
+    except (ValueError, TypeError):
+        cfg = {}
+    agent["categories"] = cfg.get("categories", [])
+    agent["sections"] = cfg.get("sections", [])
     tasks = repo.get_agent_tasks(agent_id=agent_id)
     return render("agent_detail.html", agent=agent, tasks=tasks)
 

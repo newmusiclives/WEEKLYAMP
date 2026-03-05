@@ -72,17 +72,19 @@ class AgentOrchestrator:
         except Exception as e:
             results["assignments"] = {"error": str(e)}
 
-        # Step 4: Writer executes pending tasks
-        writer = self._get_agent("writer")
-        pending = writer.get_pending_tasks()
+        # Step 4: All specialist writers execute their pending tasks
+        all_writers = self.repo.get_agents_by_type("writer")
         write_results = []
-        for task in pending:
-            if task.get("issue_id") == issue_id:
-                try:
-                    r = writer.execute(task["id"])
-                    write_results.append(r)
-                except Exception as e:
-                    write_results.append({"error": str(e), "task_id": task["id"]})
+        for writer_row in all_writers:
+            writer = WriterAgent(self.repo, self.config, agent_id=writer_row["id"])
+            pending = writer.get_pending_tasks()
+            for task in pending:
+                if task.get("issue_id") == issue_id:
+                    try:
+                        r = writer.execute(task["id"])
+                        write_results.append(r)
+                    except Exception as e:
+                        write_results.append({"error": str(e), "task_id": task["id"]})
 
         results["writing"] = {"completed": len(write_results), "details": write_results}
 

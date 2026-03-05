@@ -869,6 +869,46 @@ class Repository:
         conn.close()
         return dict(row) if row else None
 
+    def get_agents_by_type(self, agent_type: str) -> list[dict]:
+        """Return all active agents of a given type."""
+        conn = self._conn()
+        rows = conn.execute(
+            "SELECT * FROM ai_agents WHERE agent_type = ? AND is_active = 1 ORDER BY name",
+            (agent_type,),
+        ).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    def get_writer_for_section(self, section_slug: str) -> Optional[dict]:
+        """Find the specialist writer whose config_json covers this section."""
+        import json as _json
+        writers = self.get_agents_by_type("writer")
+        for w in writers:
+            try:
+                cfg = _json.loads(w.get("config_json") or "{}")
+            except (ValueError, TypeError):
+                continue
+            sections = cfg.get("sections", [])
+            if section_slug in sections:
+                return w
+        # Fallback: check by category
+        conn = self._conn()
+        row = conn.execute(
+            "SELECT category FROM section_definitions WHERE slug = ?", (section_slug,)
+        ).fetchone()
+        conn.close()
+        if row:
+            cat = row["category"]
+            for w in writers:
+                try:
+                    cfg = _json.loads(w.get("config_json") or "{}")
+                except (ValueError, TypeError):
+                    continue
+                if cat in cfg.get("categories", []):
+                    return w
+        # Final fallback: first writer
+        return writers[0] if writers else None
+
     def update_agent(self, agent_id: int, **kwargs) -> None:
         if not kwargs:
             return

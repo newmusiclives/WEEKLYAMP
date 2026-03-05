@@ -3,15 +3,49 @@
 {% block nav_agents %}active{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h2>{{ agent.name }}</h2>
-    <p>{{ agent.agent_type|replace('_', ' ')|title }} — {{ agent.autonomy_level }}</p>
+<div class="page-header" style="display: flex; align-items: center; gap: 20px;">
+    <div style="width: 72px; height: 72px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700; color: #fff; background: {{ agent.name|avatar_color }};">
+        {{ agent.name|initials }}
+    </div>
+    <div>
+        <h2 style="margin: 0;">{{ agent.name }}</h2>
+        <p style="margin: 4px 0 0;">
+            <span class="badge badge-{{ agent.agent_type }}">{{ agent.agent_type|replace('_', ' ')|title }}</span>
+            <span class="badge" style="background: var(--teal-bg, rgba(20,184,166,0.12)); color: var(--teal, #14b8a6);">{{ agent.autonomy_level }}</span>
+        </p>
+    </div>
 </div>
 
 {% if agent.persona %}
 <div class="card" style="margin-bottom: 24px;">
-    <div class="card-title">Persona</div>
-    <p style="color: var(--text-dim); margin-top: 8px;">{{ agent.persona }}</p>
+    <div class="card-title">About</div>
+    <p style="color: var(--text-dim); margin-top: 8px; line-height: 1.7;">{{ agent.persona }}</p>
+</div>
+{% endif %}
+
+{% if agent.categories or agent.sections %}
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-title">Coverage</div>
+    {% if agent.categories %}
+    <div style="margin-top: 10px; margin-bottom: 8px;">
+        <span style="color: var(--text-dim); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Categories</span>
+        <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px;">
+            {% for cat in agent.categories %}
+            <span class="badge badge-core">{{ cat|replace('_', ' ')|title }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    {% if agent.sections %}
+    <div style="margin-top: 12px;">
+        <span style="color: var(--text-dim); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Sections</span>
+        <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px;">
+            {% for sec in agent.sections %}
+            <span class="badge" style="background: var(--surface-2); color: var(--text);">{{ sec|replace('_', ' ')|title }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endif %}
 

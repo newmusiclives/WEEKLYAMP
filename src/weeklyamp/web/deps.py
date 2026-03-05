@@ -52,6 +52,30 @@ def _plain_preview(text: str, max_len: int = 140) -> str:
 _env.filters["plain_preview"] = _plain_preview
 
 
+def _initials(name: str) -> str:
+    """Extract 2-char initials from a name."""
+    if not name:
+        return "?"
+    parts = name.replace('"', "").split()
+    if len(parts) >= 2:
+        return (parts[0][0] + parts[-1][0]).upper()
+    return parts[0][:2].upper()
+
+
+def _avatar_color(name: str) -> str:
+    """Deterministic hex color from a name string."""
+    h = hash(name or "agent") & 0xFFFFFF
+    # Ensure decent saturation/lightness by mixing with a base
+    r = 80 + (h >> 16 & 0xFF) % 140
+    g = 80 + (h >> 8 & 0xFF) % 140
+    b = 80 + (h & 0xFF) % 140
+    return f"#{r:02x}{g:02x}{b:02x}"
+
+
+_env.filters["initials"] = _initials
+_env.filters["avatar_color"] = _avatar_color
+
+
 def get_config() -> AppConfig:
     return load_config()
 
