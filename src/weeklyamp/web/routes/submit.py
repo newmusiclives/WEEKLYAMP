@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import logging
+import secrets
+import threading
 import time
 from pathlib import Path
 
@@ -24,6 +26,7 @@ router = APIRouter()
 
 # ---- Rate limiting (10 submissions per IP per 15 minutes) ----
 _submit_attempts: dict[str, list[float]] = {}
+_submit_lock = threading.Lock()
 _SUBMIT_MAX = 10
 _SUBMIT_WINDOW = 900  # 15 minutes
 
@@ -37,14 +40,16 @@ def _get_client_ip(request: Request) -> str:
 
 def _is_submit_rate_limited(ip: str) -> bool:
     now = time.time()
-    attempts = _submit_attempts.get(ip, [])
-    attempts = [t for t in attempts if now - t < _SUBMIT_WINDOW]
-    _submit_attempts[ip] = attempts
-    return len(attempts) >= _SUBMIT_MAX
+    with _submit_lock:
+        attempts = _submit_attempts.get(ip, [])
+        attempts = [t for t in attempts if now - t < _SUBMIT_WINDOW]
+        _submit_attempts[ip] = attempts
+        return len(attempts) >= _SUBMIT_MAX
 
 
 def _record_submission(ip: str) -> None:
-    _submit_attempts.setdefault(ip, []).append(time.time())
+    with _submit_lock:
+        _submit_attempts.setdefault(ip, []).append(time.time())
 
 
 @router.get("/submit", response_class=HTMLResponse)
@@ -113,6 +118,11 @@ async def api_submit(request: Request, x_truefans_api_key: str = Header(None)):
         return JSONResponse(
             status_code=429,
             content={"error": "Too many submissions. Please try again later."},
+            headers={
+                "Retry-After": "900",
+                "X-RateLimit-Limit": str(_SUBMIT_MAX),
+                "X-RateLimit-Remaining": "0",
+            },
         )
 
     cfg = load_config()
@@ -123,7 +133,7 @@ async def api_submit(request: Request, x_truefans_api_key: str = Header(None)):
             status_code=403,
             content={"error": "API submissions are not configured"},
         )
-    if x_truefans_api_key != cfg.submissions.api_key:
+    if not secrets.compare_digest(x_truefans_api_key or "", cfg.submissions.api_key):
         return JSONResponse(
             status_code=401,
             content={"error": "Invalid or missing API key"},
@@ -138,9 +148,19 @@ async def api_submit(request: Request, x_truefans_api_key: str = Header(None)):
     try:
         submission_id = process_api_submission(repo, body)
         _record_submission(ip)
+
+        # Calculate remaining
+        with _submit_lock:
+            current = len([t for t in _submit_attempts.get(ip, []) if time.time() - t < _SUBMIT_WINDOW])
+        remaining = max(0, _SUBMIT_MAX - current)
+
         return JSONResponse(
             status_code=201,
             content={"id": submission_id, "status": "submitted"},
+            headers={
+                "X-RateLimit-Limit": str(_SUBMIT_MAX),
+                "X-RateLimit-Remaining": str(remaining),
+            },
         )
     except Exception:
         logger.exception("API submission failed")

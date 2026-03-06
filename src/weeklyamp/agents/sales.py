@@ -14,7 +14,7 @@ class SalesAgent(AgentBase):
     default_name = "Sales Director"
     default_persona = "Strategic sales professional with deep understanding of the music industry advertising landscape."
     default_system_prompt = (
-        "You are the Sales Director for TrueFans AMP Magazine. "
+        "You are the Sales Director for TrueFans NEWSLETTERS. "
         "You identify potential sponsors, draft outreach emails, "
         "and manage the sponsorship pipeline."
     )
@@ -42,7 +42,7 @@ class SalesAgent(AgentBase):
 
         prompt = (
             f"Suggest 5 types of companies that would be ideal sponsors for "
-            f"TrueFans AMP Magazine, a newsletter/magazine for independent artists "
+            f"TrueFans NEWSLETTERS, a newsletter/magazine for independent artists "
             f"and songwriters with {subscriber_count} subscribers. "
             f"For each, suggest: company type, why they'd sponsor, "
             f"estimated budget range, and a pitch angle."
@@ -65,7 +65,7 @@ class SalesAgent(AgentBase):
         subscriber_count = self.repo.get_subscriber_count()
 
         prompt = (
-            f"Write a personalized sponsorship outreach email for TrueFans AMP Magazine.\n\n"
+            f"Write a personalized sponsorship outreach email for TrueFans NEWSLETTERS.\n\n"
             f"Sponsor: {sponsor['name']}\n"
             f"Contact: {sponsor.get('contact_name', 'N/A')}\n"
             f"Website: {sponsor.get('website', 'N/A')}\n"

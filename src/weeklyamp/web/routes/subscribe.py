@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import logging
 import re
+import secrets
+import threading
 import time
 from pathlib import Path
 
@@ -24,6 +26,7 @@ router = APIRouter()
 
 # ---- Rate limiting (5 signups per IP per 15 minutes) ----
 _subscribe_attempts: dict[str, list[float]] = {}
+_subscribe_lock = threading.Lock()
 _SUBSCRIBE_MAX = 5
 _SUBSCRIBE_WINDOW = 900  # 15 minutes
 
@@ -39,14 +42,16 @@ def _get_client_ip(request: Request) -> str:
 
 def _is_subscribe_rate_limited(ip: str) -> bool:
     now = time.time()
-    attempts = _subscribe_attempts.get(ip, [])
-    attempts = [t for t in attempts if now - t < _SUBSCRIBE_WINDOW]
-    _subscribe_attempts[ip] = attempts
-    return len(attempts) >= _SUBSCRIBE_MAX
+    with _subscribe_lock:
+        attempts = _subscribe_attempts.get(ip, [])
+        attempts = [t for t in attempts if now - t < _SUBSCRIBE_WINDOW]
+        _subscribe_attempts[ip] = attempts
+        return len(attempts) >= _SUBSCRIBE_MAX
 
 
 def _record_subscribe(ip: str) -> None:
-    _subscribe_attempts.setdefault(ip, []).append(time.time())
+    with _subscribe_lock:
+        _subscribe_attempts.setdefault(ip, []).append(time.time())
 
 
 def _get_repo() -> Repository:
@@ -118,13 +123,16 @@ async def subscribe_process(request: Request):
         edition_days[slug] = days
 
     try:
-        repo.subscribe_to_editions(
+        sub_id = repo.subscribe_to_editions(
             email=email,
             edition_slugs=selected_slugs,
             first_name=first_name,
             source_channel="website",
             edition_days=edition_days,
         )
+        verification_token = secrets.token_urlsafe(32)
+        unsubscribe_token = secrets.token_urlsafe(32)
+        repo.set_subscriber_tokens(sub_id, verification_token, unsubscribe_token)
         _record_subscribe(ip)
 
         # PRG: redirect to confirmation page with edition info + days in query
@@ -144,6 +152,32 @@ async def subscribe_process(request: Request):
             tpl.render(editions=editions, error="Something went wrong. Please try again later.",
                        email=email, first_name=first_name, selected=selected_slugs),
         )
+
+
+@router.get("/unsubscribe", response_class=HTMLResponse)
+async def unsubscribe(request: Request):
+    token = request.query_params.get("token", "")
+    tpl = _env.get_template("unsubscribe.html")
+    if not token:
+        return HTMLResponse(tpl.render(error="Invalid unsubscribe link."), status_code=400)
+    repo = _get_repo()
+    success = repo.unsubscribe_by_token(token)
+    if success:
+        return tpl.render(success=True)
+    return HTMLResponse(tpl.render(error="This link has already been used or is invalid."), status_code=400)
+
+
+@router.get("/verify", response_class=HTMLResponse)
+async def verify_email(request: Request):
+    token = request.query_params.get("token", "")
+    tpl = _env.get_template("verify_email.html")
+    if not token:
+        return HTMLResponse(tpl.render(error="Invalid verification link."), status_code=400)
+    repo = _get_repo()
+    success = repo.verify_subscriber(token)
+    if success:
+        return tpl.render(success=True)
+    return HTMLResponse(tpl.render(error="This link has already been used or is invalid."), status_code=400)
 
 
 @router.get("/subscribe/confirm", response_class=HTMLResponse)

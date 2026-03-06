@@ -9,6 +9,10 @@ from weeklyamp.core.database import get_connection
 
 # Migrations keyed by target version number.
 # Each migration runs SQL to advance from (version - 1) to version.
+#
+# NOTE: These migrations use SQLite-specific syntax (INSERT OR IGNORE,
+# INTEGER PRIMARY KEY AUTOINCREMENT).  PostgreSQL equivalents are in
+# PG_MIGRATIONS below.
 MIGRATIONS: dict[int, str] = {
     2: """
 -- v2: Add word count columns to section_definitions
@@ -322,17 +326,23 @@ INSERT OR IGNORE INTO schema_version (version) VALUES (14);
 }
 
 
-def get_current_version(conn: sqlite3.Connection) -> int:
-    """Return the current schema version from the database."""
+def get_current_version(conn) -> int:
+    """Return the current schema version from the database.
+
+    Works with both sqlite3.Connection and PgConnection.
+    """
     try:
         row = conn.execute("SELECT MAX(version) as v FROM schema_version").fetchone()
-        return row["v"] if row and row["v"] else 0
-    except sqlite3.OperationalError:
+        if row is None:
+            return 0
+        v = row["v"] if isinstance(row, dict) else row["v"]
+        return v if v else 0
+    except Exception:
         return 0
 
 
 def run_migrations(db_path: str) -> list[int]:
-    """Run all pending migrations. Returns list of versions applied."""
+    """Run all pending SQLite migrations. Returns list of versions applied."""
     conn = get_connection(db_path)
     current = get_current_version(conn)
     applied: list[int] = []
@@ -340,6 +350,60 @@ def run_migrations(db_path: str) -> list[int]:
     for version in sorted(MIGRATIONS.keys()):
         if version > current:
             conn.executescript(MIGRATIONS[version])
+            applied.append(version)
+
+    conn.close()
+    return applied
+
+
+# ---------------------------------------------------------------------------
+# PostgreSQL migration equivalents
+# ---------------------------------------------------------------------------
+
+def _sqlite_to_pg_migration(sql: str) -> str:
+    """Convert a SQLite migration to PostgreSQL syntax."""
+    import re
+    result = sql
+    # INTEGER PRIMARY KEY AUTOINCREMENT -> SERIAL PRIMARY KEY
+    result = re.sub(
+        r'(\w+)\s+INTEGER\s+PRIMARY\s+KEY\s+AUTOINCREMENT',
+        r'\1 SERIAL PRIMARY KEY',
+        result,
+        flags=re.IGNORECASE,
+    )
+    # INSERT OR IGNORE INTO -> INSERT INTO ... ON CONFLICT DO NOTHING
+    result = re.sub(
+        r'INSERT\s+OR\s+IGNORE\s+INTO\s+(\w+)',
+        r'INSERT INTO \1',
+        result,
+        flags=re.IGNORECASE,
+    )
+    # Add ON CONFLICT DO NOTHING to schema_version inserts
+    result = re.sub(
+        r"(INSERT INTO schema_version \(version\) VALUES \(\d+\))(\s*;)",
+        r"\1 ON CONFLICT DO NOTHING\2",
+        result,
+    )
+    return result
+
+
+# Build PG_MIGRATIONS by converting each SQLite migration
+PG_MIGRATIONS: dict[int, str] = {
+    version: _sqlite_to_pg_migration(sql)
+    for version, sql in MIGRATIONS.items()
+}
+
+
+def run_pg_migrations(database_url: str) -> list[int]:
+    """Run all pending PostgreSQL migrations. Returns list of versions applied."""
+    from weeklyamp.db.postgres import get_pg_connection
+    conn = get_pg_connection(database_url)
+    current = get_current_version(conn)
+    applied: list[int] = []
+
+    for version in sorted(PG_MIGRATIONS.keys()):
+        if version > current:
+            conn.executescript(PG_MIGRATIONS[version])
             applied.append(version)
 
     conn.close()

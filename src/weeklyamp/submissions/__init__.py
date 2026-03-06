@@ -1,1 +1,1 @@
-"""Artist submission system for TrueFans AMP Magazine."""
+"""Artist submission system for TrueFans NEWSLETTERS."""

@@ -549,7 +549,7 @@ class BeehiivConfig(BaseModel):
 
 
 class NewsletterConfig(BaseModel):
-    name: str = "TrueFans AMP"
+    name: str = "TrueFans NEWSLETTERS"
     tagline: str = "Amplifying Independent Artists & Songwriters"
     from_name: str = "PS"
     reply_to: str = ""
@@ -587,7 +587,11 @@ class EmailConfig(BaseModel):
     smtp_user: str = ""
     smtp_password: str = ""
     from_address: str = ""
-    from_name: str = "TrueFans AMP"
+    from_name: str = "TrueFans NEWSLETTERS"
+
+
+class AnalyticsConfig(BaseModel):
+    plausible_domain: str = ""
 
 
 class AppConfig(BaseModel):
@@ -599,4 +603,7 @@ class AppConfig(BaseModel):
     agents: AgentsConfig = Field(default_factory=AgentsConfig)
     submissions: SubmissionsConfig = Field(default_factory=SubmissionsConfig)
     email: EmailConfig = Field(default_factory=EmailConfig)
+    analytics: AnalyticsConfig = Field(default_factory=AnalyticsConfig)
     db_path: str = "data/weeklyamp.db"
+    db_backend: str = "sqlite"  # "sqlite" or "postgres"
+    database_url: str = ""  # PostgreSQL connection string

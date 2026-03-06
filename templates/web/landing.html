@@ -3,10 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WeeklyAMP — The Music Newsletter for Fans, Artists & Industry</title>
+    <title>TrueFans NEWSLETTERS — The Music Newsletter for Fans, Artists & Industry</title>
+    <meta name="description" content="TrueFans NEWSLETTERS delivers curated music industry intelligence, creative strategy, and career tools for industry professionals, music artists, and their fans. Free, 3x weekly.">
+    <meta property="og:title" content="TrueFans NEWSLETTERS — Music Newsletters for Fans, Artists & Industry">
+    <meta property="og:description" content="Curated stories, expert insights, and actionable advice — tailored to how you experience music. Choose your edition and subscribe free.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://web-production-88ebc.up.railway.app/static/header-logo.png">
+    <meta property="og:url" content="https://truefansnewsletters.com/">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://web-production-88ebc.up.railway.app/static/header-logo.png">
+    <meta name="twitter:title" content="TrueFans NEWSLETTERS">
+    <meta name="twitter:description" content="The music newsletters for industry professionals, music artists and their fans. Free, 3x weekly.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link rel="alternate" type="application/rss+xml" title="TrueFans NEWSLETTERS" href="/feed.xml">
     <style>
         :root {
             --bg: #0a0a12;
@@ -72,7 +83,7 @@
             font-size: 13px; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 32px;
         }
         .hero h1 {
-            font-size: clamp(42px, 7vw, 72px); font-weight: 900;
+            font-size: clamp(36px, 5.5vw, 62px); font-weight: 900;
             line-height: 1.08; letter-spacing: -2px; margin-bottom: 24px;
         }
         .hero h1 .highlight {
@@ -211,10 +222,11 @@
             .steps { grid-template-columns: 1fr; }
         }
     </style>
+{% include "partials/analytics.html" %}
 </head>
 <body>
     <nav>
-        <a href="/" class="nav-brand">Weekly<span>AMP</span></a>
+        <a href="/" class="nav-brand">True<span>Fans</span> NEWSLETTERS</a>
         <div class="nav-links">
             <a href="/newsletters" class="nav-link">Newsletters</a>
             {% if authenticated %}
@@ -227,8 +239,8 @@
     <section class="hero">
         <div class="hero-content">
             <div class="hero-badge">3 Editions &middot; 3x Weekly &middot; Always Free</div>
-            <h1>The music newsletter for <span class="highlight">fans, artists & industry.</span></h1>
-            <p>WeeklyAMP delivers curated stories, expert insights, and actionable advice — tailored to how you experience music. Choose the edition that fits you.</p>
+            <h1>The Music Newsletters<br><span class="highlight" style="white-space:nowrap">for Industry Professionals,</span><br><span class="highlight">Music Artists and their Fans</span></h1>
+            <p>TrueFans NEWSLETTERS delivers curated stories, expert insights, and actionable advice — tailored to how you experience music. Choose the edition that fits you.</p>
             <div class="hero-cta">
                 <a href="/subscribe" class="btn btn-primary">Subscribe Free</a>
                 <a href="/newsletters" class="btn btn-outline">Explore Editions</a>
@@ -309,7 +321,7 @@
                 <div class="step">
                     <div class="step-num">4</div>
                     <h3>Always Free</h3>
-                    <p>No paywalls, no trials. WeeklyAMP is free for everyone who loves music.</p>
+                    <p>No paywalls, no trials. TrueFans NEWSLETTERS is free for everyone who loves music.</p>
                 </div>
             </div>
         </div>

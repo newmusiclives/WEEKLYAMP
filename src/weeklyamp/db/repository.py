@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import sqlite3
 from datetime import datetime
 from typing import Optional
@@ -9,8 +10,75 @@ from typing import Optional
 from weeklyamp.core.database import get_connection
 
 
+class _PgCursorAdapter:
+    """Wraps a PgCursor/dict result to provide ``lastrowid`` like sqlite3."""
+
+    def __init__(self, cur, lastrowid: Optional[int] = None) -> None:
+        self._cur = cur
+        self.lastrowid = lastrowid
+
+    def fetchone(self):
+        return self._cur.fetchone()
+
+    def fetchall(self):
+        return self._cur.fetchall()
+
+
+class _PgConnAdapter:
+    """Wraps a PgConnection so that SQLite-style ``?`` placeholders are
+    transparently converted to ``%s`` before execution.  This lets every
+    Repository method keep its original SQL strings unchanged.
+
+    For INSERT statements, automatically appends ``RETURNING id`` so that
+    ``cursor.lastrowid`` works as expected.
+    """
+
+    def __init__(self, conn) -> None:
+        self._conn = conn
+
+    @staticmethod
+    def _convert(sql: str) -> str:
+        return sql.replace("?", "%s")
+
+    def execute(self, sql: str, params=None):
+        converted = self._convert(sql)
+        stripped = converted.strip()
+        is_insert = stripped.upper().startswith("INSERT")
+        # Auto-append RETURNING id for INSERT statements that don't already have it
+        if is_insert and "RETURNING" not in stripped.upper():
+            converted = converted.rstrip().rstrip(";") + " RETURNING id"
+        raw_cur = self._conn.execute(converted, params)
+        # Extract lastrowid from the RETURNING clause
+        lastrowid = None
+        if is_insert:
+            try:
+                row = raw_cur.fetchone()
+                if row and "id" in row:
+                    lastrowid = row["id"]
+            except Exception:
+                pass
+        return _PgCursorAdapter(raw_cur, lastrowid)
+
+    def executescript(self, sql: str) -> None:
+        self._conn.executescript(sql)
+
+    def commit(self) -> None:
+        self._conn.commit()
+
+    def rollback(self) -> None:
+        self._conn.rollback()
+
+    def close(self) -> None:
+        self._conn.close()
+
+
 class Repository:
-    """Central data-access layer for the WEEKLYAMP database."""
+    """Central data-access layer for the WEEKLYAMP database.
+
+    Supports both SQLite and PostgreSQL backends.  The backend is chosen
+    at construction time via the ``backend`` parameter or the
+    ``WEEKLYAMP_DB_BACKEND`` environment variable.
+    """
 
     # Column whitelist for generic update methods — prevents SQL injection
     # via f-string column name interpolation.
@@ -64,11 +132,24 @@ class Repository:
         if bad:
             raise ValueError(f"Invalid columns for {table}: {bad}")
 
-    def __init__(self, db_path: str) -> None:
+    def __init__(self, db_path: str = "", database_url: str = "", backend: str = "") -> None:
+        self.backend = backend or os.getenv("WEEKLYAMP_DB_BACKEND", "sqlite").lower()
         self.db_path = db_path
+        self.database_url = database_url
 
-    def _conn(self) -> sqlite3.Connection:
-        return get_connection(self.db_path)
+    @property
+    def _is_pg(self) -> bool:
+        return self.backend == "postgres"
+
+    def _conn(self):
+        raw = get_connection(self.db_path, self.database_url, self.backend)
+        if self._is_pg:
+            return _PgConnAdapter(raw)
+        return raw
+
+    # NOTE: Placeholder conversion (? -> %s) and RETURNING id for
+    # PostgreSQL are handled automatically by _PgConnAdapter, so all
+    # Repository methods can use standard SQLite-style ? placeholders.
 
     # ---- Issues ----
 
@@ -140,6 +221,16 @@ class Repository:
         rows = conn.execute(
             """SELECT * FROM issues WHERE status NOT IN ('published')
                ORDER BY issue_number DESC LIMIT ?""",
+            (limit,),
+        ).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    def get_published_issues(self, limit: int = 20) -> list[dict]:
+        """Return issues with status='published', newest first."""
+        conn = self._conn()
+        rows = conn.execute(
+            "SELECT * FROM issues WHERE status = 'published' ORDER BY publish_date DESC LIMIT ?",
             (limit,),
         ).fetchall()
         conn.close()
@@ -1149,11 +1240,11 @@ class Repository:
         """Count guest articles linked to a contact."""
         conn = self._conn()
         row = conn.execute(
-            "SELECT COUNT(*) FROM guest_articles WHERE contact_id = ?",
+            "SELECT COUNT(*) as c FROM guest_articles WHERE contact_id = ?",
             (contact_id,),
         ).fetchone()
         conn.close()
-        return row[0] if row else 0
+        return row["c"] if row else 0
 
     def guest_article_url_exists(self, original_url: str) -> bool:
         """Check if a guest article with this URL already exists."""
@@ -1425,6 +1516,58 @@ class Repository:
             ).fetchall()
         conn.close()
         return [dict(r) for r in rows]
+
+    # ---- Stats ----
+
+    def get_subscriber_by_email(self, email: str) -> Optional[dict]:
+        conn = self._conn()
+        row = conn.execute("SELECT * FROM subscribers WHERE email = ?", (email,)).fetchone()
+        conn.close()
+        return dict(row) if row else None
+
+    def get_subscriber_by_unsubscribe_token(self, token: str) -> Optional[dict]:
+        conn = self._conn()
+        row = conn.execute("SELECT * FROM subscribers WHERE unsubscribe_token = ?", (token,)).fetchone()
+        conn.close()
+        return dict(row) if row else None
+
+    def get_subscriber_by_verification_token(self, token: str) -> Optional[dict]:
+        conn = self._conn()
+        row = conn.execute("SELECT * FROM subscribers WHERE verification_token = ?", (token,)).fetchone()
+        conn.close()
+        return dict(row) if row else None
+
+    def verify_subscriber(self, token: str) -> bool:
+        conn = self._conn()
+        cur = conn.execute(
+            "UPDATE subscribers SET email_verified = 1, verification_token = '', status = 'active' WHERE verification_token = ? AND verification_token != ''",
+            (token,),
+        )
+        conn.commit()
+        # Check if any row was actually updated
+        changed = conn.execute("SELECT changes() as c").fetchone()
+        conn.close()
+        return (changed["c"] if changed else 0) > 0
+
+    def unsubscribe_by_token(self, token: str) -> bool:
+        conn = self._conn()
+        cur = conn.execute(
+            "UPDATE subscribers SET status = 'unsubscribed' WHERE unsubscribe_token = ? AND unsubscribe_token != ''",
+            (token,),
+        )
+        conn.commit()
+        changed = conn.execute("SELECT changes() as c").fetchone()
+        conn.close()
+        return (changed["c"] if changed else 0) > 0
+
+    def set_subscriber_tokens(self, subscriber_id: int, verification_token: str, unsubscribe_token: str) -> None:
+        conn = self._conn()
+        conn.execute(
+            "UPDATE subscribers SET verification_token = ?, unsubscribe_token = ? WHERE id = ?",
+            (verification_token, unsubscribe_token, subscriber_id),
+        )
+        conn.commit()
+        conn.close()
 
     # ---- Stats ----
 

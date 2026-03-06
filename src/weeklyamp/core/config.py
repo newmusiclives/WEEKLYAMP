@@ -111,11 +111,13 @@ def load_config(config_path: Optional[str] = None) -> AppConfig:
         smtp_user=os.getenv("WEEKLYAMP_SMTP_USER", email_data.get("smtp_user", "")),
         smtp_password=os.getenv("WEEKLYAMP_SMTP_PASSWORD", email_data.get("smtp_password", "")),
         from_address=os.getenv("WEEKLYAMP_EMAIL_FROM", email_data.get("from_address", "")),
-        from_name=os.getenv("WEEKLYAMP_EMAIL_FROM_NAME", email_data.get("from_name", "TrueFans AMP")),
+        from_name=os.getenv("WEEKLYAMP_EMAIL_FROM_NAME", email_data.get("from_name", "TrueFans NEWSLETTERS")),
     )
 
-    # DB path
+    # DB path and backend
     db_path = os.getenv("WEEKLYAMP_DB_PATH", yaml_data.get("db_path", "data/weeklyamp.db"))
+    db_backend = os.getenv("WEEKLYAMP_DB_BACKEND", yaml_data.get("db_backend", "sqlite"))
+    database_url = os.getenv("WEEKLYAMP_DATABASE_URL", yaml_data.get("database_url", ""))
 
     return AppConfig(
         newsletter=newsletter,
@@ -127,6 +129,8 @@ def load_config(config_path: Optional[str] = None) -> AppConfig:
         submissions=submissions,
         email=email,
         db_path=db_path,
+        db_backend=db_backend,
+        database_url=database_url,
     )
 
 

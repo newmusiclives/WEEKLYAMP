@@ -1,6 +1,6 @@
 :root {
-    --accent: #0ea5e9;
-    --teal: #14b8a6;
+    --accent: #e8645a;
+    --accent-hover: #f07a70;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -85,7 +85,7 @@ textarea { min-height: 120px; resize: vertical; }
     transition: background 0.15s;
     font-family: inherit;
 }
-.btn:hover { background: #38bdf8; }
+.btn:hover { background: var(--accent-hover); }
 .alert {
     padding: 16px;
     border-radius: 8px;

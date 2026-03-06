@@ -55,7 +55,7 @@ class SubmissionReviewer:
 
         prompt = (
             f"Write a newsletter section about this artist submission for "
-            f"TrueFans AMP Magazine.\n\n"
+            f"TrueFans NEWSLETTERS.\n\n"
             f"Artist: {sub['artist_name']}\n"
             f"Title: {sub['title']}\n"
             f"Type: {sub['submission_type']}\n"

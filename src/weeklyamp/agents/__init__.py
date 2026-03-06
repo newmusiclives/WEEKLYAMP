@@ -1,1 +1,1 @@
-"""AI Staff system for TrueFans AMP Magazine."""
+"""AI Staff system for TrueFans NEWSLETTERS."""

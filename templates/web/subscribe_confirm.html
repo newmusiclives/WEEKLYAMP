@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>You're Subscribed! — WeeklyAMP</title>
+    <title>You're Subscribed! — TrueFans NEWSLETTERS</title>
+    <meta name="description" content="Welcome to TrueFans NEWSLETTERS. Your subscription is confirmed.">
+    <meta name="robots" content="noindex">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
@@ -122,6 +124,7 @@
             .confirm-page h1 { font-size: 28px; }
         }
     </style>
+{% include "partials/analytics.html" %}
 </head>
 <body>
     {% include "partials/public_nav.html" %}
@@ -131,7 +134,7 @@
             <svg width="36" height="36" viewBox="0 0 36 36" fill="none"><path d="M8 18l7 7L28 11" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
         <h1>You're subscribed!</h1>
-        <p class="subtitle">Welcome to WeeklyAMP. Here's what you signed up for:</p>
+        <p class="subtitle">Welcome to TrueFans NEWSLETTERS. Here's what you signed up for:</p>
 
         <div class="selected-editions">
             {% for ed in selected_editions %}

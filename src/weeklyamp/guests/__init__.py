@@ -1,1 +1,1 @@
-"""Guest article system for TrueFans AMP Magazine."""
+"""Guest article system for TrueFans NEWSLETTERS."""

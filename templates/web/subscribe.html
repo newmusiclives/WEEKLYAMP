@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subscribe — WeeklyAMP</title>
+    <title>Subscribe — TrueFans NEWSLETTERS</title>
+    <meta name="description" content="Subscribe to TrueFans NEWSLETTERS — choose from Fan, Artist, or Industry editions. Free, delivered 3x weekly.">
+    <meta property="og:title" content="Subscribe — TrueFans NEWSLETTERS">
+    <meta property="og:description" content="Pick the music newsletter that fits you. Fan, Artist, or Industry editions — always free.">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
@@ -170,12 +175,13 @@
             .subscribe-page h1 { font-size: 32px; }
         }
     </style>
+{% include "partials/analytics.html" %}
 </head>
 <body>
     {% include "partials/public_nav.html" %}
 
     <div class="subscribe-page">
-        <h1>Subscribe to WeeklyAMP</h1>
+        <h1>Subscribe to TrueFans NEWSLETTERS</h1>
         <p class="subtitle">Choose the editions that match your interests. Free, delivered three times a week.</p>
 
         {% if error %}

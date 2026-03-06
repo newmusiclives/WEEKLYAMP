@@ -1,15 +1,18 @@
-"""FastAPI web application for the TrueFans AMP Magazine dashboard."""
+"""FastAPI web application for the TrueFans NEWSLETTERS dashboard."""
 
 from __future__ import annotations
 
 import logging
 import os
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi import Response as FastAPIResponse
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.middleware.gzip import GZipMiddleware
 
 from weeklyamp.core.config import load_config
 from weeklyamp.core.database import init_database, seed_agents, seed_editions, seed_guest_contacts, seed_sections
@@ -30,12 +33,55 @@ _STATIC_DIR = _TEMPLATES_DIR / "web" / "static"
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(title="TrueFans AMP Magazine", docs_url=None, redoc_url=None)
+    logging.basicConfig(
+        level=os.environ.get("LOG_LEVEL", "INFO").upper(),
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
 
-    # Security middleware (order matters: outermost runs first)
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        try:
+            config = load_config()
+            # Validate critical production config
+            if not os.environ.get("WEEKLYAMP_SECRET_KEY"):
+                logger.warning("WEEKLYAMP_SECRET_KEY not set — sessions won't survive restarts")
+            if not os.environ.get("WEEKLYAMP_ADMIN_HASH") and not os.environ.get("WEEKLYAMP_ADMIN_PASSWORD"):
+                logger.warning("No admin password configured — auth is disabled")
+            if config.email.enabled and not config.email.smtp_host:
+                logger.warning("Email enabled but SMTP_HOST not configured — sending will fail")
+            db_path = config.db_path
+            backend = config.db_backend
+            database_url = config.database_url
+            # Use absolute path on Railway, relative to cwd locally (sqlite only)
+            if backend == "sqlite" and not os.path.isabs(db_path):
+                if os.path.exists("/app"):
+                    db_path = os.path.join("/app", db_path)
+                else:
+                    db_path = os.path.abspath(db_path)
+            init_database(db_path, database_url, backend)
+            seed_sections(db_path, database_url, backend)
+            seed_editions(db_path, database_url, backend)
+            seed_guest_contacts(db_path, database_url, backend)
+            seed_agents(db_path, database_url, backend)
+            # Sync any new sources from sources.yaml into DB
+            from weeklyamp.db.repository import Repository
+            repo = Repository(db_path, database_url, backend)
+            added = sync_sources_from_config(repo)
+            if added:
+                logger.info("Synced %d new sources from sources.yaml", added)
+            logger.info("Database initialized at %s", db_path)
+        except Exception:
+            logger.exception("Failed to initialize database")
+        yield
+
+    app = FastAPI(title="TrueFans NEWSLETTERS", docs_url=None, redoc_url=None, lifespan=lifespan)
+
+    # Middleware (order matters: outermost runs first)
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(CSRFMiddleware)
     app.add_middleware(AuthMiddleware)
+    app.add_middleware(GZipMiddleware, minimum_size=500)
 
     # Auth routes
     app.add_api_route("/login", login_page, methods=["GET"])
@@ -59,33 +105,6 @@ def create_app() -> FastAPI:
         logger.exception("Unhandled server error")
         return HTMLResponse(_error_500, status_code=500)
 
-    # Auto-initialize database on startup
-    @app.on_event("startup")
-    def startup_init_db():
-        try:
-            config = load_config()
-            db_path = config.db_path
-            # Use absolute path on Railway, relative to cwd locally
-            if not os.path.isabs(db_path):
-                if os.path.exists("/app"):
-                    db_path = os.path.join("/app", db_path)
-                else:
-                    db_path = os.path.abspath(db_path)
-            init_database(db_path)
-            seed_sections(db_path)
-            seed_editions(db_path)
-            seed_guest_contacts(db_path)
-            seed_agents(db_path)
-            # Sync any new sources from sources.yaml into DB
-            from weeklyamp.db.repository import Repository
-            repo = Repository(db_path)
-            added = sync_sources_from_config(repo)
-            if added:
-                logger.info("Synced %d new sources from sources.yaml", added)
-            logger.info("Database initialized at %s", db_path)
-        except Exception:
-            logger.exception("Failed to initialize database")
-
     # Public landing page
     @app.get("/")
     def landing(request: Request):
@@ -100,7 +119,70 @@ def create_app() -> FastAPI:
     # Health check
     @app.get("/health")
     def health():
-        return {"status": "ok"}
+        try:
+            from weeklyamp.web.deps import get_repo
+            repo = get_repo()
+            repo.get_editions()
+            return {"status": "ok", "db": "connected"}
+        except Exception as exc:
+            return JSONResponse(
+                status_code=503,
+                content={"status": "error", "detail": str(exc)},
+            )
+
+    # SEO: robots.txt
+    @app.get("/robots.txt")
+    def robots_txt():
+        body = (
+            "User-agent: *\n"
+            "Allow: /\n"
+            "Disallow: /dashboard\n"
+            "Disallow: /research\n"
+            "Disallow: /drafts\n"
+            "Disallow: /review\n"
+            "Disallow: /publish\n"
+            "Disallow: /subscribers\n"
+            "Disallow: /sections\n"
+            "Disallow: /schedule\n"
+            "Disallow: /sponsor-blocks\n"
+            "Disallow: /sponsors\n"
+            "Disallow: /agents\n"
+            "Disallow: /submissions\n"
+            "Disallow: /guests\n"
+            "Disallow: /calendar\n"
+            "Disallow: /growth\n"
+            "Disallow: /security\n"
+            "Disallow: /login\n"
+            "Disallow: /logout\n"
+            "\n"
+            "Sitemap: https://truefansnewsletters.com/sitemap.xml\n"
+        )
+        return PlainTextResponse(body)
+
+    # SEO: sitemap.xml
+    @app.get("/sitemap.xml")
+    def sitemap_xml():
+        urls = [
+            "https://truefansnewsletters.com/",
+            "https://truefansnewsletters.com/newsletters",
+            "https://truefansnewsletters.com/subscribe",
+            "https://truefansnewsletters.com/submit",
+        ]
+        xml_urls = "\n".join(
+            f"  <url><loc>{u}</loc></url>" for u in urls
+        )
+        xml = (
+            '<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+            f"{xml_urls}\n"
+            "</urlset>\n"
+        )
+        return FastAPIResponse(content=xml, media_type="application/xml")
+
+    # SEO: favicon redirect
+    @app.get("/favicon.ico")
+    def favicon_ico():
+        return RedirectResponse(url="/static/favicon.svg", status_code=301)
 
     # Static files
     if _STATIC_DIR.exists():

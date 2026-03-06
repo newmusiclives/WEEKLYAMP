@@ -6,6 +6,8 @@ from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader
 
+from weeklyamp.web.sanitize import sanitize_html
+
 
 def _get_template_dir() -> Path:
     """Find the templates directory."""
@@ -77,9 +79,9 @@ def render_guest_section(content_html: str, author_name: str = "", author_bio: s
     env = get_env()
     template = env.get_template("guest_section.html.j2")
     return template.render(
-        content=content_html,
-        author_name=author_name,
-        author_bio=author_bio,
+        content=sanitize_html(content_html),
+        author_name=sanitize_html(author_name),
+        author_bio=sanitize_html(author_bio),
         original_url=original_url,
     )
 
@@ -95,11 +97,11 @@ def render_submission_section(
     env = get_env()
     template = env.get_template("submission_section.html.j2")
     return template.render(
-        content=content_html,
-        section_title=section_title,
-        artist_name=artist_name,
+        content=sanitize_html(content_html),
+        section_title=sanitize_html(section_title),
+        artist_name=sanitize_html(artist_name),
         artist_website=artist_website,
-        artist_social=artist_social,
+        artist_social=sanitize_html(artist_social),
     )
 
 
@@ -107,4 +109,9 @@ def render_sponsor_block(block: dict) -> str:
     """Render a single sponsor ad block for email."""
     env = get_env()
     template = env.get_template("sponsor_block.html.j2")
-    return template.render(block=block)
+    sanitized = dict(block)
+    if sanitized.get("body_html"):
+        sanitized["body_html"] = sanitize_html(sanitized["body_html"])
+    if sanitized.get("headline"):
+        sanitized["headline"] = sanitize_html(sanitized["headline"])
+    return template.render(block=sanitized)

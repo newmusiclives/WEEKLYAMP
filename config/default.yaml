@@ -1,11 +1,11 @@
 newsletter:
-  name: "TrueFans AMP Magazine"
+  name: "TrueFans NEWSLETTERS"
   tagline: ""
   from_name: "PS"
   reply_to: ""
   header_image_url: "https://web-production-88ebc.up.railway.app/static/header-logo.png"
   intro_copy: "<p style='font-size:18px;font-weight:600;color:#000000;margin:0'>The independent artist's edge — music industry intelligence, creative strategy, and the tools to build your career on your own terms.</p>"
-  footer_html: "<p><strong>TrueFans AMP Magazine</strong> — Amplifying Independent Artists &amp; Songwriters</p><p style='margin:8px 0'>&copy; 2026 TrueFans AMP. All rights reserved.</p><p style='margin:8px 0'><a href='#'>Twitter</a> &nbsp;|&nbsp; <a href='#'>Instagram</a> &nbsp;|&nbsp; <a href='#'>LinkedIn</a></p><p style='font-size:11px;color:#aaa;margin-top:10px'>Built by artists, for artists. Every issue is crafted to help you own your career.</p>"
+  footer_html: "<p><strong>TrueFans NEWSLETTERS</strong> — Amplifying Independent Artists &amp; Songwriters</p><p style='margin:8px 0'>&copy; 2026 TrueFans NEWSLETTERS. All rights reserved.</p><p style='margin:8px 0'><a href='#'>Twitter</a> &nbsp;|&nbsp; <a href='#'>Instagram</a> &nbsp;|&nbsp; <a href='#'>LinkedIn</a></p><p style='font-size:11px;color:#aaa;margin-top:10px'>Built by artists, for artists. Every issue is crafted to help you own your career.</p>"
 
 ai:
   provider: "anthropic"
@@ -48,6 +48,10 @@ email:
   smtp_user: ""                   # your-user@yourdomain.com (from GHL SMTP settings)
   smtp_password: ""               # from GHL SMTP settings
   from_address: ""                # your sending email address
-  from_name: "TrueFans AMP"
+  from_name: "TrueFans NEWSLETTERS"
+
+analytics:
+  plausible_domain: ""  # e.g. "truefansnewsletters.com" — leave empty to disable
 
 db_path: "data/weeklyamp.db"
+db_backend: "sqlite"  # "sqlite" or "postgres"

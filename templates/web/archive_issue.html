@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Issue #{{ issue.issue_number }}{% if issue.title %} — {{ issue.title }}{% endif %} — TrueFans NEWSLETTERS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <style>
+        :root { --bg:#0a0a12; --bg-card:#13131f; --border:rgba(255,255,255,0.08); --text:#f0f0f5; --text-dim:#9ca3af; --accent:#e8645a; --font:'Inter',-apple-system,sans-serif; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:var(--font); background:var(--bg); color:var(--text); line-height:1.6; }
+        nav { position:fixed; top:0; left:0; right:0; z-index:100; padding:20px 40px; display:flex; justify-content:space-between; align-items:center; background:rgba(10,10,18,0.8); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); }
+        .nav-brand { font-size:20px; font-weight:800; letter-spacing:-0.5px; color:var(--text); text-decoration:none; }
+        .nav-brand span { color:var(--accent); }
+        .nav-link { color:var(--text-dim); text-decoration:none; font-size:14px; font-weight:500; padding:8px 20px; border-radius:8px; border:1px solid var(--border); transition:all 0.2s; }
+        .nav-link:hover { color:var(--text); border-color:rgba(255,255,255,0.2); }
+        .nav-link-cta { background:var(--accent); color:#fff; border-color:var(--accent); }
+        .container { max-width:800px; margin:0 auto; padding:120px 24px 40px; }
+        .back-link { display:inline-flex; align-items:center; gap:6px; color:var(--text-dim); text-decoration:none; font-size:14px; margin-bottom:24px; }
+        .back-link:hover { color:var(--text); }
+        .issue-header { margin-bottom:32px; }
+        .issue-header h1 { font-size:28px; font-weight:800; letter-spacing:-0.5px; margin-bottom:8px; }
+        .issue-header .date { font-size:14px; color:var(--text-dim); }
+        .issue-content { background:#fff; border-radius:12px; padding:32px; color:#1a1a1a; overflow:hidden; }
+        .issue-content img { max-width:100%; height:auto; }
+        footer { padding:40px 24px; text-align:center; border-top:1px solid var(--border); color:var(--text-dim); font-size:14px; }
+        .footer-links { display:flex; gap:24px; justify-content:center; margin-bottom:16px; }
+        .footer-links a { color:var(--text-dim); text-decoration:none; font-size:13px; }
+    </style>
+</head>
+<body>
+    {% include "partials/public_nav.html" %}
+    <div class="container">
+        <a href="/newsletters/archive" class="back-link">← Back to Archive</a>
+        <div class="issue-header">
+            <h1>Issue #{{ issue.issue_number }}{% if issue.title %} — {{ issue.title }}{% endif %}</h1>
+            <div class="date">{{ issue.publish_date or issue.created_at }}</div>
+        </div>
+        <div class="issue-content">
+            {{ content | safe }}
+        </div>
+    </div>
+    {% include "partials/public_footer.html" %}
+</body>
+</html>

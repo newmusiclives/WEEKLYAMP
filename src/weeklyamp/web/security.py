@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import os
 import secrets
+import threading
 import time
 from pathlib import Path
 
@@ -49,12 +50,12 @@ _FALLBACK_SECRET_KEY = ""
 
 _SESSION_COOKIE = "_session"
 _SESSION_VALUE = "admin"
-_SESSION_MAX_AGE = 86400  # 24 hours
+_SESSION_MAX_AGE = 43200  # 12 hours
 
 _CSRF_COOKIE = "_csrf"
 
 # Routes that don't require authentication
-_PUBLIC_PREFIXES = ("/health", "/login", "/static", "/submit", "/subscribe", "/newsletters", "/api/")
+_PUBLIC_PREFIXES = ("/health", "/login", "/static", "/submit", "/subscribe", "/unsubscribe", "/verify", "/newsletters", "/api/", "/feed.xml")
 _PUBLIC_EXACT = frozenset({"/"})
 
 _TEMPLATES_DIR = Path(__file__).parent.parent.parent.parent / "templates" / "web"
@@ -64,6 +65,7 @@ _login_env = Environment(loader=FileSystemLoader(str(_TEMPLATES_DIR)), autoescap
 # ---- Rate limiting ----
 
 _login_attempts: dict[str, list[float]] = {}  # ip -> [timestamps]
+_login_lock = threading.Lock()
 _MAX_ATTEMPTS = 5
 _WINDOW_SECONDS = 900  # 15 minutes
 
@@ -79,21 +81,23 @@ def _get_client_ip(request: Request) -> str:
 def _is_rate_limited(ip: str) -> bool:
     """Check if an IP has exceeded the login attempt limit."""
     now = time.time()
-    attempts = _login_attempts.get(ip, [])
-    # Prune old entries outside the window
-    attempts = [t for t in attempts if now - t < _WINDOW_SECONDS]
-    _login_attempts[ip] = attempts
-    return len(attempts) >= _MAX_ATTEMPTS
+    with _login_lock:
+        attempts = _login_attempts.get(ip, [])
+        attempts = [t for t in attempts if now - t < _WINDOW_SECONDS]
+        _login_attempts[ip] = attempts
+        return len(attempts) >= _MAX_ATTEMPTS
 
 
 def _record_attempt(ip: str) -> None:
     """Record a failed login attempt for an IP."""
-    _login_attempts.setdefault(ip, []).append(time.time())
+    with _login_lock:
+        _login_attempts.setdefault(ip, []).append(time.time())
 
 
 def _clear_attempts(ip: str) -> None:
     """Clear login attempts for an IP after successful login."""
-    _login_attempts.pop(ip, None)
+    with _login_lock:
+        _login_attempts.pop(ip, None)
 
 
 # ---- Secure cookie helpers ----
@@ -200,8 +204,15 @@ async def login_page(request: Request) -> Response:
     """GET /login — render login form."""
     if is_authenticated(request):
         return RedirectResponse("/dashboard", status_code=302)
+    csrf_token = secrets.token_hex(32)
     tpl = _login_env.get_template("login.html")
-    return HTMLResponse(tpl.render())
+    response = HTMLResponse(tpl.render(csrf_token=csrf_token))
+    secure = _is_secure(request)
+    response.set_cookie(
+        "_login_csrf", csrf_token,
+        httponly=True, samesite="lax", max_age=900, secure=secure,
+    )
+    return response
 
 
 async def login_submit(request: Request) -> Response:
@@ -218,6 +229,14 @@ async def login_submit(request: Request) -> Response:
         )
 
     form = await request.form()
+
+    # Verify login CSRF token
+    form_csrf = form.get("_csrf_token", "")
+    cookie_csrf = request.cookies.get("_login_csrf", "")
+    if not form_csrf or not cookie_csrf or not secrets.compare_digest(form_csrf, cookie_csrf):
+        tpl = _login_env.get_template("login.html")
+        return HTMLResponse(tpl.render(error="Session expired. Please try again."), status_code=403)
+
     password = form.get("password", "")
 
     if verify_password(password, _get_admin_hash()):
@@ -245,7 +264,7 @@ async def logout(request: Request) -> Response:
 
 _CSP = (
     "default-src 'self'; "
-    "script-src 'self' https://unpkg.com; "
+    "script-src 'self' https://unpkg.com https://plausible.io; "
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
     "font-src 'self' https://fonts.gstatic.com; "
     "connect-src 'self'; "
@@ -283,7 +302,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             response.headers["Content-Security-Policy"] = _CSP
         # HSTS only over HTTPS
         if request.headers.get("X-Forwarded-Proto") == "https":
-            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
         return response
 
 

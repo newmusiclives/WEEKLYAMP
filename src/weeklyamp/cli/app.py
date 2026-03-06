@@ -24,7 +24,7 @@ from weeklyamp.db.repository import Repository
 console = Console()
 app = typer.Typer(
     name="weeklyamp",
-    help="TrueFans AMP Magazine — AI-powered magazine platform for independent artists.",
+    help="TrueFans NEWSLETTERS — AI-powered magazine platform for independent artists.",
     no_args_is_help=True,
 )
 
@@ -45,22 +45,28 @@ def init() -> None:
     """Initialize the database and seed default sections."""
     cfg = load_config()
     db_path = cfg.db_path
+    backend = cfg.db_backend
+    database_url = cfg.database_url
 
-    console.print(f"[bold]Initializing TrueFans AMP Magazine...[/bold]")
+    console.print(f"[bold]Initializing TrueFans NEWSLETTERS...[/bold]")
+    console.print(f"  Backend: [cyan]{backend}[/cyan]")
 
     # Create DB
-    init_database(db_path)
-    console.print(f"  Database created at [cyan]{db_path}[/cyan]")
+    init_database(db_path, database_url, backend)
+    if backend == "postgres":
+        console.print(f"  Database initialized (PostgreSQL)")
+    else:
+        console.print(f"  Database created at [cyan]{db_path}[/cyan]")
 
     # Seed sections
-    count = seed_sections(db_path)
+    count = seed_sections(db_path, database_url, backend)
     if count > 0:
         console.print(f"  Seeded [green]{count}[/green] default sections")
     else:
         console.print("  Sections already exist")
 
     # Show schema version
-    ver = get_schema_version(db_path)
+    ver = get_schema_version(db_path, database_url, backend)
     console.print(f"  Schema version: [cyan]{ver}[/cyan]")
 
     console.print("\n[bold green]Ready![/bold green] Run [cyan]weeklyamp status[/cyan] to see the dashboard.")
@@ -70,15 +76,15 @@ def init() -> None:
 def status() -> None:
     """Show the current issue dashboard."""
     cfg = load_config()
-    repo = Repository(cfg.db_path)
+    repo = Repository(cfg.db_path, cfg.database_url, cfg.db_backend)
 
-    if not Path(cfg.db_path).exists():
+    if cfg.db_backend == "sqlite" and not Path(cfg.db_path).exists():
         console.print("[red]Database not found.[/red] Run [cyan]weeklyamp init[/cyan] first.")
         raise typer.Exit(1)
 
     # Current issue
     issue = repo.get_current_issue()
-    console.print("\n[bold]TrueFans AMP Magazine Dashboard[/bold]")
+    console.print("\n[bold]TrueFans NEWSLETTERS Dashboard[/bold]")
     console.print(f"Newsletter: [cyan]{cfg.newsletter.name}[/cyan]")
     console.print(f"AI: [cyan]{cfg.ai.provider.value}[/cyan] / [cyan]{cfg.ai.model}[/cyan]\n")
 
@@ -132,7 +138,7 @@ def serve(
     """Start the web dashboard."""
     import uvicorn
 
-    console.print(f"\n[bold]TrueFans AMP Magazine Dashboard[/bold]")
+    console.print(f"\n[bold]TrueFans NEWSLETTERS Dashboard[/bold]")
     console.print(f"Starting at [cyan]http://{host}:{port}[/cyan]\n")
     uvicorn.run(
         "weeklyamp.web.app:create_app",

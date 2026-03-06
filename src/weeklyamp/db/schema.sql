@@ -1,4 +1,4 @@
--- TrueFans AMP Magazine Database Schema (v10)
+-- TrueFans NEWSLETTERS Database Schema (v10)
 
 CREATE TABLE IF NOT EXISTS schema_version (
     version INTEGER PRIMARY KEY,
@@ -104,6 +104,9 @@ CREATE TABLE IF NOT EXISTS subscribers (
     beehiiv_id TEXT DEFAULT '',
     status TEXT DEFAULT 'active',
     source_channel TEXT DEFAULT '',
+    email_verified INTEGER DEFAULT 0,
+    verification_token TEXT DEFAULT '',
+    unsubscribe_token TEXT DEFAULT '',
     subscribed_at TIMESTAMP,
     synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

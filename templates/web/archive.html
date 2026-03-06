@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newsletter Archive — TrueFans NEWSLETTERS</title>
+    <meta name="description" content="Browse past issues of TrueFans NEWSLETTERS.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link rel="alternate" type="application/rss+xml" title="TrueFans NEWSLETTERS" href="/feed.xml">
+    <style>
+        :root { --bg:#0a0a12; --bg-card:#13131f; --border:rgba(255,255,255,0.08); --text:#f0f0f5; --text-dim:#9ca3af; --accent:#e8645a; --font:'Inter',-apple-system,sans-serif; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:var(--font); background:var(--bg); color:var(--text); line-height:1.6; }
+        nav { position:fixed; top:0; left:0; right:0; z-index:100; padding:20px 40px; display:flex; justify-content:space-between; align-items:center; background:rgba(10,10,18,0.8); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); }
+        .nav-brand { font-size:20px; font-weight:800; letter-spacing:-0.5px; color:var(--text); text-decoration:none; }
+        .nav-brand span { color:var(--accent); }
+        .nav-link { color:var(--text-dim); text-decoration:none; font-size:14px; font-weight:500; padding:8px 20px; border-radius:8px; border:1px solid var(--border); transition:all 0.2s; }
+        .nav-link:hover { color:var(--text); border-color:rgba(255,255,255,0.2); }
+        .nav-link-cta { background:var(--accent); color:#fff; border-color:var(--accent); }
+        .container { max-width:800px; margin:0 auto; padding:140px 24px 80px; }
+        h1 { font-size:36px; font-weight:900; letter-spacing:-1px; margin-bottom:12px; }
+        .subtitle { color:var(--text-dim); font-size:16px; margin-bottom:40px; }
+        .issue-list { display:flex; flex-direction:column; gap:12px; }
+        .issue-card { display:flex; justify-content:space-between; align-items:center; background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:20px 24px; text-decoration:none; color:var(--text); transition:all 0.2s; }
+        .issue-card:hover { border-color:rgba(255,255,255,0.2); transform:translateY(-2px); }
+        .issue-info h3 { font-size:16px; font-weight:700; margin-bottom:4px; }
+        .issue-info .date { font-size:13px; color:var(--text-dim); }
+        .read-link { color:var(--accent); font-size:14px; font-weight:600; white-space:nowrap; }
+        .empty { text-align:center; color:var(--text-dim); padding:60px 0; font-size:16px; }
+        footer { padding:40px 24px; text-align:center; border-top:1px solid var(--border); color:var(--text-dim); font-size:14px; }
+        .footer-links { display:flex; gap:24px; justify-content:center; margin-bottom:16px; }
+        .footer-links a { color:var(--text-dim); text-decoration:none; font-size:13px; }
+        .rss-link { display:inline-flex; align-items:center; gap:6px; color:var(--text-dim); font-size:13px; text-decoration:none; margin-bottom:32px; }
+        .rss-link:hover { color:var(--accent); }
+    </style>
+</head>
+<body>
+    {% include "partials/public_nav.html" %}
+    <div class="container">
+        <h1>Newsletter Archive</h1>
+        <p class="subtitle">Browse past issues of TrueFans NEWSLETTERS</p>
+        <a href="/feed.xml" class="rss-link">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6.18 15.64a2.18 2.18 0 0 1 2.18 2.18C8.36 19 7.38 20 6.18 20C5 20 4 19 4 17.82a2.18 2.18 0 0 1 2.18-2.18M4 4.44A15.56 15.56 0 0 1 19.56 20h-2.83A12.73 12.73 0 0 0 4 7.27V4.44m0 5.66a9.9 9.9 0 0 1 9.9 9.9h-2.83A7.07 7.07 0 0 0 4 12.93V10.1z"/></svg>
+            RSS Feed
+        </a>
+        {% if issues %}
+        <div class="issue-list">
+            {% for issue in issues %}
+            <a href="/newsletters/archive/{{ issue.issue_number }}" class="issue-card">
+                <div class="issue-info">
+                    <h3>Issue #{{ issue.issue_number }}{% if issue.title %} — {{ issue.title }}{% endif %}</h3>
+                    <div class="date">{{ issue.publish_date or issue.created_at }}</div>
+                </div>
+                <span class="read-link">Read →</span>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty">No published issues yet. Check back soon!</div>
+        {% endif %}
+    </div>
+    {% include "partials/public_footer.html" %}
+</body>
+</html>

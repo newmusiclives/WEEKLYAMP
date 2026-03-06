@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login — TrueFans AMP</title>
+    <title>Login — TrueFans NEWSLETTERS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
@@ -13,13 +13,16 @@
 <body>
     <div class="login-card">
         <div class="login-brand">
-            <h1>TrueFans AMP</h1>
+            <h1>TrueFans NEWSLETTERS</h1>
             <div class="tagline">AI Magazine for Independent Artists</div>
         </div>
         {% if error %}
         <div class="login-error">{{ error }}</div>
         {% endif %}
         <form method="post" action="/login">
+            {% if csrf_token %}
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+            {% endif %}
             <div class="login-field">
                 <label for="password">Password</label>
                 <input type="password" id="password" name="password" required autofocus>
