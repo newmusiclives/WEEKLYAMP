@@ -314,6 +314,7 @@ body {
 
 /* Agent type badges */
 .badge-editor_in_chief { background: var(--purple-bg); color: var(--purple); }
+.badge-editor { background: rgba(124, 92, 252, 0.06); color: #9b7dfc; }
 .badge-writer { background: var(--blue-bg); color: var(--blue); }
 .badge-researcher { background: var(--cyan-bg); color: var(--cyan); }
 .badge-sales { background: var(--orange-bg); color: var(--orange); }

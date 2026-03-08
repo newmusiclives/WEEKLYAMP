@@ -4,21 +4,129 @@
 
 {% block content %}
 <div class="page-header">
-    <h2>Sponsor Ad Blocks</h2>
-    <p>{% if issue %}Managing blocks for Issue #{{ issue.issue_number }}{% else %}No current issue{% endif %}</p>
+    <h2>Ad Blocks &amp; Sponsors</h2>
+    <p>Manage sponsors, main sponsorships, and ad placements across all newsletters</p>
 </div>
 
-{% if issue %}
-<!-- Add sponsor block form -->
-<div class="card">
-    <div class="card-header">
-        <span class="card-title">Add Sponsor Block</span>
+<!-- Stats row -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px">
+    {% for g in grid %}
+    <div class="stat-card" style="border-top:3px solid {{ g.edition.color }};padding:14px 16px">
+        <div class="label" style="margin-bottom:6px">{{ g.edition.icon | safe }} {{ g.edition.name }}</div>
+        <div style="display:flex;gap:14px;align-items:baseline">
+            <div>
+                <span style="font-size:20px;font-weight:700;color:{{ g.edition.color }}">{{ g.total_main }}</span><span style="font-size:12px;color:var(--text-dim)">/3</span>
+                <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px">Sponsors</div>
+            </div>
+            <div>
+                <span style="font-size:20px;font-weight:700;color:{{ g.edition.color }}">{{ g.total_filled }}</span><span style="font-size:12px;color:var(--text-dim)">/9</span>
+                <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px">Ad Blocks</div>
+            </div>
+        </div>
     </div>
-    <form hx-post="/sponsor-blocks/add" hx-target="#blocks-list" hx-swap="outerHTML">
+    {% endfor %}
+    <div class="stat-card" style="padding:14px 16px">
+        <div class="label" style="margin-bottom:6px">Revenue</div>
+        <div style="display:flex;gap:14px;align-items:baseline">
+            <div>
+                <span style="font-size:20px;font-weight:700" class="green">${{ "%.0f" | format((revenue.paid_cents or 0) / 100) }}</span>
+                <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px">Paid</div>
+            </div>
+            <div>
+                <span style="font-size:20px;font-weight:700" class="blue">${{ "%.0f" | format((revenue.pipeline_cents or 0) / 100) }}</span>
+                <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px">Pipeline</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tab-style section headers -->
+<div style="display:flex;gap:8px;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:0">
+    <button class="btn btn-ghost btn-sm" onclick="showTab('placements')" id="tab-placements" style="border-bottom:2px solid var(--accent);border-radius:0;font-weight:600">Placements</button>
+    <button class="btn btn-ghost btn-sm" onclick="showTab('directory')" id="tab-directory" style="border-radius:0">Sponsor Directory</button>
+</div>
+
+<!-- Placements tab -->
+<div id="section-placements">
+
+<!-- Add Main Sponsor form -->
+<div class="card" style="margin-bottom:16px">
+    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+        <span class="card-title">Set Main Sponsor</span>
+        <span style="color:var(--text-dim);font-size:12px">1 per newsletter edition &mdash; 9 total</span>
+    </div>
+    <form hx-post="/sponsor-blocks/main-sponsor/set" hx-target="#blocks-grid" hx-swap="outerHTML">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px">
+            <div class="form-group">
+                <label>Newsletter</label>
+                <select name="edition_slug" required>
+                    {% for g in grid %}
+                    <option value="{{ g.edition.slug }}">{{ g.edition.icon | safe }} {{ g.edition.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Edition #</label>
+                <select name="edition_number" required>
+                    {% for n in edition_numbers %}
+                    <option value="{{ n }}">Edition {{ n }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Sponsor Name</label>
+                <input type="text" name="sponsor_name" placeholder="Main Sponsor Co." required>
+            </div>
+            <div class="form-group">
+                <label>Tagline</label>
+                <input type="text" name="tagline" placeholder="Proudly supporting indie artists">
+            </div>
+        </div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
             <div class="form-group">
+                <label>Website URL</label>
+                <input type="text" name="website_url" placeholder="https://...">
+            </div>
+            <div class="form-group">
+                <label>Logo URL (optional)</label>
+                <input type="text" name="logo_url" placeholder="https://...">
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <input type="text" name="notes" placeholder="Internal notes...">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-secondary">Set Main Sponsor</button>
+    </form>
+</div>
+
+<!-- Add Ad Block form -->
+<div class="card" style="margin-bottom:24px">
+    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+        <span class="card-title">Add Ad Block</span>
+        <span style="color:var(--text-dim);font-size:12px">3 per edition (top, mid, bottom) &mdash; 27 total</span>
+    </div>
+    <form hx-post="/sponsor-blocks/add" hx-target="#blocks-grid" hx-swap="outerHTML">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px">
+            <div class="form-group">
+                <label>Newsletter</label>
+                <select name="edition_slug" required>
+                    {% for g in grid %}
+                    <option value="{{ g.edition.slug }}">{{ g.edition.icon | safe }} {{ g.edition.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Edition #</label>
+                <select name="edition_number" required>
+                    {% for n in edition_numbers %}
+                    <option value="{{ n }}">Edition {{ n }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
                 <label>Position</label>
-                <select name="position">
+                <select name="position" required>
                     {% for p in positions %}
                     <option value="{{ p }}">{{ p | title }}</option>
                     {% endfor %}
@@ -28,12 +136,12 @@
                 <label>Sponsor Name</label>
                 <input type="text" name="sponsor_name" placeholder="Acme Corp" required>
             </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
             <div class="form-group">
                 <label>Headline</label>
                 <input type="text" name="headline" placeholder="Check out our latest product">
             </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
             <div class="form-group">
                 <label>CTA URL</label>
                 <input type="text" name="cta_url" placeholder="https://...">
@@ -43,27 +151,79 @@
                 <input type="text" name="cta_text" value="Learn More">
             </div>
         </div>
-        <div class="form-group">
-            <label>Body HTML</label>
-            <textarea name="body_html" rows="3" placeholder="Ad copy..."></textarea>
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px">
+            <div class="form-group">
+                <label>Body HTML</label>
+                <textarea name="body_html" rows="2" placeholder="Ad copy..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Image URL (optional)</label>
+                <input type="text" name="image_url" placeholder="https://...">
+            </div>
         </div>
-        <div class="form-group">
-            <label>Image URL (optional)</label>
-            <input type="text" name="image_url" placeholder="https://...">
-        </div>
-        <button type="submit" class="btn btn-primary">Add Block</button>
+        <button type="submit" class="btn btn-primary">Add Ad Block</button>
     </form>
 </div>
 
-<!-- Existing blocks -->
-<div id="blocks-list">
-    {% include "partials/sponsor_blocks_list.html" %}
+<!-- Grid of all slots -->
+<div id="blocks-grid">
+    {% include "partials/sponsor_blocks_grid.html" %}
 </div>
-{% else %}
-<div class="empty-state">
-    <div class="icon">&#128230;</div>
-    <h3>No Current Issue</h3>
-    <p>Start a new issue from the <a href="/drafts" style="color:var(--accent)">Drafts</a> page first.</p>
+
+</div><!-- end placements tab -->
+
+<!-- Sponsor Directory tab -->
+<div id="section-directory" style="display:none">
+
+<!-- Add sponsor form -->
+<div class="card" style="margin-bottom:16px">
+    <div class="card-header">
+        <span class="card-title">Add New Sponsor</span>
+    </div>
+    <form hx-post="/sponsor-blocks/sponsors/add" hx-target="#sponsors-table" hx-swap="outerHTML">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+            <div class="form-group">
+                <label>Company Name</label>
+                <input type="text" name="name" required>
+            </div>
+            <div class="form-group">
+                <label>Contact Name</label>
+                <input type="text" name="contact_name">
+            </div>
+            <div class="form-group">
+                <label>Contact Email</label>
+                <input type="email" name="contact_email">
+            </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 2fr;gap:12px">
+            <div class="form-group">
+                <label>Website</label>
+                <input type="text" name="website" placeholder="https://...">
+            </div>
+            <div class="form-group">
+                <label>Notes</label>
+                <input type="text" name="notes">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Add Sponsor</button>
+    </form>
 </div>
-{% endif %}
+
+<!-- Sponsors table -->
+<div id="sponsors-table">
+    {% include "partials/sponsors_table.html" %}
+</div>
+
+</div><!-- end directory tab -->
+
+<script>
+function showTab(tab) {
+    document.getElementById('section-placements').style.display = tab === 'placements' ? '' : 'none';
+    document.getElementById('section-directory').style.display = tab === 'directory' ? '' : 'none';
+    document.getElementById('tab-placements').style.borderBottom = tab === 'placements' ? '2px solid var(--accent)' : 'none';
+    document.getElementById('tab-placements').style.fontWeight = tab === 'placements' ? '600' : '400';
+    document.getElementById('tab-directory').style.borderBottom = tab === 'directory' ? '2px solid var(--accent)' : 'none';
+    document.getElementById('tab-directory').style.fontWeight = tab === 'directory' ? '600' : '400';
+}
+</script>
 {% endblock %}

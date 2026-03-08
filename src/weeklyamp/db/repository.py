@@ -92,6 +92,7 @@ class Repository:
         "sponsor_blocks": {
             "position", "sponsor_name", "headline", "body_html",
             "cta_url", "cta_text", "image_url", "is_active",
+            "edition_slug", "edition_number",
         },
         "sponsors": {
             "name", "contact_name", "contact_email", "website", "notes", "is_active",
@@ -759,13 +760,16 @@ class Repository:
         self, issue_id: int, position: str = "mid", sponsor_name: str = "",
         headline: str = "", body_html: str = "", cta_url: str = "",
         cta_text: str = "Learn More", image_url: str = "",
+        edition_slug: str = "", edition_number: int = 1,
     ) -> int:
         conn = self._conn()
         cur = conn.execute(
             """INSERT INTO sponsor_blocks
-               (issue_id, position, sponsor_name, headline, body_html, cta_url, cta_text, image_url)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-            (issue_id, position, sponsor_name, headline, body_html, cta_url, cta_text, image_url),
+               (issue_id, position, sponsor_name, headline, body_html, cta_url, cta_text, image_url,
+                edition_slug, edition_number)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (issue_id, position, sponsor_name, headline, body_html, cta_url, cta_text, image_url,
+             edition_slug, edition_number),
         )
         conn.commit()
         row_id = cur.lastrowid
@@ -781,6 +785,31 @@ class Repository:
         conn.close()
         return [dict(r) for r in rows]
 
+    def get_sponsor_blocks_for_edition(self, edition_slug: str, edition_number: int) -> list[dict]:
+        conn = self._conn()
+        rows = conn.execute(
+            """SELECT * FROM sponsor_blocks
+               WHERE edition_slug = ? AND edition_number = ? AND is_active = 1
+               ORDER BY position""",
+            (edition_slug, edition_number),
+        ).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    def get_all_sponsor_blocks(self) -> list[dict]:
+        conn = self._conn()
+        rows = conn.execute(
+            "SELECT * FROM sponsor_blocks WHERE is_active = 1 ORDER BY edition_slug, edition_number, position"
+        ).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    def get_sponsor_block(self, block_id: int) -> Optional[dict]:
+        conn = self._conn()
+        row = conn.execute("SELECT * FROM sponsor_blocks WHERE id = ?", (block_id,)).fetchone()
+        conn.close()
+        return dict(row) if row else None
+
     def update_sponsor_block(self, block_id: int, **kwargs) -> None:
         if not kwargs:
             return
@@ -795,6 +824,56 @@ class Repository:
     def delete_sponsor_block(self, block_id: int) -> None:
         conn = self._conn()
         conn.execute("DELETE FROM sponsor_blocks WHERE id = ?", (block_id,))
+        conn.commit()
+        conn.close()
+
+    # ---- Edition Sponsors (main sponsors per newsletter x edition) ----
+
+    def get_all_edition_sponsors(self) -> list[dict]:
+        conn = self._conn()
+        rows = conn.execute(
+            "SELECT * FROM edition_sponsors WHERE is_active = 1 ORDER BY edition_slug, edition_number"
+        ).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    def get_edition_sponsor(self, edition_slug: str, edition_number: int) -> Optional[dict]:
+        conn = self._conn()
+        row = conn.execute(
+            "SELECT * FROM edition_sponsors WHERE edition_slug = ? AND edition_number = ?",
+            (edition_slug, edition_number),
+        ).fetchone()
+        conn.close()
+        return dict(row) if row else None
+
+    def set_edition_sponsor(
+        self, edition_slug: str, edition_number: int,
+        sponsor_name: str = "", logo_url: str = "", tagline: str = "",
+        website_url: str = "", notes: str = "", sponsor_id: Optional[int] = None,
+    ) -> int:
+        conn = self._conn()
+        # Upsert: replace existing sponsor for this slot
+        conn.execute(
+            "DELETE FROM edition_sponsors WHERE edition_slug = ? AND edition_number = ?",
+            (edition_slug, edition_number),
+        )
+        cur = conn.execute(
+            """INSERT INTO edition_sponsors
+               (edition_slug, edition_number, sponsor_id, sponsor_name, logo_url, tagline, website_url, notes)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (edition_slug, edition_number, sponsor_id, sponsor_name, logo_url, tagline, website_url, notes),
+        )
+        conn.commit()
+        row_id = cur.lastrowid
+        conn.close()
+        return row_id
+
+    def remove_edition_sponsor(self, edition_slug: str, edition_number: int) -> None:
+        conn = self._conn()
+        conn.execute(
+            "DELETE FROM edition_sponsors WHERE edition_slug = ? AND edition_number = ?",
+            (edition_slug, edition_number),
+        )
         conn.commit()
         conn.close()
 

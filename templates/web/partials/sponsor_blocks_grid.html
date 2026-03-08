@@ -1,0 +1,92 @@
+<div id="blocks-grid">
+    {% if message is defined and message %}
+    <div class="card" style="margin-bottom:16px;padding:10px 16px;border-left:3px solid {% if level == 'error' %}var(--red){% else %}var(--green){% endif %}">
+        <span style="color:{% if level == 'error' %}var(--red){% else %}var(--green){% endif %};font-size:13px">{{ message }}</span>
+    </div>
+    {% endif %}
+
+    {% for g in grid %}
+    <div class="card" style="margin-bottom:20px;border-left:4px solid {{ g.edition.color }}">
+        <div class="card-header" style="border-bottom:1px solid var(--border);padding:12px 16px">
+            <span style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:18px">{{ g.edition.icon | safe }}</span>
+                <span style="font-weight:700;font-size:15px">{{ g.edition.name }}</span>
+                <span style="color:var(--text-dim);font-size:12px">{{ g.edition.audience }}</span>
+            </span>
+        </div>
+
+        {% for row in g.rows %}
+        <div style="padding:14px 16px;{% if not loop.last %}border-bottom:1px solid var(--border);{% endif %}">
+            <!-- Edition label -->
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                <span style="font-weight:600;font-size:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px">Edition {{ row.number }}</span>
+                <span style="font-size:11px;color:var(--text-dim)">
+                    {% if row.main_sponsor %}&#9679;{% else %}&#9675;{% endif %} sponsor
+                    &nbsp;&middot;&nbsp;
+                    {{ row.filled }}/3 ads
+                </span>
+            </div>
+
+            <!-- Main Sponsor row -->
+            {% if row.main_sponsor %}
+            <div style="border:1px solid {{ g.edition.color }};border-radius:6px;padding:8px 12px;margin-bottom:10px;display:flex;align-items:center;gap:10px;background:var(--bg-card)">
+                <span style="background:{{ g.edition.color }};color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;text-transform:uppercase;flex-shrink:0">Sponsor</span>
+                {% if row.main_sponsor.logo_url %}
+                <img src="{{ row.main_sponsor.logo_url }}" alt="" style="height:20px;max-width:60px;object-fit:contain;flex-shrink:0">
+                {% endif %}
+                <span style="font-weight:600;font-size:13px">{{ row.main_sponsor.sponsor_name }}</span>
+                {% if row.main_sponsor.tagline %}
+                <span style="color:var(--text-dim);font-size:12px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ row.main_sponsor.tagline }}</span>
+                {% endif %}
+                {% if row.main_sponsor.website_url %}
+                <a href="{{ row.main_sponsor.website_url }}" target="_blank" style="color:var(--accent);font-size:11px;flex-shrink:0">Visit &rarr;</a>
+                {% endif %}
+                <form hx-post="/sponsor-blocks/main-sponsor/remove" hx-target="#blocks-grid" hx-swap="outerHTML" hx-confirm="Remove this main sponsor?" style="margin:0;flex-shrink:0">
+                    <input type="hidden" name="edition_slug" value="{{ g.edition.slug }}">
+                    <input type="hidden" name="edition_number" value="{{ row.number }}">
+                    <button type="submit" class="btn btn-danger btn-sm" style="padding:3px 8px;font-size:11px">Remove</button>
+                </form>
+            </div>
+            {% else %}
+            <div style="border:1px dashed var(--border);border-radius:6px;padding:8px 12px;margin-bottom:10px;display:flex;align-items:center;gap:8px">
+                <span style="color:var(--text-dim);font-size:9px;font-weight:600;padding:2px 6px;border-radius:3px;text-transform:uppercase;border:1px solid var(--border)">Sponsor</span>
+                <span style="color:var(--text-dim);font-size:12px;opacity:0.6">No main sponsor</span>
+            </div>
+            {% endif %}
+
+            <!-- Ad slots -->
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+                {% for slot in row.slots %}
+                <div style="border:1px {% if slot.block %}solid var(--border){% else %}dashed var(--border){% endif %};border-radius:6px;padding:10px;min-height:70px;position:relative;{% if slot.block %}background:var(--bg-card){% else %}background:var(--bg-card-hover);opacity:0.7{% endif %}">
+                    <span class="badge badge-sponsor-{{ slot.position }}" style="font-size:10px;padding:2px 6px;position:absolute;top:6px;right:6px">
+                        {{ slot.position | title }}
+                    </span>
+
+                    {% if slot.block %}
+                    <div style="font-weight:600;font-size:13px;margin-bottom:3px;padding-right:40px">{{ slot.block.sponsor_name or 'Unnamed' }}</div>
+                    {% if slot.block.headline %}
+                    <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ slot.block.headline }}</div>
+                    {% endif %}
+                    {% if slot.block.cta_url %}
+                    <a href="{{ slot.block.cta_url }}" target="_blank" style="color:var(--accent);font-size:11px">{{ slot.block.cta_text }} &rarr;</a>
+                    {% endif %}
+                    <div style="margin-top:6px">
+                        <button class="btn btn-danger btn-sm" style="padding:2px 8px;font-size:11px"
+                                hx-post="/sponsor-blocks/delete/{{ slot.block.id }}"
+                                hx-target="#blocks-grid"
+                                hx-swap="outerHTML"
+                                hx-confirm="Delete this ad block?">Delete</button>
+                    </div>
+                    {% else %}
+                    <div style="display:flex;align-items:center;justify-content:center;height:40px;color:var(--text-dim);font-size:12px">
+                        Empty
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+</div>

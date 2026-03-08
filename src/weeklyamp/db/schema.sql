@@ -142,7 +142,7 @@ CREATE TABLE IF NOT EXISTS send_schedule (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Sponsor blocks (ad placements per issue)
+-- Sponsor blocks (ad placements per newsletter edition)
 CREATE TABLE IF NOT EXISTS sponsor_blocks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     issue_id INTEGER NOT NULL REFERENCES issues(id),
@@ -154,6 +154,8 @@ CREATE TABLE IF NOT EXISTS sponsor_blocks (
     cta_text TEXT DEFAULT 'Learn More',
     image_url TEXT DEFAULT '',
     is_active INTEGER DEFAULT 1,
+    edition_slug TEXT DEFAULT '',
+    edition_number INTEGER DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -185,7 +187,7 @@ CREATE TABLE IF NOT EXISTS sponsor_bookings (
 -- AI agents
 CREATE TABLE IF NOT EXISTS ai_agents (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    agent_type TEXT NOT NULL CHECK (agent_type IN ('editor_in_chief','writer','researcher','sales','growth')),
+    agent_type TEXT NOT NULL CHECK (agent_type IN ('editor_in_chief','editor','writer','researcher','sales','growth')),
     name TEXT NOT NULL,
     persona TEXT DEFAULT '',
     system_prompt TEXT DEFAULT '',
@@ -347,6 +349,23 @@ CREATE TABLE IF NOT EXISTS newsletter_editions (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Edition main sponsors (1 per newsletter x edition = 9 total)
+CREATE TABLE IF NOT EXISTS edition_sponsors (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    edition_slug TEXT NOT NULL,
+    edition_number INTEGER NOT NULL DEFAULT 1,
+    sponsor_id INTEGER REFERENCES sponsors(id),
+    sponsor_name TEXT DEFAULT '',
+    logo_url TEXT DEFAULT '',
+    tagline TEXT DEFAULT '',
+    website_url TEXT DEFAULT '',
+    notes TEXT DEFAULT '',
+    is_active INTEGER DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(edition_slug, edition_number)
+);
+CREATE INDEX IF NOT EXISTS idx_edition_sponsors_slug ON edition_sponsors(edition_slug);
+
 -- Subscriber-edition link
 CREATE TABLE IF NOT EXISTS subscriber_editions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -365,6 +384,7 @@ CREATE INDEX IF NOT EXISTS idx_editorial_issue ON editorial_inputs(issue_id);
 CREATE INDEX IF NOT EXISTS idx_subscribers_email ON subscribers(email);
 CREATE INDEX IF NOT EXISTS idx_rotation_log_issue ON section_rotation_log(issue_id);
 CREATE INDEX IF NOT EXISTS idx_sponsor_blocks_issue ON sponsor_blocks(issue_id);
+CREATE INDEX IF NOT EXISTS idx_sponsor_blocks_edition ON sponsor_blocks(edition_slug, edition_number);
 CREATE INDEX IF NOT EXISTS idx_bookings_sponsor ON sponsor_bookings(sponsor_id);
 CREATE INDEX IF NOT EXISTS idx_bookings_issue ON sponsor_bookings(issue_id);
 CREATE INDEX IF NOT EXISTS idx_agent_tasks_agent ON agent_tasks(agent_id);
@@ -397,3 +417,6 @@ INSERT OR IGNORE INTO schema_version (version) VALUES (11);
 INSERT OR IGNORE INTO schema_version (version) VALUES (12);
 INSERT OR IGNORE INTO schema_version (version) VALUES (13);
 INSERT OR IGNORE INTO schema_version (version) VALUES (14);
+INSERT OR IGNORE INTO schema_version (version) VALUES (15);
+INSERT OR IGNORE INTO schema_version (version) VALUES (16);
+INSERT OR IGNORE INTO schema_version (version) VALUES (17);

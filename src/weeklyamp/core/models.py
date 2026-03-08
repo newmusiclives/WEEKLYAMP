@@ -85,6 +85,7 @@ class SeriesType(str, Enum):
 
 class AgentType(str, Enum):
     EDITOR_IN_CHIEF = "editor_in_chief"
+    EDITOR = "editor"
     WRITER = "writer"
     RESEARCHER = "researcher"
     SALES = "sales"
@@ -353,6 +354,8 @@ class SponsorBlock(BaseModel):
     cta_text: str = "Learn More"
     image_url: str = ""
     is_active: bool = True
+    edition_slug: str = ""
+    edition_number: int = 1
     created_at: Optional[datetime] = None
 
 
@@ -364,6 +367,20 @@ class Sponsor(BaseModel):
     contact_name: str = ""
     contact_email: str = ""
     website: str = ""
+    notes: str = ""
+    is_active: bool = True
+    created_at: Optional[datetime] = None
+
+
+class EditionSponsor(BaseModel):
+    id: Optional[int] = None
+    edition_slug: str = ""
+    edition_number: int = 1
+    sponsor_id: Optional[int] = None
+    sponsor_name: str = ""
+    logo_url: str = ""
+    tagline: str = ""
+    website_url: str = ""
     notes: str = ""
     is_active: bool = True
     created_at: Optional[datetime] = None
@@ -550,7 +567,7 @@ class BeehiivConfig(BaseModel):
 
 class NewsletterConfig(BaseModel):
     name: str = "TrueFans NEWSLETTERS"
-    tagline: str = "Amplifying Independent Artists & Songwriters"
+    tagline: str = "for Industry Professionals, Music Artists and Fans"
     from_name: str = "PS"
     reply_to: str = ""
     header_image_url: str = ""

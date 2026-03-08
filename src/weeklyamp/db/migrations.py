@@ -323,6 +323,58 @@ ALTER TABLE guest_contacts ADD COLUMN category TEXT DEFAULT '';
 
 INSERT OR IGNORE INTO schema_version (version) VALUES (14);
 """,
+    15: """
+-- v15: Add edition_slug and edition_number to sponsor_blocks for multi-newsletter ad management
+ALTER TABLE sponsor_blocks ADD COLUMN edition_slug TEXT DEFAULT '';
+ALTER TABLE sponsor_blocks ADD COLUMN edition_number INTEGER DEFAULT 1;
+CREATE INDEX IF NOT EXISTS idx_sponsor_blocks_edition ON sponsor_blocks(edition_slug, edition_number);
+
+INSERT OR IGNORE INTO schema_version (version) VALUES (15);
+""",
+    16: """
+-- v16: Edition main sponsors (1 per newsletter x edition = 9 total)
+
+CREATE TABLE IF NOT EXISTS edition_sponsors (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    edition_slug TEXT NOT NULL,
+    edition_number INTEGER NOT NULL DEFAULT 1,
+    sponsor_id INTEGER REFERENCES sponsors(id),
+    sponsor_name TEXT DEFAULT '',
+    logo_url TEXT DEFAULT '',
+    tagline TEXT DEFAULT '',
+    website_url TEXT DEFAULT '',
+    notes TEXT DEFAULT '',
+    is_active INTEGER DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(edition_slug, edition_number)
+);
+CREATE INDEX IF NOT EXISTS idx_edition_sponsors_slug ON edition_sponsors(edition_slug);
+
+INSERT OR IGNORE INTO schema_version (version) VALUES (16);
+""",
+    17: """
+-- v17: Expand agent_type to include 'editor' role
+-- SQLite doesn't support ALTER CHECK, so we recreate the table
+PRAGMA foreign_keys=OFF;
+CREATE TABLE IF NOT EXISTS ai_agents_new (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    agent_type TEXT NOT NULL CHECK (agent_type IN ('editor_in_chief','editor','writer','researcher','sales','growth')),
+    name TEXT NOT NULL,
+    persona TEXT DEFAULT '',
+    system_prompt TEXT DEFAULT '',
+    autonomy_level TEXT DEFAULT 'manual' CHECK (autonomy_level IN ('manual','supervised','semi_auto','autonomous')),
+    config_json TEXT DEFAULT '{}',
+    is_active INTEGER DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+INSERT INTO ai_agents_new SELECT * FROM ai_agents;
+DROP TABLE ai_agents;
+ALTER TABLE ai_agents_new RENAME TO ai_agents;
+CREATE INDEX IF NOT EXISTS idx_agent_tasks_agent ON agent_tasks(agent_id);
+PRAGMA foreign_keys=ON;
+
+INSERT OR IGNORE INTO schema_version (version) VALUES (17);
+""",
 }
 
 

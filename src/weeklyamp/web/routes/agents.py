@@ -13,10 +13,35 @@ from weeklyamp.web.deps import get_config, get_repo, render
 router = APIRouter()
 
 
-def _enrich_staff(staff: list[dict]) -> tuple[list[dict], list[dict]]:
-    """Split staff into leadership and writers, parsing config_json."""
-    leadership = []
-    writers = []
+EDITION_LABELS = {
+    "fan": "Fan Edition",
+    "artist": "Artist Edition",
+    "industry": "Industry Edition",
+}
+
+EDITION_COLORS = {
+    "fan": "#e8645a",
+    "artist": "#7c5cfc",
+    "industry": "#f59e0b",
+}
+
+EDITION_ICONS = {
+    "fan": "&#127911;",
+    "artist": "&#127928;",
+    "industry": "&#128200;",
+}
+
+
+def _enrich_staff(staff: list[dict]) -> dict:
+    """Organize staff into structured groups by role and edition."""
+    leadership = []  # editor_in_chief + growth
+    edition_teams = {
+        "fan": {"editor": None, "researcher": None, "writer": None, "sales": None},
+        "artist": {"editor": None, "researcher": None, "writer": None, "sales": None},
+        "industry": {"editor": None, "researcher": None, "writer": None, "sales": None},
+    }
+    cross_newsletter = []  # PS and other cross-edition staff
+
     for agent in staff:
         enriched = dict(agent)
         try:
@@ -25,11 +50,39 @@ def _enrich_staff(staff: list[dict]) -> tuple[list[dict], list[dict]]:
             cfg = {}
         enriched["categories"] = cfg.get("categories", [])
         enriched["sections"] = cfg.get("sections", [])
-        if agent.get("agent_type") == "writer":
-            writers.append(enriched)
-        else:
+        enriched["edition"] = cfg.get("edition", "")
+        enriched["editions"] = cfg.get("editions", [])
+
+        atype = agent.get("agent_type", "")
+
+        if atype == "editor_in_chief":
             leadership.append(enriched)
-    return leadership, writers
+        elif atype == "growth":
+            leadership.append(enriched)
+        elif atype in ("editor", "researcher", "writer", "sales") and enriched["edition"] in edition_teams:
+            edition_teams[enriched["edition"]][atype] = enriched
+        elif enriched.get("editions"):
+            cross_newsletter.append(enriched)
+        else:
+            cross_newsletter.append(enriched)
+
+    editions = []
+    for slug in ("fan", "artist", "industry"):
+        team = edition_teams[slug]
+        members = [m for m in [team["editor"], team["researcher"], team["writer"], team["sales"]] if m]
+        editions.append({
+            "slug": slug,
+            "label": EDITION_LABELS[slug],
+            "color": EDITION_COLORS[slug],
+            "icon": EDITION_ICONS[slug],
+            "team": members,
+        })
+
+    return {
+        "leadership": leadership,
+        "editions": editions,
+        "cross_newsletter": cross_newsletter,
+    }
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -39,11 +92,12 @@ async def agents_page():
     orchestrator = AgentOrchestrator(repo, config)
     staff = orchestrator.get_staff_status()
     pending_reviews = orchestrator.check_pending_reviews()
-    leadership, writers = _enrich_staff(staff)
+    groups = _enrich_staff(staff)
     return render("agents.html",
         staff=staff,
-        leadership=leadership,
-        writers=writers,
+        leadership=groups["leadership"],
+        editions=groups["editions"],
+        cross_newsletter=groups["cross_newsletter"],
         pending_reviews=pending_reviews,
     )
 
@@ -100,8 +154,11 @@ async def trigger_agent(
 
     staff = orchestrator.get_staff_status()
     pending_reviews = orchestrator.check_pending_reviews()
+    groups = _enrich_staff(staff)
     return render("agents.html",
         staff=staff, pending_reviews=pending_reviews,
+        leadership=groups["leadership"], editions=groups["editions"],
+        cross_newsletter=groups["cross_newsletter"],
         message=message, level=level,
     )
 
@@ -150,7 +207,10 @@ async def run_cycle(issue_id: int = Form(0)):
 
     staff = orchestrator.get_staff_status()
     pending_reviews = orchestrator.check_pending_reviews()
+    groups = _enrich_staff(staff)
     return render("agents.html",
         staff=staff, pending_reviews=pending_reviews,
+        leadership=groups["leadership"], editions=groups["editions"],
+        cross_newsletter=groups["cross_newsletter"],
         message=message, level=level,
     )

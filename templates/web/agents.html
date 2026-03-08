@@ -5,7 +5,7 @@
 {% block content %}
 <div class="page-header">
     <h2>AI Staff</h2>
-    <p>The editorial team behind TrueFans NEWSLETTERS.</p>
+    <p>The editorial team behind TrueFans NEWSLETTERS &mdash; {{ staff|length }} members across 3 newsletters.</p>
 </div>
 
 {% if message %}
@@ -66,7 +66,8 @@
 <!-- Editorial Leadership -->
 {% if leadership %}
 <div style="margin-bottom: 8px;">
-    <span class="card-title">Editorial Leadership</span>
+    <span class="card-title">Leadership</span>
+    <span style="color:var(--text-dim);font-size:12px;margin-left:8px">Oversee all 3 newsletters</span>
 </div>
 <div class="sections-grid" style="margin-bottom: 32px;">
     {% for agent in leadership %}
@@ -92,40 +93,71 @@
 </div>
 {% endif %}
 
-<!-- Writing Staff -->
-{% if writers %}
-<div style="margin-bottom: 8px;">
-    <span class="card-title">Writing Staff</span>
+<!-- Newsletter Teams -->
+{% for ed in editions %}
+<div style="margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+    <span style="font-size: 18px;">{{ ed.icon | safe }}</span>
+    <span class="card-title">{{ ed.label }}</span>
+    <span style="color: var(--text-dim); font-size: 12px;">Editor &middot; Researcher &middot; Writer &middot; Sales</span>
 </div>
-<div class="sections-grid">
-    {% for agent in writers %}
-    <div class="section-card">
-        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
-            <div style="width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 700; color: #fff; background: {{ agent.name|avatar_color }};">
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 28px;">
+    {% for agent in ed.team %}
+    <div class="section-card" style="border-top: 3px solid {{ ed.color }}; padding: 16px;">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+            <div style="width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; color: #fff; background: {{ agent.name|avatar_color }};">
                 {{ agent.name|initials }}
             </div>
-            <div>
-                <div class="section-name" style="font-size: 14px; margin-bottom: 2px;">{{ agent.name }}</div>
-                {% for cat in agent.categories %}
-                <span class="badge badge-core" style="font-size: 10px; padding: 2px 6px;">{{ cat|replace('_', ' ')|title }}</span>
-                {% endfor %}
+            <div style="min-width: 0;">
+                <div style="font-weight: 600; font-size: 14px;">{{ agent.name }}</div>
+                <span class="badge badge-{{ agent.agent_type }}" style="font-size: 10px; padding: 2px 6px;">{{ agent.agent_type|replace('_', ' ')|title }}</span>
             </div>
         </div>
-        <p style="color: var(--text-dim); font-size: 12px; line-height: 1.5; margin-bottom: 10px;">
-            {{ agent.persona|truncate_words(25) }}
+        <p style="color: var(--text-dim); font-size: 11px; line-height: 1.5; margin-bottom: 8px;">
+            {{ agent.persona|truncate_words(20) }}
         </p>
         {% if agent.sections %}
-        <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px;">
-            {% for sec in agent.sections %}
-            <span class="badge" style="font-size: 10px; padding: 2px 6px; background: var(--surface-2); color: var(--text-dim);">{{ sec|replace('_', ' ') }}</span>
+        <div style="display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 8px;">
+            {% for sec in agent.sections[:5] %}
+            <span class="badge" style="font-size: 9px; padding: 1px 5px; background: var(--bg-card-hover); color: var(--text-dim);">{{ sec|replace('_', ' ') }}</span>
             {% endfor %}
+            {% if agent.sections|length > 5 %}
+            <span style="font-size: 9px; color: var(--text-dim);">+{{ agent.sections|length - 5 }} more</span>
+            {% endif %}
         </div>
         {% endif %}
-        <div class="meta" style="font-size: 12px;">
-            <span>Active: <strong>{{ agent.active_tasks }}</strong> &middot; Done: <strong>{{ agent.completed_tasks }}</strong></span>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 11px; color: var(--text-dim);">Active: {{ agent.active_tasks }} &middot; Done: {{ agent.completed_tasks }}</span>
+            <a href="/agents/{{ agent.id }}" class="btn btn-ghost btn-sm" style="padding: 3px 8px; font-size: 11px;">Profile</a>
         </div>
-        <div style="margin-top: 10px;">
-            <a href="/agents/{{ agent.id }}" class="btn btn-ghost btn-sm">View Profile</a>
+    </div>
+    {% endfor %}
+</div>
+{% endfor %}
+
+<!-- Cross-Newsletter Staff -->
+{% if cross_newsletter %}
+<div style="margin-bottom: 8px;">
+    <span class="card-title">Cross-Newsletter</span>
+    <span style="color:var(--text-dim);font-size:12px;margin-left:8px">Serve all editions</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 28px;">
+    {% for agent in cross_newsletter %}
+    <div class="section-card" style="padding: 16px;">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+            <div style="width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; color: #fff; background: {{ agent.name|avatar_color }};">
+                {{ agent.name|initials }}
+            </div>
+            <div style="min-width: 0;">
+                <div style="font-weight: 600; font-size: 14px;">{{ agent.name }}</div>
+                <span class="badge badge-{{ agent.agent_type }}" style="font-size: 10px; padding: 2px 6px;">{{ agent.agent_type|replace('_', ' ')|title }}</span>
+            </div>
+        </div>
+        <p style="color: var(--text-dim); font-size: 11px; line-height: 1.5; margin-bottom: 8px;">
+            {{ agent.persona|truncate_words(20) }}
+        </p>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 11px; color: var(--text-dim);">Active: {{ agent.active_tasks }} &middot; Done: {{ agent.completed_tasks }}</span>
+            <a href="/agents/{{ agent.id }}" class="btn btn-ghost btn-sm" style="padding: 3px 8px; font-size: 11px;">Profile</a>
         </div>
     </div>
     {% endfor %}
