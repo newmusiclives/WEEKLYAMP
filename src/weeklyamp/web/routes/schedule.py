@@ -21,7 +21,6 @@ def _build_schedule_grid(repo) -> list[dict]:
     editions = repo.get_editions()
     schedules = repo.get_send_schedules()
 
-    # Index schedules by (edition_slug, day_of_week)
     sched_map = {}
     for s in schedules:
         key = (s.get("edition_slug", ""), s["day_of_week"])
@@ -49,6 +48,126 @@ def _build_schedule_grid(repo) -> list[dict]:
         grid.append(ed_entry)
     return grid
 
+
+def _distribute_sections(sections: list[dict], num_days: int = 3) -> list[list[str]]:
+    """Split a list of sections evenly across N days."""
+    slugs = [s["slug"] for s in sections]
+    if not slugs:
+        return [[] for _ in range(num_days)]
+    buckets: list[list[str]] = [[] for _ in range(num_days)]
+    for i, slug in enumerate(slugs):
+        buckets[i % num_days].append(slug)
+    return buckets
+
+
+# ---------------------------------------------------------------------------
+# Edition Layout Editor — per-day section management
+# ---------------------------------------------------------------------------
+
+def _build_day_layout(repo, edition_slug: str) -> dict:
+    """Build a 3-day layout for an edition showing sections per day."""
+    edition = repo.get_edition_by_slug(edition_slug)
+    if not edition:
+        return {}
+
+    all_sections = repo.get_active_sections()
+    section_map = {s["slug"]: s for s in all_sections}
+    schedules = repo.get_send_schedules()
+
+    # All sections belonging to this edition (master list)
+    master_slugs = [s.strip() for s in edition.get("section_slugs", "").split(",") if s.strip()]
+
+    # Build per-day columns
+    days_data = []
+    used_across_days = set()
+
+    for day in SEND_DAYS:
+        # Find schedule for this edition+day
+        sched = None
+        for s in schedules:
+            if s.get("edition_slug") == edition_slug and s["day_of_week"] == day:
+                sched = s
+                break
+
+        day_slugs = []
+        if sched and sched.get("section_slugs"):
+            day_slugs = [s.strip() for s in sched["section_slugs"].split(",") if s.strip()]
+
+        sections_list = []
+        for slug in day_slugs:
+            if slug.startswith("__divider"):
+                sections_list.append({"type": "divider", "slug": slug, "display_name": "— Ad Break —"})
+            else:
+                sec = section_map.get(slug)
+                if sec:
+                    sections_list.append({
+                        "type": "section",
+                        "slug": slug,
+                        "display_name": sec.get("display_name", slug),
+                        "category": sec.get("category", ""),
+                        "word_count_label": sec.get("word_count_label", "medium"),
+                    })
+            used_across_days.add(slug)
+
+        days_data.append({
+            "day": day,
+            "day_title": day.title(),
+            "sections_list": sections_list,
+            "section_count": len([s for s in sections_list if s["type"] == "section"]),
+            "raw_slugs": ",".join(day_slugs),
+        })
+
+    # Find duplicates (sections appearing in more than one day)
+    slug_day_map: dict[str, list[str]] = {}
+    for dd in days_data:
+        for s in dd["sections_list"]:
+            if s["type"] == "section":
+                slug_day_map.setdefault(s["slug"], []).append(dd["day"])
+    duplicates = {slug: days for slug, days in slug_day_map.items() if len(days) > 1}
+
+    # Sections in master list but not assigned to any day
+    all_day_slugs = set()
+    for dd in days_data:
+        for s in dd["sections_list"]:
+            if s["type"] == "section":
+                all_day_slugs.add(s["slug"])
+    unassigned = []
+    for slug in master_slugs:
+        if slug not in all_day_slugs and not slug.startswith("__divider"):
+            sec = section_map.get(slug)
+            if sec:
+                unassigned.append(sec)
+
+    # Sections not in this edition at all (available to add)
+    available = [s for s in all_sections if s["slug"] not in set(master_slugs)]
+
+    return {
+        "edition": edition,
+        "days": days_data,
+        "duplicates": duplicates,
+        "unassigned": unassigned,
+        "available": available,
+        "total_sections": len(master_slugs),
+    }
+
+
+def _save_day_sections(repo, edition_slug: str, day: str, section_slugs: str):
+    """Save the section list for a specific edition+day schedule slot."""
+    schedules = repo.get_send_schedules()
+    label = ""
+    for s in schedules:
+        if s.get("edition_slug") == edition_slug and s["day_of_week"] == day:
+            label = s.get("label", "")
+            break
+    if not label:
+        ed = repo.get_edition_by_slug(edition_slug)
+        label = f"{ed['name']} — {day.title()}" if ed else day.title()
+    repo.upsert_send_schedule(day, label, section_slugs, edition_slug)
+
+
+# ---------------------------------------------------------------------------
+# Main schedule page
+# ---------------------------------------------------------------------------
 
 @router.get("/", response_class=HTMLResponse)
 async def schedule_page():
@@ -79,8 +198,6 @@ async def save_day(request: Request):
     slugs = form.getlist("section_slugs")
 
     repo = get_repo()
-
-    # If no sections manually picked, auto-fill from edition's section list
     if not slugs and edition_slug:
         edition_sections = repo.get_edition_sections(edition_slug)
         slugs = [s["slug"] for s in edition_sections]
@@ -88,7 +205,6 @@ async def save_day(request: Request):
     section_slugs = ", ".join(slugs) if slugs else ""
     repo.upsert_send_schedule(day_of_week, label, section_slugs, edition_slug)
 
-    # Return updated grid
     grid = _build_schedule_grid(repo)
     editions = repo.get_editions()
     sections = repo.get_active_sections()
@@ -106,22 +222,6 @@ async def remove_day(edition_slug: str, day: str):
     sections = repo.get_active_sections()
     return render("partials/schedule_grid.html",
         grid=grid, editions=editions, sections=sections, send_days=SEND_DAYS)
-
-
-def _distribute_sections(sections: list[dict], num_days: int = 3) -> list[list[str]]:
-    """Split a list of sections evenly across N days.
-
-    Returns a list of N lists of section slugs, balanced by count.
-    Example: 7 sections → [3, 2, 2] or 10 sections → [4, 3, 3].
-    """
-    slugs = [s["slug"] for s in sections]
-    if not slugs:
-        return [[] for _ in range(num_days)]
-
-    buckets: list[list[str]] = [[] for _ in range(num_days)]
-    for i, slug in enumerate(slugs):
-        buckets[i % num_days].append(slug)
-    return buckets
 
 
 @router.post("/setup-all", response_class=HTMLResponse)
@@ -158,7 +258,6 @@ async def create_week_issues(week_id: str = Form("")):
         today = datetime.now()
         week_id = today.strftime("%Y-W%W")
 
-    # Check existing issues for this week
     existing = repo.get_issues_for_week(week_id)
     existing_keys = {(e["send_day"], e.get("edition_slug", "")) for e in existing}
 
@@ -169,7 +268,6 @@ async def create_week_issues(week_id: str = Form("")):
         if (day, ed_slug) in existing_keys:
             continue
 
-        # Find edition name
         ed_name = "General"
         for ed in editions:
             if ed["slug"] == ed_slug:
@@ -199,85 +297,35 @@ async def create_week_issues(week_id: str = Form("")):
 
 
 # ---------------------------------------------------------------------------
-# Edition Layout Editor — reorder sections, add/remove, dividers
+# Edition Layout Editor routes
 # ---------------------------------------------------------------------------
-
-def _build_edition_layout(repo, edition_slug: str) -> dict:
-    """Build the full layout for an edition, including section details."""
-    edition = repo.get_edition_by_slug(edition_slug)
-    if not edition:
-        return {}
-
-    # Parse the ordered section slugs (may include __divider__ markers)
-    raw_slugs = [s.strip() for s in edition.get("section_slugs", "").split(",") if s.strip()]
-
-    all_sections = repo.get_active_sections()
-    section_map = {s["slug"]: s for s in all_sections}
-
-    items = []
-    for slug in raw_slugs:
-        if slug.startswith("__divider"):
-            items.append({"type": "divider", "slug": slug, "display_name": "— Divider —"})
-        else:
-            sec = section_map.get(slug)
-            if sec:
-                items.append({
-                    "type": "section",
-                    "slug": slug,
-                    "display_name": sec.get("display_name", slug),
-                    "category": sec.get("category", ""),
-                    "word_count_label": sec.get("word_count_label", "medium"),
-                })
-
-    # Sections available but not in this edition
-    used_slugs = {s for s in raw_slugs if not s.startswith("__divider")}
-    available = [s for s in all_sections if s["slug"] not in used_slugs]
-
-    return {
-        "edition": edition,
-        "sections_list": items,
-        "available": available,
-        "total_sections": len([i for i in items if i["type"] == "section"]),
-    }
-
 
 @router.get("/layout/{edition_slug}", response_class=HTMLResponse)
 async def edition_layout(edition_slug: str):
     repo = get_repo()
-    layout = _build_edition_layout(repo, edition_slug)
+    layout = _build_day_layout(repo, edition_slug)
     if not layout:
         return render("partials/alert.html", message="Edition not found.", level="error")
-
     editions = repo.get_editions()
     return render("edition_layout.html", layout=layout, editions=editions)
 
 
-@router.post("/layout/{edition_slug}/reorder", response_class=HTMLResponse)
-async def reorder_sections(edition_slug: str, request: Request):
-    """Save the reordered section list for an edition."""
-    form = await request.form()
-    # section_order is a hidden field with comma-separated slugs in new order
-    section_order = form.get("section_order", "")
-
+@router.post("/layout/{edition_slug}/{day}/move/{slug}/{direction}", response_class=HTMLResponse)
+async def move_section(edition_slug: str, day: str, slug: str, direction: str):
+    """Move a section up or down within a specific day."""
     repo = get_repo()
-    repo.update_edition_sections(edition_slug, section_order)
+    schedules = repo.get_send_schedules()
+    sched = None
+    for s in schedules:
+        if s.get("edition_slug") == edition_slug and s["day_of_week"] == day:
+            sched = s
+            break
+    if not sched:
+        return render("partials/alert.html", message="Schedule not found.", level="error")
 
-    layout = _build_edition_layout(repo, edition_slug)
-    return render("partials/edition_layout_body.html", layout=layout,
-        message="Section order saved!", level="success")
-
-
-@router.post("/layout/{edition_slug}/move/{slug}/{direction}", response_class=HTMLResponse)
-async def move_section(edition_slug: str, slug: str, direction: str):
-    """Move a section up or down in the edition's order."""
-    repo = get_repo()
-    edition = repo.get_edition_by_slug(edition_slug)
-    if not edition:
-        return render("partials/alert.html", message="Edition not found.", level="error")
-
-    slugs = [s.strip() for s in edition.get("section_slugs", "").split(",") if s.strip()]
+    slugs = [s.strip() for s in sched.get("section_slugs", "").split(",") if s.strip()]
     if slug not in slugs:
-        return render("partials/alert.html", message="Section not in edition.", level="error")
+        return render("partials/alert.html", message="Section not in this day.", level="error")
 
     idx = slugs.index(slug)
     if direction == "up" and idx > 0:
@@ -285,67 +333,83 @@ async def move_section(edition_slug: str, slug: str, direction: str):
     elif direction == "down" and idx < len(slugs) - 1:
         slugs[idx], slugs[idx + 1] = slugs[idx + 1], slugs[idx]
 
-    repo.update_edition_sections(edition_slug, ",".join(slugs))
-    layout = _build_edition_layout(repo, edition_slug)
+    _save_day_sections(repo, edition_slug, day, ",".join(slugs))
+    layout = _build_day_layout(repo, edition_slug)
     return render("partials/edition_layout_body.html", layout=layout)
 
 
-@router.post("/layout/{edition_slug}/add-section", response_class=HTMLResponse)
-async def add_section_to_edition(edition_slug: str, slug: str = Form(...)):
-    """Add a section to the end of an edition's lineup."""
+@router.post("/layout/{edition_slug}/{day}/add-section", response_class=HTMLResponse)
+async def add_section_to_day(edition_slug: str, day: str, slug: str = Form(...)):
+    """Add a section to a specific day's lineup."""
     repo = get_repo()
-    edition = repo.get_edition_by_slug(edition_slug)
-    if not edition:
-        return render("partials/alert.html", message="Edition not found.", level="error")
+    schedules = repo.get_send_schedules()
+    sched = None
+    for s in schedules:
+        if s.get("edition_slug") == edition_slug and s["day_of_week"] == day:
+            sched = s
+            break
 
-    slugs = [s.strip() for s in edition.get("section_slugs", "").split(",") if s.strip()]
-    if slug not in slugs:
-        slugs.append(slug)
-        repo.update_edition_sections(edition_slug, ",".join(slugs))
+    current = []
+    if sched and sched.get("section_slugs"):
+        current = [s.strip() for s in sched["section_slugs"].split(",") if s.strip()]
 
-    layout = _build_edition_layout(repo, edition_slug)
+    if slug not in current:
+        current.append(slug)
+        _save_day_sections(repo, edition_slug, day, ",".join(current))
+
+    layout = _build_day_layout(repo, edition_slug)
     return render("partials/edition_layout_body.html", layout=layout,
-        message=f"Added {slug}", level="success")
+        message=f"Added to {day.title()}", level="success")
 
 
-@router.post("/layout/{edition_slug}/remove-section/{slug}", response_class=HTMLResponse)
-async def remove_section_from_edition(edition_slug: str, slug: str):
-    """Remove a section from an edition's lineup."""
+@router.post("/layout/{edition_slug}/{day}/remove-section/{slug}", response_class=HTMLResponse)
+async def remove_section_from_day(edition_slug: str, day: str, slug: str):
+    """Remove a section from a specific day's lineup."""
     repo = get_repo()
-    edition = repo.get_edition_by_slug(edition_slug)
-    if not edition:
-        return render("partials/alert.html", message="Edition not found.", level="error")
+    schedules = repo.get_send_schedules()
+    sched = None
+    for s in schedules:
+        if s.get("edition_slug") == edition_slug and s["day_of_week"] == day:
+            sched = s
+            break
 
-    slugs = [s.strip() for s in edition.get("section_slugs", "").split(",") if s.strip()]
-    slugs = [s for s in slugs if s != slug]
-    repo.update_edition_sections(edition_slug, ",".join(slugs))
+    current = []
+    if sched and sched.get("section_slugs"):
+        current = [s.strip() for s in sched["section_slugs"].split(",") if s.strip()]
 
-    layout = _build_edition_layout(repo, edition_slug)
+    current = [s for s in current if s != slug]
+    _save_day_sections(repo, edition_slug, day, ",".join(current))
+
+    layout = _build_day_layout(repo, edition_slug)
     return render("partials/edition_layout_body.html", layout=layout,
-        message=f"Removed {slug}", level="success")
+        message=f"Removed from {day.title()}", level="success")
 
 
-@router.post("/layout/{edition_slug}/add-divider", response_class=HTMLResponse)
-async def add_divider(edition_slug: str, after: str = Form("")):
-    """Insert a divider after a given section slug."""
+@router.post("/layout/{edition_slug}/{day}/add-divider", response_class=HTMLResponse)
+async def add_divider(edition_slug: str, day: str, after: str = Form("")):
+    """Insert a divider/ad break after a section in a specific day."""
     repo = get_repo()
-    edition = repo.get_edition_by_slug(edition_slug)
-    if not edition:
-        return render("partials/alert.html", message="Edition not found.", level="error")
+    schedules = repo.get_send_schedules()
+    sched = None
+    for s in schedules:
+        if s.get("edition_slug") == edition_slug and s["day_of_week"] == day:
+            sched = s
+            break
 
-    slugs = [s.strip() for s in edition.get("section_slugs", "").split(",") if s.strip()]
+    current = []
+    if sched and sched.get("section_slugs"):
+        current = [s.strip() for s in sched["section_slugs"].split(",") if s.strip()]
 
-    # Generate unique divider ID
-    divider_count = sum(1 for s in slugs if s.startswith("__divider"))
+    divider_count = sum(1 for s in current if s.startswith("__divider"))
     divider_slug = f"__divider_{divider_count + 1}"
 
-    if after and after in slugs:
-        idx = slugs.index(after) + 1
-        slugs.insert(idx, divider_slug)
+    if after and after in current:
+        idx = current.index(after) + 1
+        current.insert(idx, divider_slug)
     else:
-        slugs.append(divider_slug)
+        current.append(divider_slug)
 
-    repo.update_edition_sections(edition_slug, ",".join(slugs))
-    layout = _build_edition_layout(repo, edition_slug)
+    _save_day_sections(repo, edition_slug, day, ",".join(current))
+    layout = _build_day_layout(repo, edition_slug)
     return render("partials/edition_layout_body.html", layout=layout,
         message="Divider added", level="success")

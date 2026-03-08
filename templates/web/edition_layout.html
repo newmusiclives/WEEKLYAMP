@@ -8,15 +8,16 @@
         <span style="font-size:28px">{{ layout.edition.icon | safe }}</span>
         <div>
             <h2 style="color:{{ layout.edition.color }};margin:0">{{ layout.edition.name }}</h2>
-            <p style="margin:0;color:var(--text-dim)">{{ layout.edition.tagline }} — {{ layout.total_sections }} sections</p>
+            <p style="margin:0;color:var(--text-dim)">{{ layout.edition.tagline }} — {{ layout.total_sections }} total sections across 3 editions</p>
         </div>
     </div>
-    <div style="margin-top:8px">
+    <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
         <a href="/schedule" class="btn btn-sm" style="font-size:12px">Back to Schedule</a>
         {% for ed in editions %}
-        {% if ed.slug != layout.edition.slug %}
-        <a href="/schedule/layout/{{ ed.slug }}" class="btn btn-sm" style="font-size:12px;background:{{ ed.color }};color:#fff">{{ ed.name }}</a>
-        {% endif %}
+        <a href="/schedule/layout/{{ ed.slug }}" class="btn btn-sm"
+           style="font-size:12px;{% if ed.slug == layout.edition.slug %}background:{{ ed.color }};color:#fff{% else %}border:1px solid {{ ed.color }};color:{{ ed.color }}{% endif %};text-decoration:none">
+            {{ ed.name }}
+        </a>
         {% endfor %}
     </div>
 </div>
