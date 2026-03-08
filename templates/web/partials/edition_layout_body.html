@@ -68,17 +68,16 @@
                 <div style="font-size:9px;color:var(--text-dim)">{{ item.word_count_label }}{% if item.slug in layout.duplicates %} — <span style="color:#ef4444">DUPLICATE</span>{% endif %}</div>
             </div>
             <!-- Move to another day -->
+            {% for other_day in layout.send_days %}
+            {% if other_day != dd.day %}
             <form style="display:inline" hx-post="/schedule/layout/{{ layout.edition.slug }}/{{ dd.day }}/move-to/{{ item.slug }}"
                   hx-target="#edition-layout-body" hx-swap="outerHTML">
-                <select name="to_day" style="font-size:9px;padding:1px 2px;width:55px" onchange="this.form.requestSubmit()">
-                    <option value="" disabled selected>Move</option>
-                    {% for other_day in layout.send_days %}
-                    {% if other_day != dd.day %}
-                    <option value="{{ other_day }}">{{ other_day | title }}</option>
-                    {% endif %}
-                    {% endfor %}
-                </select>
+                <input type="hidden" name="to_day" value="{{ other_day }}">
+                <button type="submit" class="btn btn-sm" style="font-size:8px;padding:1px 4px;background:{{ layout.edition.color }}20;border:1px solid {{ layout.edition.color }};color:{{ layout.edition.color }}"
+                        title="Move to {{ other_day | title }}">&#8594; {{ other_day[:3] | title }}</button>
             </form>
+            {% endif %}
+            {% endfor %}
             <!-- Divider after -->
             <form style="display:inline" hx-post="/schedule/layout/{{ layout.edition.slug }}/{{ dd.day }}/add-divider"
                   hx-target="#edition-layout-body" hx-swap="outerHTML">
