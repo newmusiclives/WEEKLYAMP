@@ -254,8 +254,21 @@ def assemble_newsletter(repo: Repository, issue_id: int, config: AppConfig) -> t
     # Convert welcome intro to HTML
     welcome_html = sanitize_html(markdown.markdown(welcome_intro, extensions=["extra"]))
 
-    # Fetch and inject sponsor blocks
+    # Fetch and inject sponsor blocks (issue-level + edition-level)
     sponsor_blocks = repo.get_sponsor_blocks_for_issue(issue_id)
+
+    # Also pull edition-level sponsor blocks if this is an edition issue
+    if edition_slug:
+        send_day = issue.get("send_day", "")
+        day_to_number = {"monday": 1, "wednesday": 2, "saturday": 3}
+        ed_number = day_to_number.get(send_day, 1)
+        edition_blocks = repo.get_sponsor_blocks_for_edition(edition_slug, ed_number)
+        # Merge: edition blocks fill in positions not already taken by issue blocks
+        existing_positions = {b["position"] for b in sponsor_blocks}
+        for eb in edition_blocks:
+            if eb["position"] not in existing_positions:
+                sponsor_blocks.append(eb)
+
     if sponsor_blocks:
         top_blocks = [b for b in sponsor_blocks if b["position"] == "top"]
         mid_blocks = [b for b in sponsor_blocks if b["position"] == "mid"]

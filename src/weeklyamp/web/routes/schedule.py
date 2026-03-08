@@ -107,18 +107,35 @@ async def remove_day(edition_slug: str, day: str):
         grid=grid, editions=editions, sections=sections, send_days=SEND_DAYS)
 
 
+def _distribute_sections(sections: list[dict], num_days: int = 3) -> list[list[str]]:
+    """Split a list of sections evenly across N days.
+
+    Returns a list of N lists of section slugs, balanced by count.
+    Example: 7 sections → [3, 2, 2] or 10 sections → [4, 3, 3].
+    """
+    slugs = [s["slug"] for s in sections]
+    if not slugs:
+        return [[] for _ in range(num_days)]
+
+    buckets: list[list[str]] = [[] for _ in range(num_days)]
+    for i, slug in enumerate(slugs):
+        buckets[i % num_days].append(slug)
+    return buckets
+
+
 @router.post("/setup-all", response_class=HTMLResponse)
 async def setup_all():
-    """One-click setup: create all 9 schedule slots (3 editions × 3 days)."""
+    """One-click setup: distribute sections across 3 days for each of 3 editions."""
     repo = get_repo()
     editions = repo.get_editions()
     created = 0
 
     for ed in editions:
         edition_sections = repo.get_edition_sections(ed["slug"])
-        section_slugs = ", ".join(s["slug"] for s in edition_sections)
+        day_buckets = _distribute_sections(edition_sections, len(SEND_DAYS))
 
-        for day in SEND_DAYS:
+        for i, day in enumerate(SEND_DAYS):
+            section_slugs = ", ".join(day_buckets[i])
             label = f"{ed['name']} — {day.title()}"
             repo.upsert_send_schedule(day, label, section_slugs, ed["slug"])
             created += 1
@@ -127,7 +144,7 @@ async def setup_all():
     sections = repo.get_active_sections()
     return render("partials/schedule_grid.html",
         grid=grid, editions=editions, sections=sections, send_days=SEND_DAYS,
-        message=f"Set up {created} schedule slots (3 editions × 3 days)", level="success")
+        message=f"Set up {created} slots — sections distributed evenly across days", level="success")
 
 
 @router.post("/create-week-issues", response_class=HTMLResponse)

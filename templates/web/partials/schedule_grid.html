@@ -28,9 +28,15 @@
             </div>
 
             {% if slot.configured %}
-            <div style="font-size:11px;color:var(--text-dim);margin-bottom:6px">{{ slot.label }}</div>
+            {% set slot_sections = slot.section_slugs.split(',') if slot.section_slugs else [] %}
+            <div style="font-size:11px;color:var(--text-dim);margin-bottom:4px">
+                {{ slot.label }}
+                <span style="float:right;font-weight:600;color:{{ ed.color }}">{{ slot_sections | length }} sections</span>
+            </div>
             <div style="font-family:var(--font-mono);font-size:10px;color:#6b7280;word-break:break-word;max-height:60px;overflow:hidden">
-                {{ slot.section_slugs or ed.section_slugs }}
+                {% for sec in slot_sections %}
+                <span style="display:inline-block;background:#f3f4f6;padding:1px 4px;border-radius:3px;margin:1px">{{ sec | trim }}</span>
+                {% endfor %}
             </div>
             <div style="margin-top:8px">
                 <button class="btn btn-danger btn-sm"
