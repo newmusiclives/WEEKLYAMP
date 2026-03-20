@@ -12,12 +12,12 @@ body {
     max-width: 640px;
     margin: 0 auto;
     background-color: #ffffff;
-    padding: 20px 30px;
+    padding: 32px 40px;
 }
 
 .header {
     text-align: center;
-    padding: 5px 0;
+    padding: 10px 0 20px;
     border-bottom: 3px solid #0ea5e9;
 }
 
@@ -31,12 +31,12 @@ body {
 .header .tagline {
     font-size: 14px;
     color: #666;
-    margin-top: 5px;
+    margin-top: 8px;
     font-style: italic;
 }
 
 .section {
-    padding: 20px 0;
+    padding: 36px 0;
     border-bottom: 1px solid #e0e0e0;
 }
 
@@ -50,7 +50,7 @@ body {
     color: #14b8a6;
     text-transform: uppercase;
     letter-spacing: 1.5px;
-    margin-bottom: 4px;
+    margin-bottom: 10px;
     padding-bottom: 0;
     display: block;
 }
@@ -60,19 +60,20 @@ body {
     font-weight: 800;
     color: #000000;
     line-height: 1.3;
-    margin-bottom: 14px;
-    padding-bottom: 8px;
-    border-bottom: 2px solid #14b8a6;
+    margin-top: 0;
+    margin-bottom: 24px;
+    padding-bottom: 0;
+    border-bottom: none;
 }
 
 .section-content {
     font-size: 16px;
-    line-height: 1.7;
+    line-height: 1.8;
     color: #333;
 }
 
 .section-content p {
-    margin: 0 0 12px 0;
+    margin: 0 0 18px 0;
 }
 
 .section-content a {
@@ -82,19 +83,19 @@ body {
 
 .section-content blockquote {
     border-left: 3px solid #14b8a6;
-    margin: 15px 0;
-    padding: 10px 20px;
+    margin: 20px 0;
+    padding: 12px 24px;
     background-color: #fdf6e3;
     font-style: italic;
 }
 
 .footer {
     text-align: center;
-    padding: 20px 0;
+    padding: 28px 0;
     font-size: 12px;
     color: #999;
     border-top: 2px solid #0ea5e9;
-    margin-top: 10px;
+    margin-top: 20px;
 }
 
 .footer a {
@@ -109,9 +110,9 @@ body {
 }
 
 .intro-copy {
-    padding: 15px 0;
+    padding: 28px 0;
     font-size: 16px;
-    line-height: 1.7;
+    line-height: 1.8;
     color: #444;
     border-bottom: 1px solid #e0e0e0;
 }

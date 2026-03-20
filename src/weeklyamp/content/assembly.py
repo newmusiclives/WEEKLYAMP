@@ -313,6 +313,8 @@ def assemble_newsletter(repo: Repository, issue_id: int, config: AppConfig) -> t
             plain_parts.append(f"--- SPONSORED: {b['sponsor_name']} ---\n{b['headline']}\n{b['cta_url']}\n")
 
     # Render full newsletter (using edition-specific template if available)
+    from datetime import date as _date
+    issue_date = issue.get("send_date", "") or _date.today().strftime("%B %d, %Y")
     html = render_newsletter(
         newsletter_name=config.newsletter.name,
         tagline=config.newsletter.tagline,
@@ -324,6 +326,7 @@ def assemble_newsletter(repo: Repository, issue_id: int, config: AppConfig) -> t
         footer_html=config.newsletter.footer_html,
         ps_closing=ps_closing,
         edition_slug=edition_slug,
+        issue_date=issue_date,
     )
 
     # Build plain text with intro and PS
