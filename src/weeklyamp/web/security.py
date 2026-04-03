@@ -244,10 +244,10 @@ async def login_page(request: Request) -> Response:
     csrf_token = secrets.token_hex(32)
     tpl = _login_env.get_template("login.html")
     response = HTMLResponse(tpl.render(csrf_token=csrf_token))
-    secure = _is_secure(request)
     response.set_cookie(
         "_login_csrf", csrf_token,
-        httponly=True, samesite="lax", max_age=900, secure=secure,
+        httponly=True, samesite="lax", max_age=900, secure=False,
+        path="/login",
     )
     return response
 
