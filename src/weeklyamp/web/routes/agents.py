@@ -34,11 +34,11 @@ EDITION_ICONS = {
 
 def _enrich_staff(staff: list[dict]) -> dict:
     """Organize staff into structured groups by role and edition."""
-    leadership = []  # editor_in_chief + growth
+    leadership = []  # editor_in_chief + growth + VP sales
     edition_teams = {
-        "fan": {"editor": None, "researcher": None, "writer": None, "sales": None, "promotion": None},
-        "artist": {"editor": None, "researcher": None, "writer": None, "sales": None, "promotion": None},
-        "industry": {"editor": None, "researcher": None, "writer": None, "sales": None, "promotion": None},
+        "fan": {"editor": None, "researcher": None, "writers": [], "sales": None, "promotion": None},
+        "artist": {"editor": None, "researcher": None, "writers": [], "sales": None, "promotion": None},
+        "industry": {"editor": None, "researcher": None, "writers": [], "sales": None, "promotion": None},
     }
     cross_newsletter = []  # PS and other cross-edition staff
 
@@ -62,7 +62,10 @@ def _enrich_staff(staff: list[dict]) -> dict:
         elif atype == "sales" and len(enriched.get("editions", [])) > 1:
             leadership.append(enriched)
         elif atype in ("editor", "researcher", "writer", "sales", "promotion") and enriched["edition"] in edition_teams:
-            edition_teams[enriched["edition"]][atype] = enriched
+            if atype == "writer":
+                edition_teams[enriched["edition"]]["writers"].append(enriched)
+            else:
+                edition_teams[enriched["edition"]][atype] = enriched
         elif enriched.get("editions"):
             cross_newsletter.append(enriched)
         else:
@@ -71,13 +74,40 @@ def _enrich_staff(staff: list[dict]) -> dict:
     editions = []
     for slug in ("fan", "artist", "industry"):
         team = edition_teams[slug]
-        members = [m for m in [team["editor"], team["researcher"], team["writer"], team["sales"], team["promotion"]] if m]
+        members = []
+        if team["editor"]:
+            members.append(team["editor"])
+        if team["researcher"]:
+            members.append(team["researcher"])
+        members.extend(team["writers"])
+        if team["sales"]:
+            members.append(team["sales"])
+        if team["promotion"]:
+            members.append(team["promotion"])
+
+        # Build role summary for header
+        roles = []
+        if team["editor"]:
+            roles.append("Editor")
+        if team["researcher"]:
+            roles.append("Researcher")
+        writer_count = len(team["writers"])
+        if writer_count == 1:
+            roles.append("Writer")
+        elif writer_count > 1:
+            roles.append(f"{writer_count} Writers")
+        if team["sales"]:
+            roles.append("Sales")
+        if team["promotion"]:
+            roles.append("Promotion")
+
         editions.append({
             "slug": slug,
             "label": EDITION_LABELS[slug],
             "color": EDITION_COLORS[slug],
             "icon": EDITION_ICONS[slug],
             "team": members,
+            "roles_summary": " · ".join(roles),
         })
 
     return {

@@ -98,7 +98,7 @@
 <div style="margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
     <span style="font-size: 18px;">{{ ed.icon | safe }}</span>
     <span class="card-title">{{ ed.label }}</span>
-    <span style="color: var(--text-dim); font-size: 12px;">Editor &middot; Researcher &middot; Writer &middot; Sales</span>
+    <span style="color: var(--text-dim); font-size: 12px;">{{ ed.roles_summary }}</span>
 </div>
 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 28px;">
     {% for agent in ed.team %}
