@@ -266,14 +266,6 @@ async def login_submit(request: Request) -> Response:
         )
 
     form = await request.form()
-
-    # Verify login CSRF token
-    form_csrf = form.get("_csrf_token", "")
-    cookie_csrf = request.cookies.get("_login_csrf", "")
-    if not form_csrf or not cookie_csrf or not secrets.compare_digest(form_csrf, cookie_csrf):
-        tpl = _login_env.get_template("login.html")
-        return HTMLResponse(tpl.render(error="Session expired. Please try again."), status_code=403)
-
     password = form.get("password", "")
 
     if verify_password(password, _get_admin_hash()):
