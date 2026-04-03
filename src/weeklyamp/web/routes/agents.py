@@ -36,9 +36,9 @@ def _enrich_staff(staff: list[dict]) -> dict:
     """Organize staff into structured groups by role and edition."""
     leadership = []  # editor_in_chief + growth + VP sales
     edition_teams = {
-        "fan": {"editor": None, "researcher": None, "writers": [], "sales": None, "promotion": None},
-        "artist": {"editor": None, "researcher": None, "writers": [], "sales": None, "promotion": None},
-        "industry": {"editor": None, "researcher": None, "writers": [], "sales": None, "promotion": None},
+        "fan": {"editor": None, "researchers": [], "writers": [], "sales": None, "promotion": None},
+        "artist": {"editor": None, "researchers": [], "writers": [], "sales": None, "promotion": None},
+        "industry": {"editor": None, "researchers": [], "writers": [], "sales": None, "promotion": None},
     }
     cross_newsletter = []  # PS and other cross-edition staff
 
@@ -64,6 +64,8 @@ def _enrich_staff(staff: list[dict]) -> dict:
         elif atype in ("editor", "researcher", "writer", "sales", "promotion") and enriched["edition"] in edition_teams:
             if atype == "writer":
                 edition_teams[enriched["edition"]]["writers"].append(enriched)
+            elif atype == "researcher":
+                edition_teams[enriched["edition"]]["researchers"].append(enriched)
             else:
                 edition_teams[enriched["edition"]][atype] = enriched
         elif enriched.get("editions"):
@@ -77,8 +79,7 @@ def _enrich_staff(staff: list[dict]) -> dict:
         members = []
         if team["editor"]:
             members.append(team["editor"])
-        if team["researcher"]:
-            members.append(team["researcher"])
+        members.extend(team["researchers"])
         members.extend(team["writers"])
         if team["sales"]:
             members.append(team["sales"])
@@ -89,8 +90,11 @@ def _enrich_staff(staff: list[dict]) -> dict:
         roles = []
         if team["editor"]:
             roles.append("Editor")
-        if team["researcher"]:
+        researcher_count = len(team["researchers"])
+        if researcher_count == 1:
             roles.append("Researcher")
+        elif researcher_count > 1:
+            roles.append(f"{researcher_count} Researchers")
         writer_count = len(team["writers"])
         if writer_count == 1:
             roles.append("Writer")
