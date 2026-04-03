@@ -410,9 +410,9 @@ def create_app() -> FastAPI:
     # v27+ affiliate programs
     app.include_router(affiliates_routes.router, prefix="/affiliates")
     # v28+ revenue dashboard
-    app.include_router(revenue_routes.router, prefix="/revenue")
+    app.include_router(revenue_routes.router, prefix="/admin/revenue")
     # v28+ markets & artist newsletters
-    app.include_router(markets_routes.router, prefix="/markets")
+    app.include_router(markets_routes.router, prefix="/admin/markets")
     app.include_router(artist_newsletters_routes.router)
     # v28+ subscriber segmentation
     app.include_router(segments_routes.router, prefix="/admin/segments")
