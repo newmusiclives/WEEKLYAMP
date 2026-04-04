@@ -159,6 +159,51 @@ async def test_send():
     return render("partials/alert.html", message="Test send failed — check SMTP settings", level="error")
 
 
+@router.post("/autopilot", response_class=HTMLResponse)
+async def autopilot(request: Request, edition_slug: str = Form("fan")):
+    """One-click autopilot: fetch research → generate drafts → assemble."""
+    repo = get_repo()
+    config = get_config()
+    results = []
+
+    # Step 1: Fetch research
+    try:
+        from weeklyamp.research.sources import fetch_all_sources
+        fetched = fetch_all_sources(repo)
+        results.append(f"Research: fetched content from sources")
+    except Exception as e:
+        results.append(f"Research: {e}")
+
+    # Step 2: Auto-generate drafts for sections with research content
+    try:
+        from weeklyamp.content.auto_draft import auto_draft_from_research
+        # Get or create current issue
+        issue = repo.get_latest_issue()
+        if issue:
+            issue_id = issue["id"]
+            sections = repo.get_all_sections()
+            drafted = 0
+            for section in sections[:5]:  # Limit to 5 sections
+                slug = section.get("slug", "")
+                try:
+                    draft_id = auto_draft_from_research(repo, config, issue_id, slug)
+                    if draft_id:
+                        drafted += 1
+                except Exception:
+                    pass
+            results.append(f"Drafts: generated {drafted} drafts")
+        else:
+            results.append("Drafts: no issue found — create one first")
+    except Exception as e:
+        results.append(f"Drafts: {e}")
+
+    html = '<div class="card" style="margin-top:12px"><h4>Autopilot Results</h4><ul>'
+    for r in results:
+        html += f'<li>{r}</li>'
+    html += '</ul><p style="margin-top:12px"><a href="/drafts/" class="btn btn-primary">Review Drafts</a></p></div>'
+    return HTMLResponse(html)
+
+
 @router.get("/spam-check/{issue_id}", response_class=HTMLResponse)
 async def spam_check(issue_id: int, request: Request):
     repo = get_repo()

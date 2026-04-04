@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Events — TrueFans NEWSLETTERS{% endblock %}
+{% block nav_events %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Events</h2>
+    <p>Manage virtual and in-person music events.</p>
+</div>
+
+<div class="card" style="margin-bottom:24px;">
+    <h3>Create Event</h3>
+    <form hx-post="/events/create" hx-target="#event-result" hx-swap="innerHTML" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+        <div>
+            <label>Title</label>
+            <input type="text" name="title" required class="form-input" placeholder="Event title">
+        </div>
+        <div>
+            <label>Type</label>
+            <select name="event_type" class="form-input">
+                <option value="virtual">Virtual</option>
+                <option value="in_person">In Person</option>
+                <option value="hybrid">Hybrid</option>
+            </select>
+        </div>
+        <div>
+            <label>Edition</label>
+            <input type="text" name="edition_slug" class="form-input" placeholder="e.g. fan, artist, industry">
+        </div>
+        <div>
+            <label>Location</label>
+            <input type="text" name="location" class="form-input" placeholder="Venue or URL">
+        </div>
+        <div>
+            <label>Date &amp; Time</label>
+            <input type="datetime-local" name="event_date" class="form-input">
+        </div>
+        <div>
+            <label>Ticket Price (cents)</label>
+            <input type="number" name="ticket_price_cents" value="0" class="form-input" min="0">
+        </div>
+        <div>
+            <label>Max Attendees (0 = unlimited)</label>
+            <input type="number" name="max_attendees" value="0" class="form-input" min="0">
+        </div>
+        <div style="display:flex;align-items:end;">
+            <button type="submit" class="btn btn-primary" style="width:100%;">Create Event</button>
+        </div>
+        <div style="grid-column:1/-1;">
+            <label>Description</label>
+            <textarea name="description" class="form-input" rows="3" placeholder="Event description"></textarea>
+        </div>
+    </form>
+    <div id="event-result" style="margin-top:12px;"></div>
+</div>
+
+<div class="card">
+    <h3>All Events</h3>
+    {% if events %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Type</th>
+                    <th>Edition</th>
+                    <th>Date</th>
+                    <th>Registered</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in events %}
+                <tr>
+                    <td><strong>{{ e.title }}</strong></td>
+                    <td>
+                        {% if e.event_type == 'virtual' %}
+                        <span class="badge badge-info">Virtual</span>
+                        {% elif e.event_type == 'in_person' %}
+                        <span class="badge badge-success">In Person</span>
+                        {% else %}
+                        <span class="badge badge-warning">Hybrid</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ e.edition_slug or '—' }}</td>
+                    <td>{{ e.event_date or '—' }}</td>
+                    <td>{{ e.registered_count }}{% if e.max_attendees %} / {{ e.max_attendees }}{% endif %}</td>
+                    <td>
+                        {% if e.status == 'published' %}
+                        <span class="badge badge-success">Published</span>
+                        {% elif e.status == 'draft' %}
+                        <span class="badge badge-dim">Draft</span>
+                        {% elif e.status == 'sold_out' %}
+                        <span class="badge badge-warning">Sold Out</span>
+                        {% elif e.status == 'completed' %}
+                        <span class="badge badge-info">Completed</span>
+                        {% elif e.status == 'cancelled' %}
+                        <span class="badge badge-danger">Cancelled</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color:var(--text-dim);margin-top:12px;">No events yet. Create your first event above.</p>
+    {% endif %}
+</div>
+{% endblock %}

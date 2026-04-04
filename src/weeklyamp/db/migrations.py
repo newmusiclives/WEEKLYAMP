@@ -1361,6 +1361,65 @@ CREATE TABLE IF NOT EXISTS unsubscribe_surveys (
 
 INSERT OR IGNORE INTO schema_version (version) VALUES (35);
 """,
+    36: """
+-- v36: Future vision features
+
+CREATE TABLE IF NOT EXISTS events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    description TEXT DEFAULT '',
+    event_type TEXT DEFAULT 'virtual' CHECK (event_type IN ('virtual','in_person','hybrid')),
+    edition_slug TEXT DEFAULT '',
+    location TEXT DEFAULT '',
+    event_date TIMESTAMP,
+    ticket_url TEXT DEFAULT '',
+    ticket_price_cents INTEGER DEFAULT 0,
+    max_attendees INTEGER DEFAULT 0,
+    registered_count INTEGER DEFAULT 0,
+    status TEXT DEFAULT 'draft' CHECK (status IN ('draft','published','sold_out','completed','cancelled')),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS event_registrations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_id INTEGER NOT NULL REFERENCES events(id),
+    email TEXT NOT NULL,
+    name TEXT DEFAULT '',
+    subscriber_id INTEGER REFERENCES subscribers(id),
+    status TEXT DEFAULT 'registered' CHECK (status IN ('registered','confirmed','attended','cancelled')),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(event_id, email)
+);
+
+CREATE TABLE IF NOT EXISTS creator_marketplace (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    listing_type TEXT NOT NULL CHECK (listing_type IN ('service','collaboration','job','gear')),
+    title TEXT NOT NULL,
+    description TEXT DEFAULT '',
+    poster_email TEXT DEFAULT '',
+    poster_name TEXT DEFAULT '',
+    category TEXT DEFAULT '',
+    price_range TEXT DEFAULT '',
+    location TEXT DEFAULT '',
+    edition_slug TEXT DEFAULT '',
+    status TEXT DEFAULT 'active' CHECK (status IN ('active','filled','expired','removed')),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS api_keys (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    key_hash TEXT UNIQUE NOT NULL,
+    key_prefix TEXT DEFAULT '',
+    permissions TEXT DEFAULT 'read',
+    rate_limit INTEGER DEFAULT 1000,
+    is_active INTEGER DEFAULT 1,
+    last_used_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT OR IGNORE INTO schema_version (version) VALUES (36);
+""",
 }
 
 

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creator Marketplace - TrueFans NEWSLETTERS</title>
+    <meta name="description" content="Find collaborators, services, jobs, and gear in the TrueFans creator marketplace.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <style>
+        :root {
+            --bg: #0a0a12;
+            --bg-card: #13131f;
+            --bg-card-hover: #1a1a2e;
+            --border: rgba(255,255,255,0.08);
+            --text: #f0f0f5;
+            --text-dim: #9ca3af;
+            --accent: #e8645a;
+            --accent-hover: #f07a70;
+            --purple: #7c5cfc;
+            --gold: #f59e0b;
+            --green: #10b981;
+            --blue: #3b82f6;
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.6; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 40px 24px; }
+        h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 8px; }
+        .subtitle { color: var(--text-dim); font-size: 1.1rem; margin-bottom: 32px; }
+        .listing-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-bottom: 40px; }
+        .listing-card {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+            padding: 20px; transition: border-color 0.2s;
+        }
+        .listing-card:hover { border-color: var(--accent); }
+        .listing-type { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+        .type-service { color: var(--purple); }
+        .type-collaboration { color: var(--green); }
+        .type-job { color: var(--blue); }
+        .type-gear { color: var(--gold); }
+        .listing-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; }
+        .listing-desc { color: var(--text-dim); font-size: 0.9rem; margin-bottom: 10px; }
+        .listing-meta { font-size: 0.8rem; color: var(--text-dim); display: flex; gap: 12px; flex-wrap: wrap; }
+        .create-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+        .create-section h2 { margin-bottom: 16px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; color: var(--text-dim); }
+        input, select, textarea { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; color: var(--text); font-size: 0.9rem; font-family: var(--font); }
+        textarea { resize: vertical; }
+        .btn { display: inline-block; padding: 10px 24px; border-radius: 8px; font-weight: 600; font-size: 0.95rem; cursor: pointer; border: none; }
+        .btn-accent { background: var(--accent); color: white; }
+        .btn-accent:hover { background: var(--accent-hover); }
+        .empty { text-align: center; padding: 40px; color: var(--text-dim); }
+        .back-link { color: var(--accent); text-decoration: none; font-size: 0.9rem; }
+        .back-link:hover { text-decoration: underline; }
+        .alert { padding: 12px 16px; border-radius: 8px; margin-top: 12px; font-size: 0.9rem; }
+        .alert-success { background: rgba(16,185,129,0.15); color: var(--green); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-link">&larr; Back to TrueFans</a>
+        <h1 style="margin-top:16px;">Creator Marketplace</h1>
+        <p class="subtitle">Find collaborators, services, jobs, and gear from the music community.</p>
+
+        {% if listings %}
+        <div class="listing-grid">
+            {% for l in listings %}
+            <div class="listing-card">
+                <div class="listing-type type-{{ l.listing_type }}">{{ l.listing_type }}</div>
+                <div class="listing-title">{{ l.title }}</div>
+                {% if l.description %}<div class="listing-desc">{{ l.description[:150] }}{% if l.description|length > 150 %}...{% endif %}</div>{% endif %}
+                <div class="listing-meta">
+                    {% if l.poster_name %}<span>{{ l.poster_name }}</span>{% endif %}
+                    {% if l.category %}<span>{{ l.category }}</span>{% endif %}
+                    {% if l.price_range %}<span>{{ l.price_range }}</span>{% endif %}
+                    {% if l.location %}<span>{{ l.location }}</span>{% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty">
+            <p style="font-size:1.1rem;margin-bottom:8px;">No listings yet.</p>
+            <p>Be the first to post a service, collaboration, job, or gear listing!</p>
+        </div>
+        {% endif %}
+
+        <div class="create-section">
+            <h2>Post a Listing</h2>
+            <form hx-post="/marketplace/create" hx-target="#listing-result" hx-swap="innerHTML">
+                <div class="form-grid">
+                    <div>
+                        <label>Type</label>
+                        <select name="listing_type" required>
+                            {% for val, label in listing_types %}
+                            <option value="{{ val }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label>Title</label>
+                        <input type="text" name="title" required placeholder="What are you offering or looking for?">
+                    </div>
+                    <div>
+                        <label>Your Name</label>
+                        <input type="text" name="poster_name" placeholder="Your name">
+                    </div>
+                    <div>
+                        <label>Email</label>
+                        <input type="email" name="poster_email" placeholder="Contact email">
+                    </div>
+                    <div>
+                        <label>Category</label>
+                        <input type="text" name="category" placeholder="e.g. mixing, mastering, vocals">
+                    </div>
+                    <div>
+                        <label>Price Range</label>
+                        <input type="text" name="price_range" placeholder="e.g. $50-$200, Free, Negotiable">
+                    </div>
+                    <div>
+                        <label>Location</label>
+                        <input type="text" name="location" placeholder="City or Remote">
+                    </div>
+                    <div style="display:flex;align-items:end;">
+                        <button type="submit" class="btn btn-accent" style="width:100%;">Post Listing</button>
+                    </div>
+                    <div style="grid-column:1/-1;">
+                        <label>Description</label>
+                        <textarea name="description" rows="3" placeholder="Describe your listing in detail..."></textarea>
+                    </div>
+                </div>
+            </form>
+            <div id="listing-result" style="margin-top:12px;"></div>
+        </div>
+    </div>
+</body>
+</html>

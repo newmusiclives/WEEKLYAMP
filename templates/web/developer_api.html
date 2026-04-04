@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Developer API — TrueFans NEWSLETTERS{% endblock %}
+{% block nav_developer_api %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Developer API</h2>
+    <p>Manage API keys and integrate with TrueFans programmatically.</p>
+</div>
+
+<div class="card" style="margin-bottom:24px;">
+    <h3>Create API Key</h3>
+    <form hx-post="/admin/api/keys/create" hx-target="#key-result" hx-swap="innerHTML" style="display:flex;gap:12px;align-items:end;margin-top:12px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:200px;">
+            <label>Key Name</label>
+            <input type="text" name="name" required class="form-input" placeholder="e.g. My Integration">
+        </div>
+        <div style="min-width:150px;">
+            <label>Permissions</label>
+            <select name="permissions" class="form-input">
+                <option value="read">Read Only</option>
+                <option value="read_write">Read &amp; Write</option>
+                <option value="admin">Admin</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Generate Key</button>
+    </form>
+    <div id="key-result" style="margin-top:12px;"></div>
+</div>
+
+<div class="card" style="margin-bottom:24px;">
+    <h3>API Keys</h3>
+    {% if keys %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Prefix</th>
+                    <th>Permissions</th>
+                    <th>Rate Limit</th>
+                    <th>Status</th>
+                    <th>Last Used</th>
+                    <th>Created</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for k in keys %}
+                <tr>
+                    <td><strong>{{ k.name }}</strong></td>
+                    <td><code>{{ k.key_prefix }}...</code></td>
+                    <td>
+                        {% if k.permissions == 'admin' %}
+                        <span class="badge badge-danger">Admin</span>
+                        {% elif k.permissions == 'read_write' %}
+                        <span class="badge badge-warning">Read/Write</span>
+                        {% else %}
+                        <span class="badge badge-info">Read</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ k.rate_limit }}/hr</td>
+                    <td>
+                        {% if k.is_active %}
+                        <span class="badge badge-success">Active</span>
+                        {% else %}
+                        <span class="badge badge-dim">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ k.last_used_at or 'Never' }}</td>
+                    <td>{{ k.created_at }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color:var(--text-dim);margin-top:12px;">No API keys yet. Create one above to get started.</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3>API Documentation</h3>
+    <p style="margin-top:8px;">The TrueFans API provides programmatic access to newsletters, subscribers, events, and marketplace data.</p>
+
+    <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div style="background:var(--bg-hover);padding:16px;border-radius:8px;border:1px solid var(--border);">
+            <h4 style="margin-bottom:8px;">Interactive Docs</h4>
+            <p style="color:var(--text-dim);font-size:0.9rem;margin-bottom:12px;">Explore and test API endpoints directly in the browser.</p>
+            <a href="/docs" class="btn btn-primary" style="font-size:0.85rem;">OpenAPI (Swagger)</a>
+            <a href="/redoc" class="btn btn-secondary" style="font-size:0.85rem;margin-left:8px;">ReDoc</a>
+        </div>
+        <div style="background:var(--bg-hover);padding:16px;border-radius:8px;border:1px solid var(--border);">
+            <h4 style="margin-bottom:8px;">Rate Limits</h4>
+            <p style="color:var(--text-dim);font-size:0.9rem;">
+                <strong>Read:</strong> 1,000 requests/hour<br>
+                <strong>Read/Write:</strong> 500 requests/hour<br>
+                <strong>Admin:</strong> 200 requests/hour
+            </p>
+        </div>
+    </div>
+
+    <div style="margin-top:16px;background:var(--bg-hover);padding:16px;border-radius:8px;border:1px solid var(--border);">
+        <h4 style="margin-bottom:8px;">Authentication</h4>
+        <p style="color:var(--text-dim);font-size:0.9rem;margin-bottom:8px;">Include your API key in the <code>Authorization</code> header:</p>
+        <pre style="background:var(--bg);padding:12px;border-radius:6px;font-size:0.85rem;overflow-x:auto;"><code>Authorization: Bearer tf_your_api_key_here</code></pre>
+    </div>
+</div>
+{% endblock %}
