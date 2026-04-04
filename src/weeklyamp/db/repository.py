@@ -4195,6 +4195,76 @@ class Repository:
         conn.commit()
         conn.close()
 
+    # ---- Subscriber Milestones ----
+
+    def check_and_create_milestones(self, subscriber_id: int) -> list[str]:
+        """Check if subscriber has earned any new milestones. Returns list of new milestone types."""
+        conn = self._conn()
+        sub = conn.execute("SELECT * FROM subscribers WHERE id = ?", (subscriber_id,)).fetchone()
+        if not sub:
+            conn.close()
+            return []
+
+        sub = dict(sub)
+        new_milestones = []
+        from datetime import datetime, timedelta
+        now = datetime.now()
+        subscribed = sub.get("subscribed_at") or sub.get("synced_at") or ""
+
+        if subscribed:
+            try:
+                sub_date = datetime.fromisoformat(str(subscribed).replace("Z", "+00:00").split("+")[0])
+                days = (now - sub_date).days
+
+                milestone_map = [
+                    (7, "1_week"), (30, "1_month"), (90, "3_months"),
+                    (180, "6_months"), (365, "1_year"),
+                ]
+
+                for threshold, mtype in milestone_map:
+                    if days >= threshold:
+                        existing = conn.execute(
+                            "SELECT id FROM subscriber_milestones WHERE subscriber_id = ? AND milestone_type = ?",
+                            (subscriber_id, mtype),
+                        ).fetchone()
+                        if not existing:
+                            conn.execute(
+                                "INSERT INTO subscriber_milestones (subscriber_id, milestone_type) VALUES (?, ?)",
+                                (subscriber_id, mtype),
+                            )
+                            new_milestones.append(mtype)
+            except Exception:
+                pass
+
+        conn.commit()
+        conn.close()
+        return new_milestones
+
+    def get_subscriber_milestones(self, subscriber_id: int) -> list[dict]:
+        conn = self._conn()
+        rows = conn.execute("SELECT * FROM subscriber_milestones WHERE subscriber_id = ? ORDER BY achieved_at", (subscriber_id,)).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    # ---- Unsubscribe Surveys ----
+
+    def save_unsubscribe_survey(self, email: str, reason: str, feedback: str = "", subscriber_id: int = 0) -> int:
+        conn = self._conn()
+        cur = conn.execute(
+            "INSERT INTO unsubscribe_surveys (subscriber_id, email, reason, feedback) VALUES (?, ?, ?, ?)",
+            (subscriber_id or None, email, reason, feedback),
+        )
+        conn.commit()
+        row_id = cur.lastrowid
+        conn.close()
+        return row_id
+
+    def get_unsubscribe_surveys(self, limit: int = 50) -> list[dict]:
+        conn = self._conn()
+        rows = conn.execute("SELECT * FROM unsubscribe_surveys ORDER BY created_at DESC LIMIT ?", (limit,)).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
     def get_outreach_stats(self) -> dict:
         conn = self._conn()
         total = conn.execute("SELECT COUNT(*) as count FROM outreach_log").fetchone()

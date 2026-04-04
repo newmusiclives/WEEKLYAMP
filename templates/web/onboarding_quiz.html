@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Your Edition — TrueFans NEWSLETTERS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <style>
+        :root {
+            --bg: #0a0a12;
+            --bg-card: #13131f;
+            --border: rgba(255,255,255,0.08);
+            --text: #f0f0f5;
+            --text-dim: #9ca3af;
+            --accent: #e8645a;
+            --accent-hover: #f07a70;
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.6; }
+        .page-content { max-width: 640px; margin: 0 auto; padding: 160px 24px 80px; }
+        h1 { font-size: 36px; font-weight: 900; letter-spacing: -1.5px; margin-bottom: 8px; text-align: center; }
+        .subtitle { font-size: 18px; color: var(--text-dim); margin-bottom: 40px; text-align: center; }
+        .quiz-step { margin-bottom: 36px; }
+        .quiz-step h2 { font-size: 20px; font-weight: 700; margin-bottom: 16px; }
+        .radio-group, .checkbox-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .radio-group label, .checkbox-group label {
+            display: flex; align-items: center; gap: 10px;
+            padding: 14px 16px; border-radius: 10px;
+            background: var(--bg-card); border: 1px solid var(--border);
+            cursor: pointer; font-size: 15px; font-weight: 500; transition: all 0.2s;
+        }
+        .radio-group label:hover, .checkbox-group label:hover {
+            border-color: rgba(255,255,255,0.2);
+        }
+        .radio-group input:checked + span, .checkbox-group input:checked + span { color: var(--accent); }
+        .radio-group label:has(input:checked), .checkbox-group label:has(input:checked) {
+            border-color: var(--accent); background: rgba(232,100,90,0.08);
+        }
+        input[type="radio"], input[type="checkbox"] { accent-color: var(--accent); width: 18px; height: 18px; }
+        .interests-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .interests-group label {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 12px 14px; border-radius: 10px;
+            background: var(--bg-card); border: 1px solid var(--border);
+            cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; text-align: center;
+        }
+        .interests-group label:hover { border-color: rgba(255,255,255,0.2); }
+        .interests-group label:has(input:checked) {
+            border-color: var(--accent); background: rgba(232,100,90,0.08); color: var(--accent);
+        }
+        .interests-group input { display: none; }
+        .btn-submit {
+            display: block; width: 100%; padding: 16px 32px; border-radius: 10px;
+            background: var(--accent); color: #fff; font-size: 16px; font-weight: 700;
+            border: none; cursor: pointer; transition: all 0.2s; margin-top: 32px;
+        }
+        .btn-submit:hover { background: var(--accent-hover); transform: translateY(-2px); }
+        .progress-bar { display: flex; gap: 8px; margin-bottom: 32px; justify-content: center; }
+        .progress-dot { width: 40px; height: 4px; border-radius: 2px; background: var(--border); }
+        .progress-dot.active { background: var(--accent); }
+        @media (max-width: 600px) {
+            .radio-group, .checkbox-group { grid-template-columns: 1fr; }
+            .interests-group { grid-template-columns: 1fr 1fr; }
+            h1 { font-size: 28px; }
+        }
+    </style>
+</head>
+<body>
+    {% include "partials/public_nav.html" %}
+
+    <div class="page-content">
+        <h1>What kind of music person are you?</h1>
+        <p class="subtitle">Answer 3 quick questions and we'll recommend the perfect newsletter edition for you.</p>
+
+        <div class="progress-bar">
+            <div class="progress-dot active"></div>
+            <div class="progress-dot active"></div>
+            <div class="progress-dot active"></div>
+        </div>
+
+        <form method="post" action="/onboarding">
+            <div class="quiz-step">
+                <h2>1. I am a...</h2>
+                <div class="radio-group">
+                    <label><input type="radio" name="music_role" value="fan" checked> <span>Music Fan</span></label>
+                    <label><input type="radio" name="music_role" value="artist"> <span>Independent Artist</span></label>
+                    <label><input type="radio" name="music_role" value="industry"> <span>Industry Professional</span></label>
+                    <label><input type="radio" name="music_role" value="both"> <span>All of the Above</span></label>
+                </div>
+            </div>
+
+            <div class="quiz-step">
+                <h2>2. Genres I love (pick all that apply)</h2>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" name="genres" value="hiphop"> <span>Hip-Hop</span></label>
+                    <label><input type="checkbox" name="genres" value="rock"> <span>Rock</span></label>
+                    <label><input type="checkbox" name="genres" value="pop"> <span>Pop</span></label>
+                    <label><input type="checkbox" name="genres" value="country"> <span>Country</span></label>
+                    <label><input type="checkbox" name="genres" value="electronic"> <span>Electronic</span></label>
+                    <label><input type="checkbox" name="genres" value="rnb"> <span>R&amp;B</span></label>
+                    <label><input type="checkbox" name="genres" value="latin"> <span>Latin</span></label>
+                    <label><input type="checkbox" name="genres" value="indie"> <span>Indie</span></label>
+                    <label><input type="checkbox" name="genres" value="jazz"> <span>Jazz</span></label>
+                    <label><input type="checkbox" name="genres" value="classical"> <span>Classical</span></label>
+                </div>
+            </div>
+
+            <div class="quiz-step">
+                <h2>3. I'm most interested in...</h2>
+                <div class="interests-group">
+                    <label><input type="radio" name="interests" value="discovery"> Discovery</label>
+                    <label><input type="radio" name="interests" value="songwriting"> Songwriting</label>
+                    <label><input type="radio" name="interests" value="production"> Production</label>
+                    <label><input type="radio" name="interests" value="marketing"> Marketing</label>
+                    <label><input type="radio" name="interests" value="business"> Business</label>
+                    <label><input type="radio" name="interests" value="live_music"> Live Music</label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit">Find My Edition</button>
+        </form>
+    </div>
+
+    {% include "partials/public_footer.html" %}
+</body>
+</html>

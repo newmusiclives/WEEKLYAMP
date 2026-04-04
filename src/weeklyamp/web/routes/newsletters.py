@@ -11,12 +11,29 @@ from jinja2 import Environment, FileSystemLoader
 
 from weeklyamp.core.config import load_config
 from weeklyamp.db.repository import Repository
-from weeklyamp.web.deps import get_repo as _get_repo
+from weeklyamp.web.deps import get_repo as _get_repo, get_config as _get_config
 
 _TEMPLATES_DIR = Path(__file__).parent.parent.parent.parent.parent / "templates" / "web"
 _env = Environment(loader=FileSystemLoader(str(_TEMPLATES_DIR)), autoescape=True)
 
 router = APIRouter()
+
+
+@router.get("/preview/{issue_id}", response_class=HTMLResponse)
+async def newsletter_preview(issue_id: int, request: Request):
+    repo = _get_repo()
+    config = _get_config()
+    issue = repo.get_issue(issue_id)
+    if not issue:
+        return HTMLResponse("Issue not found", status_code=404)
+    assembled = repo.get_assembled(issue_id)
+    if not assembled:
+        return HTMLResponse("Issue not assembled yet", status_code=404)
+    subscriber_count = repo.get_subscriber_count()
+    tpl = _env.get_template("newsletter_preview.html")
+    return HTMLResponse(tpl.render(
+        issue=issue, html_content=assembled.get("html_content", ""),
+        subscriber_count=subscriber_count, config=config))
 
 
 @router.get("/newsletters/archive", response_class=HTMLResponse)

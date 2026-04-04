@@ -16,7 +16,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from weeklyamp.core.config import load_config
 from weeklyamp.content.referrals import ReferralManager
-from weeklyamp.web.deps import get_repo as _get_repo
+from weeklyamp.web.deps import get_repo as _get_repo, render
 
 logger = logging.getLogger(__name__)
 
@@ -180,6 +180,19 @@ async def unsubscribe(request: Request):
     return HTMLResponse(tpl.render(error="This link has already been used or is invalid."), status_code=400)
 
 
+@router.post("/unsubscribe/survey", response_class=HTMLResponse)
+async def unsubscribe_survey(request: Request):
+    form = await request.form()
+    email = form.get("email", "").strip()
+    reason = form.get("reason", "").strip()
+    feedback = form.get("feedback", "").strip()
+    if reason:
+        repo = _get_repo()
+        repo.save_unsubscribe_survey(email=email, reason=reason, feedback=feedback)
+    tpl = _env.get_template("unsubscribe.html")
+    return HTMLResponse(tpl.render(success=True, survey_submitted=True))
+
+
 @router.get("/verify", response_class=HTMLResponse)
 async def verify_email(request: Request):
     token = request.query_params.get("token", "")
@@ -242,3 +255,25 @@ async def subscribe_confirm(request: Request):
         referral_url=referral_url,
         subscriber_count=subscriber_count,
     )
+
+
+@router.get("/onboarding", response_class=HTMLResponse)
+async def onboarding_quiz(request: Request, token: str = ""):
+    return HTMLResponse(render("onboarding_quiz.html", token=token))
+
+
+@router.post("/onboarding", response_class=HTMLResponse)
+async def process_onboarding(request: Request):
+    form = await request.form()
+    repo = _get_repo()
+    # Save responses
+    music_role = form.get("music_role", "")
+    genres = form.getlist("genres")
+    interests = form.get("interests", "")
+
+    # Map role to edition
+    edition_map = {"fan": "fan", "artist": "artist", "industry": "industry", "both": "fan,artist"}
+    recommended_edition = edition_map.get(music_role, "fan")
+
+    return HTMLResponse(render("onboarding_result.html",
+        recommended_edition=recommended_edition, genres=genres, interests=interests))

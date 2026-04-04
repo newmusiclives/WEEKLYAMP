@@ -107,6 +107,37 @@
         <h1>Unsubscribe</h1>
         {% if success %}
         <div class="alert-success">You've been unsubscribed. We're sorry to see you go.</div>
+
+        {% if not survey_submitted %}
+        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 28px; margin-bottom: 32px; text-align: left;">
+            <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">Quick feedback?</h3>
+            <p style="font-size: 14px; color: var(--text-dim); margin-bottom: 20px;">Help us improve by telling us why you unsubscribed.</p>
+            <form method="post" action="/unsubscribe/survey">
+                <div style="margin-bottom: 16px;">
+                    <label style="font-size: 14px; font-weight: 600; display: block; margin-bottom: 6px;">Reason</label>
+                    <select name="reason" required style="width: 100%; padding: 12px 14px; border-radius: 8px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--text); font-size: 14px; font-family: var(--font);">
+                        <option value="">Select a reason...</option>
+                        <option value="too_many_emails">Too many emails</option>
+                        <option value="not_relevant">Not relevant to me</option>
+                        <option value="found_alternative">Found an alternative</option>
+                        <option value="inbox_overload">Inbox overload</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <label style="font-size: 14px; font-weight: 600; display: block; margin-bottom: 6px;">Any other feedback? (optional)</label>
+                    <textarea name="feedback" rows="3" style="width: 100%; padding: 12px 14px; border-radius: 8px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--text); font-size: 14px; font-family: var(--font); resize: vertical;" placeholder="What could we have done better?"></textarea>
+                </div>
+                <input type="hidden" name="email" value="">
+                <button type="submit" style="padding: 12px 24px; border-radius: 8px; background: var(--bg); border: 1px solid var(--border); color: var(--text-dim); font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: var(--font);">Submit Feedback</button>
+            </form>
+        </div>
+        {% else %}
+        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 32px;">
+            <p style="font-size: 15px; color: var(--text-dim);">Thanks for your feedback. We appreciate it.</p>
+        </div>
+        {% endif %}
+
         <p>Changed your mind? You can always come back.</p>
         <a href="/subscribe" class="btn-link">Re-subscribe</a>
         {% elif error %}

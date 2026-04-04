@@ -368,6 +368,7 @@ def create_app() -> FastAPI:
     from weeklyamp.web.routes import marketing as marketing_routes
     from weeklyamp.web.routes import edition_pages as edition_pages_routes
     from weeklyamp.web.routes import notifications as notifications_routes
+    from weeklyamp.web.routes import licensee_portal as licensee_portal_routes
 
     # Routes
     app.include_router(dashboard.router)
@@ -442,6 +443,8 @@ def create_app() -> FastAPI:
     app.include_router(edition_pages_routes.router)
     # Notification center
     app.include_router(notifications_routes.router, prefix="/notifications")
+    # White-label licensee portal
+    app.include_router(licensee_portal_routes.router, prefix="/licensee")
 
     # Security logs (authenticated, uses Jinja2 template with autoescape)
     from jinja2 import Environment, FileSystemLoader

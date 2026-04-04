@@ -427,3 +427,27 @@ def get_personalized_section_order(repo, subscriber_id: int, sections: list[dict
         return -scores.get(slug, 0)  # negative for descending
 
     return sorted(sections, key=sort_key)
+
+
+def wrap_share_gated_section(section_html: str, share_url: str, teaser_lines: int = 3) -> str:
+    """Wrap a section's HTML with a share-to-unlock gate.
+
+    Shows the first few lines as a teaser, then a "Share to unlock" CTA.
+    In email, this links to the web archive version. On web, JS handles unlock.
+    """
+    # Extract teaser (first N paragraphs)
+    paragraphs = re.findall(r'<p[^>]*>.*?</p>', section_html, re.DOTALL)
+    teaser = ''.join(paragraphs[:teaser_lines]) if paragraphs else section_html[:300]
+
+    gated_html = f'''
+    <div class="share-gated">
+        <div class="share-teaser">{teaser}</div>
+        <div style="text-align:center;padding:24px;margin:16px 0;background:linear-gradient(180deg, rgba(255,255,255,0) 0%, #f9fafb 30%);border-radius:8px;">
+            <div style="font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:8px;">Want to read the full article?</div>
+            <div style="font-size:13px;color:#666;margin-bottom:16px;">Share this issue with a friend to unlock the rest</div>
+            <a href="https://twitter.com/intent/tweet?text=Great%20read%20from%20TrueFans%20NEWSLETTERS&url={share_url}" target="_blank" style="display:inline-block;padding:10px 24px;background:#1a1a1a;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;margin:0 4px;">Share on Twitter</a>
+            <a href="https://www.linkedin.com/sharing/share-offsite/?url={share_url}" target="_blank" style="display:inline-block;padding:10px 24px;background:#0a66c2;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;margin:0 4px;">Share on LinkedIn</a>
+        </div>
+    </div>
+    '''
+    return gated_html

@@ -6,7 +6,7 @@ import hashlib
 import hmac
 import logging
 
-from fastapi import APIRouter, Form
+from fastapi import APIRouter, Form, Request
 from fastapi.responses import HTMLResponse
 
 from weeklyamp.web.deps import get_config, get_repo, render
@@ -112,3 +112,40 @@ async def update_preferences(
             message=f"Failed to save preferences: {exc}",
             level="error",
         )
+
+
+@router.get("/my-dashboard/{token}", response_class=HTMLResponse)
+async def subscriber_dashboard(token: str, request: Request):
+    repo = get_repo()
+    config = get_config()
+    # Look up subscriber by unsubscribe token
+    conn = repo._conn()
+    sub = conn.execute("SELECT * FROM subscribers WHERE unsubscribe_token = ?", (token,)).fetchone()
+    conn.close()
+    if not sub:
+        return HTMLResponse("Invalid link", status_code=404)
+    sub = dict(sub)
+
+    # Get their editions
+    editions_conn = repo._conn()
+    editions = editions_conn.execute(
+        """SELECT ne.name, ne.slug, se.send_days FROM subscriber_editions se
+           JOIN newsletter_editions ne ON ne.id = se.edition_id
+           WHERE se.subscriber_id = ?""", (sub["id"],)
+    ).fetchall()
+    editions_conn.close()
+    editions = [dict(e) for e in editions]
+
+    # Get milestones
+    milestones = repo.get_subscriber_milestones(sub["id"])
+
+    # Get referral stats
+    referral_code = None
+    try:
+        referral_code = repo.get_referral_code(sub["id"])
+    except Exception:
+        pass
+
+    return HTMLResponse(render("subscriber_dashboard.html",
+        subscriber=sub, editions=editions, milestones=milestones,
+        referral=referral_code, config=config, token=token))

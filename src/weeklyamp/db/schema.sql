@@ -1405,3 +1405,33 @@ CREATE TABLE IF NOT EXISTS notifications (
 CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(is_read);
 
 INSERT OR IGNORE INTO schema_version (version) VALUES (34);
+
+-- v35: Subscriber experience features
+
+CREATE TABLE IF NOT EXISTS onboarding_responses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    subscriber_id INTEGER REFERENCES subscribers(id),
+    question_key TEXT NOT NULL,
+    answer TEXT DEFAULT '',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS subscriber_milestones (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    subscriber_id INTEGER NOT NULL REFERENCES subscribers(id),
+    milestone_type TEXT NOT NULL CHECK (milestone_type IN ('1_week','1_month','3_months','6_months','1_year','referral_3','referral_10')),
+    achieved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    email_sent INTEGER DEFAULT 0,
+    UNIQUE(subscriber_id, milestone_type)
+);
+
+CREATE TABLE IF NOT EXISTS unsubscribe_surveys (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    subscriber_id INTEGER REFERENCES subscribers(id),
+    email TEXT DEFAULT '',
+    reason TEXT DEFAULT '',
+    feedback TEXT DEFAULT '',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT OR IGNORE INTO schema_version (version) VALUES (35);

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Recommended Edition — TrueFans NEWSLETTERS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <style>
+        :root {
+            --bg: #0a0a12;
+            --bg-card: #13131f;
+            --border: rgba(255,255,255,0.08);
+            --text: #f0f0f5;
+            --text-dim: #9ca3af;
+            --accent: #e8645a;
+            --accent-hover: #f07a70;
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.6; }
+        .page-content { max-width: 640px; margin: 0 auto; padding: 160px 24px 80px; text-align: center; }
+        .result-badge {
+            display: inline-block; padding: 6px 16px; border-radius: 20px;
+            background: rgba(232,100,90,0.12); color: var(--accent);
+            font-size: 13px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 1px; margin-bottom: 20px;
+        }
+        h1 { font-size: 36px; font-weight: 900; letter-spacing: -1.5px; margin-bottom: 16px; }
+        h1 span { color: var(--accent); }
+        .description { font-size: 18px; color: var(--text-dim); margin-bottom: 40px; line-height: 1.7; }
+        .edition-card {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+            padding: 32px; margin-bottom: 32px; text-align: left;
+        }
+        .edition-card h3 { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+        .edition-card p { font-size: 15px; color: var(--text-dim); margin-bottom: 20px; }
+        .genre-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+        .genre-tag {
+            padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600;
+            background: rgba(255,255,255,0.06); color: var(--text-dim);
+        }
+        .btn-primary {
+            display: inline-block; padding: 16px 40px; border-radius: 10px;
+            background: var(--accent); color: #fff; font-size: 16px; font-weight: 700;
+            text-decoration: none; transition: all 0.2s;
+        }
+        .btn-primary:hover { background: var(--accent-hover); transform: translateY(-2px); }
+        .btn-secondary {
+            display: inline-block; padding: 14px 32px; border-radius: 10px;
+            background: transparent; color: var(--text-dim); font-size: 15px; font-weight: 600;
+            text-decoration: none; border: 1px solid var(--border); transition: all 0.2s;
+            margin-left: 12px;
+        }
+        .btn-secondary:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+        .cta-row { margin-top: 32px; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 12px; }
+        @media (max-width: 600px) { h1 { font-size: 28px; } }
+    </style>
+</head>
+<body>
+    {% include "partials/public_nav.html" %}
+
+    <div class="page-content">
+        <div class="result-badge">Your Match</div>
+
+        {% set edition_names = {"fan": "Fan", "artist": "Artist", "industry": "Industry", "fan,artist": "Fan + Artist"} %}
+        {% set edition_desc = {
+            "fan": "Curated music discovery, artist spotlights, and culture deep-dives delivered to your inbox.",
+            "artist": "Production tips, marketing strategies, and industry insights to grow your music career.",
+            "industry": "Data-driven analysis, deal news, and executive interviews for music professionals.",
+            "fan,artist": "The best of both worlds: music discovery plus artist growth strategies."
+        } %}
+
+        <h1>We recommend the <span>{{ edition_names.get(recommended_edition, "Fan") }} Edition</span> for you!</h1>
+        <p class="description">{{ edition_desc.get(recommended_edition, "Curated music content delivered to your inbox.") }}</p>
+
+        <div class="edition-card">
+            <h3>{{ edition_names.get(recommended_edition, "Fan") }} Edition</h3>
+            <p>Based on your interests in <strong>{{ interests or "music" }}</strong></p>
+            {% if genres %}
+            <div class="genre-tags">
+                {% for g in genres %}
+                <span class="genre-tag">{{ g }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+            <p>3x per week (Monday, Wednesday, Saturday)</p>
+        </div>
+
+        <div class="cta-row">
+            {% if "," in recommended_edition %}
+            <a href="/subscribe?editions={{ recommended_edition.replace(',', '&editions=') }}" class="btn-primary">Subscribe Now — Free</a>
+            {% else %}
+            <a href="/subscribe?editions={{ recommended_edition }}" class="btn-primary">Subscribe Now — Free</a>
+            {% endif %}
+            <a href="/newsletters" class="btn-secondary">Explore All Editions</a>
+        </div>
+    </div>
+
+    {% include "partials/public_footer.html" %}
+</body>
+</html>
