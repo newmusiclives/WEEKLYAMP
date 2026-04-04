@@ -4154,6 +4154,47 @@ class Repository:
         conn.close()
         return row_id
 
+    # ---- Notifications ----
+
+    def create_notification(self, title: str, message: str = "", notification_type: str = "info", category: str = "system", action_url: str = "") -> int:
+        conn = self._conn()
+        cur = conn.execute(
+            "INSERT INTO notifications (title, message, notification_type, category, action_url) VALUES (?, ?, ?, ?, ?)",
+            (title, message, notification_type, category, action_url),
+        )
+        conn.commit()
+        row_id = cur.lastrowid
+        conn.close()
+        return row_id
+
+    def get_notifications(self, unread_only: bool = False, limit: int = 20) -> list[dict]:
+        conn = self._conn()
+        query = "SELECT * FROM notifications"
+        if unread_only:
+            query += " WHERE is_read = 0"
+        query += " ORDER BY created_at DESC LIMIT ?"
+        rows = conn.execute(query, (limit,)).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    def get_unread_count(self) -> int:
+        conn = self._conn()
+        row = conn.execute("SELECT COUNT(*) as count FROM notifications WHERE is_read = 0").fetchone()
+        conn.close()
+        return dict(row)["count"] if row else 0
+
+    def mark_notification_read(self, notification_id: int) -> None:
+        conn = self._conn()
+        conn.execute("UPDATE notifications SET is_read = 1 WHERE id = ?", (notification_id,))
+        conn.commit()
+        conn.close()
+
+    def mark_all_notifications_read(self) -> None:
+        conn = self._conn()
+        conn.execute("UPDATE notifications SET is_read = 1 WHERE is_read = 0")
+        conn.commit()
+        conn.close()
+
     def get_outreach_stats(self) -> dict:
         conn = self._conn()
         total = conn.execute("SELECT COUNT(*) as count FROM outreach_log").fetchone()

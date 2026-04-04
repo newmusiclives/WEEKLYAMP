@@ -809,3 +809,17 @@ CREATE TABLE IF NOT EXISTS sponsor_prospects (
 CREATE INDEX IF NOT EXISTS idx_sponsor_prospects_status ON sponsor_prospects(status);
 
 INSERT INTO schema_version (version) VALUES (32) ON CONFLICT DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS notifications (
+    id SERIAL PRIMARY KEY,
+    title TEXT NOT NULL,
+    message TEXT DEFAULT '',
+    notification_type TEXT DEFAULT 'info' CHECK (notification_type IN ('info','success','warning','error','milestone')),
+    category TEXT DEFAULT 'system' CHECK (category IN ('system','subscriber','sponsor','content','agent','revenue')),
+    action_url TEXT DEFAULT '',
+    is_read INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(is_read);
+
+INSERT INTO schema_version (version) VALUES (34) ON CONFLICT DO NOTHING;

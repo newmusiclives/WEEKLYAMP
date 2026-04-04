@@ -1314,6 +1314,22 @@ ALTER TABLE ai_agents_new RENAME TO ai_agents;
 PRAGMA foreign_keys=ON;
 INSERT OR IGNORE INTO schema_version (version) VALUES (33);
 """,
+    34: """
+-- v34: Notification center
+CREATE TABLE IF NOT EXISTS notifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    message TEXT DEFAULT '',
+    notification_type TEXT DEFAULT 'info' CHECK (notification_type IN ('info','success','warning','error','milestone')),
+    category TEXT DEFAULT 'system' CHECK (category IN ('system','subscriber','sponsor','content','agent','revenue')),
+    action_url TEXT DEFAULT '',
+    is_read INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(is_read);
+
+INSERT OR IGNORE INTO schema_version (version) VALUES (34);
+""",
 }
 
 

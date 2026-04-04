@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+
+{% block title %}Getting Started — TrueFans NEWSLETTERS{% endblock %}
+{% block nav_setup %}active{% endblock %}
+
+{% block content %}
+<style>
+    .wizard-header {
+        margin-bottom: 32px;
+    }
+    .wizard-header h1 {
+        font-size: 28px;
+        font-weight: 800;
+        margin-bottom: 8px;
+    }
+    .wizard-progress-info {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+    .wizard-progress-text {
+        font-size: 15px;
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+    .wizard-progress-text strong {
+        color: var(--text-primary);
+    }
+    .wizard-progress-bar {
+        flex: 1;
+        max-width: 400px;
+        height: 10px;
+        background: var(--bg-tertiary);
+        border-radius: 100px;
+        overflow: hidden;
+    }
+    .wizard-progress-fill {
+        height: 100%;
+        border-radius: 100px;
+        background: linear-gradient(135deg, #34d399, #059669);
+        transition: width 0.5s ease;
+    }
+
+    .wizard-timeline {
+        position: relative;
+        padding-left: 40px;
+    }
+    .wizard-timeline::before {
+        content: '';
+        position: absolute;
+        left: 19px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: var(--border-color);
+    }
+
+    .wizard-step {
+        position: relative;
+        margin-bottom: 24px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 24px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        transition: all 0.2s;
+    }
+    .wizard-step:hover {
+        border-color: rgba(255,255,255,0.12);
+    }
+    .wizard-step.complete {
+        border-color: rgba(52, 211, 153, 0.2);
+    }
+
+    .step-number {
+        position: absolute;
+        left: -40px;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        font-weight: 700;
+        z-index: 1;
+        border: 2px solid var(--border-color);
+        background: var(--bg-primary);
+        color: var(--text-secondary);
+    }
+    .wizard-step.complete .step-number {
+        background: #059669;
+        border-color: #059669;
+        color: #fff;
+    }
+
+    .step-body {
+        flex: 1;
+        min-width: 0;
+    }
+    .step-title {
+        font-size: 17px;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+    .step-description {
+        font-size: 14px;
+        color: var(--text-secondary);
+        line-height: 1.5;
+    }
+
+    .step-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-shrink: 0;
+    }
+
+    .step-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 12px;
+        border-radius: 100px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+    }
+    .step-badge.complete {
+        background: rgba(52, 211, 153, 0.12);
+        color: #34d399;
+    }
+    .step-badge.pending {
+        background: rgba(156, 163, 175, 0.12);
+        color: #9ca3af;
+    }
+
+    .step-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 20px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        background: transparent;
+    }
+    .step-btn:hover {
+        background: rgba(255,255,255,0.05);
+        border-color: rgba(255,255,255,0.2);
+    }
+    .step-btn.primary {
+        background: var(--accent-color, #e8645a);
+        border-color: var(--accent-color, #e8645a);
+        color: #fff;
+    }
+    .step-btn.primary:hover {
+        filter: brightness(1.1);
+    }
+
+    .wizard-footer {
+        margin-top: 32px;
+        padding: 24px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        text-align: center;
+    }
+    .wizard-footer p {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin-bottom: 12px;
+    }
+    .wizard-footer a {
+        color: var(--accent-color, #e8645a);
+        text-decoration: none;
+        font-weight: 600;
+    }
+    .wizard-footer a:hover {
+        text-decoration: underline;
+    }
+
+    @media (max-width: 640px) {
+        .wizard-step {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .step-actions {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="wizard-header">
+    <h1>Getting Started</h1>
+    <div class="wizard-progress-info">
+        <span class="wizard-progress-text"><strong>{{ completed }}</strong> of <strong>{{ total }}</strong> steps complete ({{ ((completed / total) * 100) | int }}%)</span>
+        <div class="wizard-progress-bar">
+            <div class="wizard-progress-fill" style="width: {{ ((completed / total) * 100) | int }}%"></div>
+        </div>
+    </div>
+</div>
+
+<div class="wizard-timeline">
+    {% for step in steps %}
+    <div class="wizard-step {{ step.status }}">
+        <div class="step-number">
+            {% if step.status == 'complete' %}
+                &#10003;
+            {% else %}
+                {{ step.number }}
+            {% endif %}
+        </div>
+        <div class="step-body">
+            <div class="step-title">{{ step.title }}</div>
+            <div class="step-description">{{ step.description }}</div>
+        </div>
+        <div class="step-actions">
+            <span class="step-badge {{ step.status }}">
+                {% if step.status == 'complete' %}
+                    Complete
+                {% else %}
+                    Pending
+                {% endif %}
+            </span>
+            {% if step.status == 'complete' %}
+                <a href="{{ step.action_url }}" class="step-btn">{{ step.action_label }}</a>
+            {% else %}
+                <a href="{{ step.action_url }}" class="step-btn primary">{{ step.action_label }}</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="wizard-footer">
+    <p>Need help? Check the <a href="/admin/setup">Setup Guide</a> for detailed configuration instructions, or visit the <a href="/dashboard">Dashboard</a> to jump straight in.</p>
+</div>
+{% endblock %}

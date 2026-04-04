@@ -366,6 +366,8 @@ def create_app() -> FastAPI:
     from weeklyamp.web.routes import licensing as licensing_routes
     from weeklyamp.web.routes import pricing_calc as pricing_calc_routes
     from weeklyamp.web.routes import marketing as marketing_routes
+    from weeklyamp.web.routes import edition_pages as edition_pages_routes
+    from weeklyamp.web.routes import notifications as notifications_routes
 
     # Routes
     app.include_router(dashboard.router)
@@ -436,6 +438,10 @@ def create_app() -> FastAPI:
     app.include_router(pricing_calc_routes.router, prefix="/admin/calculator")
     # v32+ marketing & promotion hub
     app.include_router(marketing_routes.router, prefix="/admin/marketing")
+    # Edition-specific landing pages
+    app.include_router(edition_pages_routes.router)
+    # Notification center
+    app.include_router(notifications_routes.router, prefix="/notifications")
 
     # Security logs (authenticated, uses Jinja2 template with autoescape)
     from jinja2 import Environment, FileSystemLoader

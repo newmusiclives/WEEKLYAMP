@@ -17,6 +17,25 @@
     <p>{{ config.newsletter.name }} — {{ config.newsletter.tagline }}</p>
 </div>
 
+{% if insights %}
+<div style="margin-bottom:24px;">
+    <h3 style="margin-bottom:12px;">Insights &amp; Recommendations</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+    {% for insight in insights %}
+    <div class="card" style="padding:16px;border-left:4px solid {% if insight.type == 'success' %}#10b981{% elif insight.type == 'warning' %}#f59e0b{% else %}#3b82f6{% endif %};">
+        <div style="display:flex;justify-content:space-between;align-items:start;">
+            <div>
+                <div style="font-size:15px;font-weight:700;">{{ insight.icon | safe }} {{ insight.title }}</div>
+                <div style="font-size:13px;color:var(--text-dim);margin-top:4px;">{{ insight.message }}</div>
+            </div>
+            <a href="{{ insight.action_url }}" class="btn btn-sm" style="white-space:nowrap;margin-left:12px;">{{ insight.action_label }}</a>
+        </div>
+    </div>
+    {% endfor %}
+    </div>
+</div>
+{% endif %}
+
 <!-- Stats -->
 <div class="stats-grid">
     <div class="stat-card">

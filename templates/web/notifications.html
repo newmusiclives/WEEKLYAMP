@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Notifications — TrueFans NEWSLETTERS{% endblock %}
+{% block nav_notifications %}active{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display:flex;justify-content:space-between;align-items:center;">
+    <div>
+        <h2>Notifications
+            {% if unread_count > 0 %}
+            <span class="badge" style="background:#3b82f6;color:#fff;font-size:13px;vertical-align:middle;margin-left:6px;">{{ unread_count }} unread</span>
+            {% endif %}
+        </h2>
+    </div>
+    {% if unread_count > 0 %}
+    <button class="btn btn-sm"
+            hx-post="/notifications/read-all"
+            hx-target="#read-all-result"
+            hx-swap="innerHTML">Mark All Read</button>
+    {% endif %}
+</div>
+
+<div id="read-all-result"></div>
+
+{% if notifications %}
+<div style="display:flex;flex-direction:column;gap:10px;">
+    {% for n in notifications %}
+    <div class="card" style="padding:16px;border-left:4px solid {% if n.notification_type == 'success' %}#10b981{% elif n.notification_type == 'warning' %}#f59e0b{% elif n.notification_type == 'error' %}#ef4444{% elif n.notification_type == 'milestone' %}#8b5cf6{% else %}#3b82f6{% endif %};{% if n.is_read %}opacity:0.65;{% endif %}">
+        <div style="display:flex;justify-content:space-between;align-items:start;">
+            <div style="flex:1;">
+                <div style="font-size:15px;font-weight:700;">
+                    {% if n.notification_type == 'success' %}&#9989;{% elif n.notification_type == 'warning' %}&#9888;{% elif n.notification_type == 'error' %}&#10060;{% elif n.notification_type == 'milestone' %}&#127942;{% else %}&#8505;{% endif %}
+                    {{ n.title }}
+                </div>
+                {% if n.message %}
+                <div style="font-size:13px;color:var(--text-dim);margin-top:4px;">{{ n.message }}</div>
+                {% endif %}
+                <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">
+                    <span class="badge badge-muted" style="font-size:10px;">{{ n.category }}</span>
+                    {{ n.created_at }}
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin-left:12px;">
+                {% if n.action_url %}
+                <a href="{{ n.action_url }}" class="btn btn-sm" style="white-space:nowrap;">View</a>
+                {% endif %}
+                {% if not n.is_read %}
+                <span hx-post="/notifications/{{ n.id }}/read" hx-swap="outerHTML">
+                    <button class="btn btn-sm" style="font-size:11px;">Mark Read</button>
+                </span>
+                {% else %}
+                <span class="badge badge-muted">read</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card" style="padding:32px;text-align:center;color:var(--text-dim);">
+    <div style="font-size:32px;margin-bottom:8px;">&#128276;</div>
+    <p>No notifications yet. They will appear here as events occur.</p>
+</div>
+{% endif %}
+{% endblock %}
