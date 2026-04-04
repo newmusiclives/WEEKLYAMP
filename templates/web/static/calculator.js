@@ -18,22 +18,7 @@ function calculate() {
     var licenseeRev = parseFloat(document.getElementById('slider-licensee-rev').value);
     var affPer1k = parseFloat(document.getElementById('slider-aff').value);
 
-    // Update display values
-    document.getElementById('val-subs').textContent = subs.toLocaleString();
-    document.getElementById('val-editions').textContent = editions;
-    document.getElementById('val-issues').textContent = issuesPerWeek;
-    document.getElementById('val-cpm').textContent = '$' + cpm;
-    document.getElementById('val-fill').textContent = (fillRate * 100) + '%';
-    document.getElementById('val-slots').textContent = slots;
-    document.getElementById('val-pro-price').textContent = fmtDec(proPrice);
-    document.getElementById('val-prem-price').textContent = fmtDec(premPrice);
-    document.getElementById('val-pro-conv').textContent = (proConv * 100) + '%';
-    document.getElementById('val-prem-conv').textContent = (premConv * 100) + '%';
-    document.getElementById('val-licensees').textContent = licensees;
-    document.getElementById('val-license-fee').textContent = fmt(licenseFee);
-    document.getElementById('val-rev-share').textContent = (revShare * 100) + '%';
-    document.getElementById('val-licensee-rev').textContent = fmt(licenseeRev);
-    document.getElementById('val-aff').textContent = fmt(affPer1k);
+    // Number inputs are synced via event listeners — no display update needed here
 
     // Calculate
     var totalSubs = subs * editions;
@@ -113,20 +98,40 @@ function calculate() {
     document.getElementById('projection-table').innerHTML = projHtml;
 }
 
-// Attach event listeners to all sliders
+// Bidirectional sync: slider <-> number input
 document.addEventListener('DOMContentLoaded', function() {
-    var sliderIds = [
-        'slider-subs', 'slider-editions', 'slider-issues',
-        'slider-cpm', 'slider-fill', 'slider-slots',
-        'slider-pro-price', 'slider-prem-price', 'slider-pro-conv', 'slider-prem-conv',
-        'slider-licensees', 'slider-license-fee', 'slider-rev-share', 'slider-licensee-rev',
-        'slider-aff'
+    var pairs = [
+        ['slider-subs', 'num-subs'],
+        ['slider-editions', 'num-editions'],
+        ['slider-issues', 'num-issues'],
+        ['slider-cpm', 'num-cpm'],
+        ['slider-fill', 'num-fill'],
+        ['slider-slots', 'num-slots'],
+        ['slider-pro-price', 'num-pro-price'],
+        ['slider-prem-price', 'num-prem-price'],
+        ['slider-pro-conv', 'num-pro-conv'],
+        ['slider-prem-conv', 'num-prem-conv'],
+        ['slider-licensees', 'num-licensees'],
+        ['slider-license-fee', 'num-license-fee'],
+        ['slider-rev-share', 'num-rev-share'],
+        ['slider-licensee-rev', 'num-licensee-rev'],
+        ['slider-aff', 'num-aff'],
     ];
-    for (var i = 0; i < sliderIds.length; i++) {
-        var el = document.getElementById(sliderIds[i]);
-        if (el) {
-            el.addEventListener('input', calculate);
-        }
+    for (var i = 0; i < pairs.length; i++) {
+        (function(sliderId, numId) {
+            var slider = document.getElementById(sliderId);
+            var num = document.getElementById(numId);
+            if (slider && num) {
+                slider.addEventListener('input', function() {
+                    num.value = slider.value;
+                    calculate();
+                });
+                num.addEventListener('input', function() {
+                    slider.value = num.value;
+                    calculate();
+                });
+            }
+        })(pairs[i][0], pairs[i][1]);
     }
     calculate();
 });
