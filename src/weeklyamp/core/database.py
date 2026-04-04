@@ -936,6 +936,57 @@ def seed_content(db_path: str = "", database_url: str = "", backend: str = "") -
         except integrity:
             pass
 
+    # --- Fox & Bones links ---
+    fb_nl = conn.execute(f"SELECT id FROM artist_newsletters WHERE slug = {ph}", ("fox-and-bones",)).fetchone()
+    if fb_nl:
+        fb_id = fb_nl[0] if isinstance(fb_nl, tuple) else fb_nl["id"]
+        fb_links = [
+            (fb_id, "website", "Official Website", "https://foxandbones.com", 1),
+            (fb_id, "music", "Listen on Spotify", "https://open.spotify.com/artist/foxandbones", 2),
+            (fb_id, "music", "Apple Music", "https://music.apple.com/artist/fox-and-bones", 3),
+            (fb_id, "merch", "Merch Store", "https://foxandbones.com/merch", 4),
+            (fb_id, "tickets", "Tour Dates & Tickets", "https://foxandbones.com/tour", 5),
+            (fb_id, "social", "Instagram", "https://instagram.com/foxandbones", 6),
+            (fb_id, "social", "TikTok", "https://tiktok.com/@foxandbones", 7),
+            (fb_id, "donate", "Support on Patreon", "https://patreon.com/foxandbones", 8),
+        ]
+        for nl_id, ltype, label, url, sort in fb_links:
+            exists = conn.execute(
+                f"SELECT id FROM artist_newsletter_links WHERE newsletter_id = {ph} AND url = {ph}",
+                (nl_id, url),
+            ).fetchone()
+            if not exists:
+                try:
+                    conn.execute(
+                        f"INSERT INTO artist_newsletter_links (newsletter_id, link_type, label, url, sort_order) VALUES ({ph}, {ph}, {ph}, {ph}, {ph})",
+                        (nl_id, ltype, label, url, sort),
+                    )
+                    seeded += 1
+                except integrity:
+                    pass
+
+        # Seed demo revenue
+        demo_months = [
+            (fb_id, "2026-01", 15000, 3500, 22000, 8500),
+            (fb_id, "2026-02", 18000, 4200, 19000, 12000),
+            (fb_id, "2026-03", 22000, 5100, 28000, 15000),
+        ]
+        for nl_id, month, sponsor, affiliate, merch, tickets in demo_months:
+            exists = conn.execute(
+                f"SELECT id FROM artist_newsletter_revenue WHERE newsletter_id = {ph} AND month = {ph}",
+                (nl_id, month),
+            ).fetchone()
+            if not exists:
+                total = sponsor + affiliate + merch + tickets
+                try:
+                    conn.execute(
+                        f"INSERT INTO artist_newsletter_revenue (newsletter_id, month, sponsor_revenue_cents, affiliate_revenue_cents, merch_revenue_cents, ticket_revenue_cents, total_revenue_cents) VALUES ({ph}, {ph}, {ph}, {ph}, {ph}, {ph}, {ph})",
+                        (nl_id, month, sponsor, affiliate, merch, tickets, total),
+                    )
+                    seeded += 1
+                except integrity:
+                    pass
+
     conn.commit()
     conn.close()
     if seeded:

@@ -4051,6 +4051,57 @@ class Repository:
         conn.close()
         return [dict(r) for r in rows]
 
+    # ---- Artist Newsletter Links & Revenue ----
+
+    def get_artist_nl_links(self, newsletter_id: int) -> list[dict]:
+        conn = self._conn()
+        rows = conn.execute("SELECT * FROM artist_newsletter_links WHERE newsletter_id = ? AND is_active = 1 ORDER BY sort_order", (newsletter_id,)).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    def add_artist_nl_link(self, newsletter_id: int, link_type: str, label: str, url: str, sort_order: int = 0) -> int:
+        conn = self._conn()
+        cur = conn.execute(
+            "INSERT INTO artist_newsletter_links (newsletter_id, link_type, label, url, sort_order) VALUES (?, ?, ?, ?, ?)",
+            (newsletter_id, link_type, label, url, sort_order),
+        )
+        conn.commit()
+        row_id = cur.lastrowid
+        conn.close()
+        return row_id
+
+    def delete_artist_nl_link(self, link_id: int) -> None:
+        conn = self._conn()
+        conn.execute("UPDATE artist_newsletter_links SET is_active = 0 WHERE id = ?", (link_id,))
+        conn.commit()
+        conn.close()
+
+    def get_artist_nl_subscribers(self, newsletter_id: int, limit: int = 100) -> list[dict]:
+        conn = self._conn()
+        rows = conn.execute("SELECT * FROM artist_newsletter_subscribers WHERE newsletter_id = ? ORDER BY subscribed_at DESC LIMIT ?", (newsletter_id, limit)).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    def get_artist_nl_revenue(self, newsletter_id: int) -> list[dict]:
+        conn = self._conn()
+        rows = conn.execute("SELECT * FROM artist_newsletter_revenue WHERE newsletter_id = ? ORDER BY month DESC", (newsletter_id,)).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    def get_artist_nl_revenue_total(self, newsletter_id: int) -> dict:
+        conn = self._conn()
+        row = conn.execute(
+            """SELECT COALESCE(SUM(sponsor_revenue_cents),0) as sponsor,
+                      COALESCE(SUM(affiliate_revenue_cents),0) as affiliate,
+                      COALESCE(SUM(merch_revenue_cents),0) as merch,
+                      COALESCE(SUM(ticket_revenue_cents),0) as tickets,
+                      COALESCE(SUM(total_revenue_cents),0) as total
+               FROM artist_newsletter_revenue WHERE newsletter_id = ?""",
+            (newsletter_id,),
+        ).fetchone()
+        conn.close()
+        return dict(row) if row else {"sponsor": 0, "affiliate": 0, "merch": 0, "tickets": 0, "total": 0}
+
     # ---- Marketing & Promotion ----
 
     def get_marketing_campaigns(self, campaign_type: str = "", status: str = "", limit: int = 50) -> list[dict]:

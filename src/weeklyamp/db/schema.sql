@@ -1493,3 +1493,33 @@ CREATE TABLE IF NOT EXISTS api_keys (
 );
 
 INSERT OR IGNORE INTO schema_version (version) VALUES (36);
+
+-- v37: Artist newsletter links and revenue tracking
+
+CREATE TABLE IF NOT EXISTS artist_newsletter_links (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    newsletter_id INTEGER NOT NULL REFERENCES artist_newsletters(id),
+    link_type TEXT NOT NULL CHECK (link_type IN ('music','merch','website','social','tickets','donate','other')),
+    label TEXT NOT NULL,
+    url TEXT NOT NULL,
+    sort_order INTEGER DEFAULT 0,
+    is_active INTEGER DEFAULT 1,
+    click_count INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_artist_nl_links ON artist_newsletter_links(newsletter_id);
+
+CREATE TABLE IF NOT EXISTS artist_newsletter_revenue (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    newsletter_id INTEGER NOT NULL REFERENCES artist_newsletters(id),
+    month TEXT NOT NULL,
+    sponsor_revenue_cents INTEGER DEFAULT 0,
+    affiliate_revenue_cents INTEGER DEFAULT 0,
+    merch_revenue_cents INTEGER DEFAULT 0,
+    ticket_revenue_cents INTEGER DEFAULT 0,
+    total_revenue_cents INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_artist_nl_revenue ON artist_newsletter_revenue(newsletter_id);
+
+INSERT OR IGNORE INTO schema_version (version) VALUES (37);

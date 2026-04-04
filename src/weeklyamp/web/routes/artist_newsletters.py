@@ -37,10 +37,28 @@ async def newsletter_dashboard(newsletter_id: int, request: Request):
     if not newsletter:
         return HTMLResponse("Newsletter not found", status_code=404)
     sub_count = repo.get_artist_nl_subscriber_count(newsletter_id)
+    subscribers = repo.get_artist_nl_subscribers(newsletter_id, limit=50)
     issues = repo.get_artist_nl_issues(newsletter_id)
     templates = repo.get_artist_nl_templates()
+    links = repo.get_artist_nl_links(newsletter_id)
+    revenue = repo.get_artist_nl_revenue(newsletter_id)
+    revenue_total = repo.get_artist_nl_revenue_total(newsletter_id)
     return HTMLResponse(render("artist_newsletter_dashboard.html",
-        newsletter=newsletter, sub_count=sub_count, issues=issues, templates=templates, config=config))
+        newsletter=newsletter, sub_count=sub_count, subscribers=subscribers,
+        issues=issues, templates=templates, links=links,
+        revenue=revenue, revenue_total=revenue_total, config=config))
+
+@router.post("/admin/artist-newsletters/{newsletter_id}/link", response_class=HTMLResponse)
+async def add_link(newsletter_id: int, request: Request, link_type: str = Form(...), label: str = Form(...), url: str = Form(...)):
+    repo = get_repo()
+    repo.add_artist_nl_link(newsletter_id, link_type, label, url)
+    return HTMLResponse(f'<div class="alert alert-success">Link "{label}" added.</div>')
+
+@router.post("/admin/artist-newsletters/link/{link_id}/delete", response_class=HTMLResponse)
+async def delete_link(link_id: int, request: Request):
+    repo = get_repo()
+    repo.delete_artist_nl_link(link_id)
+    return HTMLResponse('<div class="alert alert-success">Link removed.</div>')
 
 @router.post("/admin/artist-newsletters/create", response_class=HTMLResponse)
 async def create_newsletter(request: Request, artist_name: str = Form(...), slug: str = Form(...), brand_color: str = Form("#e8645a"), tagline: str = Form(""), template_style: str = Form("minimal")):

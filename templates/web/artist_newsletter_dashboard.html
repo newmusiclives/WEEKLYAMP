@@ -3,41 +3,232 @@
 {% block nav_artist_newsletters %}active{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h2>{{ newsletter.artist_name }} Newsletter</h2>
-    <p class="subtitle">Dashboard for artist-branded newsletter</p>
+<!-- Header -->
+<div class="card" style="margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+    <div style="width:48px;height:48px;border-radius:10px;background:{{ newsletter.brand_color or '#e8645a' }};flex-shrink:0;"></div>
+    <div style="flex:1;">
+        <h2 style="margin:0;">{{ newsletter.artist_name }} Newsletter</h2>
+        <div style="display:flex;align-items:center;gap:0.75rem;margin-top:0.25rem;flex-wrap:wrap;">
+            <span style="font-size:0.8rem;background:#1a1a2e;color:{{ newsletter.brand_color or '#e8645a' }};padding:2px 10px;border-radius:999px;font-weight:600;">{{ newsletter.status or 'setup' }}</span>
+            <span style="font-size:0.85rem;color:#888;">{{ newsletter.tagline }}</span>
+        </div>
+    </div>
+    <div style="font-size:0.85rem;color:#666;text-align:right;">
+        Public page: <a href="/n/{{ newsletter.slug }}" target="_blank" style="color:{{ newsletter.brand_color or '#e8645a' }};">/n/{{ newsletter.slug }}</a><br>
+        Schedule: {{ newsletter.schedule or 'monthly' }}
+    </div>
 </div>
 
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem;">
+<!-- KPI Row -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1.5rem;">
     <div class="card" style="text-align:center;padding:1.5rem;">
         <div style="font-size:2rem;font-weight:700;color:{{ newsletter.brand_color or '#e8645a' }};">{{ sub_count }}</div>
         <div style="font-size:0.85rem;color:#888;">Subscribers</div>
     </div>
     <div class="card" style="text-align:center;padding:1.5rem;">
         <div style="font-size:2rem;font-weight:700;">{{ issues|length }}</div>
-        <div style="font-size:0.85rem;color:#888;">Issues</div>
+        <div style="font-size:0.85rem;color:#888;">Issues Sent</div>
     </div>
     <div class="card" style="text-align:center;padding:1.5rem;">
-        <div style="width:40px;height:40px;border-radius:8px;background:{{ newsletter.brand_color or '#e8645a' }};margin:0 auto 0.5rem;"></div>
-        <div style="font-size:0.85rem;color:#888;">Brand Color</div>
+        <div style="font-size:2rem;font-weight:700;color:#10b981;">${{ "%.2f"|format(revenue_total.total / 100) }}</div>
+        <div style="font-size:0.85rem;color:#888;">Total Revenue</div>
     </div>
     <div class="card" style="text-align:center;padding:1.5rem;">
-        <div style="font-size:1rem;font-weight:600;">{{ newsletter.template_style or 'minimal' }}</div>
-        <div style="font-size:0.85rem;color:#888;">Template</div>
+        <div style="font-size:2rem;font-weight:700;color:#6366f1;">${{ "%.2f"|format(revenue_total.sponsor / 100) }}</div>
+        <div style="font-size:0.85rem;color:#888;">Sponsor Revenue</div>
+    </div>
+    <div class="card" style="text-align:center;padding:1.5rem;">
+        <div style="font-size:2rem;font-weight:700;color:#f59e0b;">${{ "%.2f"|format(revenue_total.merch / 100) }}</div>
+        <div style="font-size:0.85rem;color:#888;">Merch Revenue</div>
     </div>
 </div>
 
+<!-- Links Section -->
 <div class="card" style="margin-bottom:1.5rem;">
-    <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem;">
-        <span style="font-size:0.8rem;background:#1a1a2e;color:#e8645a;padding:2px 10px;border-radius:999px;">{{ newsletter.status or 'setup' }}</span>
-        <span style="font-size:0.85rem;color:#888;">{{ newsletter.tagline }}</span>
-    </div>
-    <div style="font-size:0.85rem;color:#666;">
-        Public page: <a href="/n/{{ newsletter.slug }}" target="_blank" style="color:#e8645a;">/n/{{ newsletter.slug }}</a>
-        &nbsp;|&nbsp; Schedule: {{ newsletter.schedule or 'monthly' }}
-    </div>
+    <h3>Music, Merch &amp; Social Links</h3>
+    {% if links %}
+    <table class="data-table" style="margin-bottom:1.5rem;">
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>Label</th>
+                <th>URL</th>
+                <th>Clicks</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for link in links %}
+            <tr>
+                <td>
+                    {% if link.link_type == 'music' %}&#127925;{% elif link.link_type == 'merch' %}&#128722;{% elif link.link_type == 'website' %}&#127760;{% elif link.link_type == 'social' %}&#128241;{% elif link.link_type == 'tickets' %}&#127915;{% elif link.link_type == 'donate' %}&#128156;{% else %}&#128279;{% endif %}
+                    {{ link.link_type }}
+                </td>
+                <td>{{ link.label }}</td>
+                <td><a href="{{ link.url }}" target="_blank" style="color:{{ newsletter.brand_color or '#e8645a' }};word-break:break-all;">{{ link.url }}</a></td>
+                <td>{{ link.click_count }}</td>
+                <td>
+                    <button hx-post="/admin/artist-newsletters/link/{{ link.id }}/delete" hx-target="#link-result" hx-swap="innerHTML" hx-confirm="Remove this link?" class="btn" style="font-size:0.75rem;padding:2px 8px;background:#ef4444;color:#fff;border:none;border-radius:4px;cursor:pointer;">Remove</button>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted" style="margin-bottom:1rem;">No links added yet.</p>
+    {% endif %}
+
+    <div id="link-result" style="margin-bottom:0.75rem;"></div>
+
+    <h4 style="margin-bottom:0.5rem;">Add Link</h4>
+    <form hx-post="/admin/artist-newsletters/{{ newsletter.id }}/link" hx-target="#link-result" hx-swap="innerHTML" style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:flex-end;">
+        <div>
+            <label style="display:block;font-size:0.8rem;margin-bottom:2px;">Type</label>
+            <select name="link_type" required style="padding:8px;border:1px solid #333;border-radius:6px;background:#1a1a2e;color:#fff;">
+                <option value="music">&#127925; Music</option>
+                <option value="merch">&#128722; Merch</option>
+                <option value="website">&#127760; Website</option>
+                <option value="social">&#128241; Social</option>
+                <option value="tickets">&#127915; Tickets</option>
+                <option value="donate">&#128156; Donate</option>
+                <option value="other">Other</option>
+            </select>
+        </div>
+        <div style="flex:1;min-width:150px;">
+            <label style="display:block;font-size:0.8rem;margin-bottom:2px;">Label</label>
+            <input type="text" name="label" required placeholder="e.g. Spotify" style="width:100%;padding:8px;border:1px solid #333;border-radius:6px;background:#1a1a2e;color:#fff;">
+        </div>
+        <div style="flex:2;min-width:200px;">
+            <label style="display:block;font-size:0.8rem;margin-bottom:2px;">URL</label>
+            <input type="url" name="url" required placeholder="https://..." style="width:100%;padding:8px;border:1px solid #333;border-radius:6px;background:#1a1a2e;color:#fff;">
+        </div>
+        <button type="submit" class="btn btn-primary" style="white-space:nowrap;">Add Link</button>
+    </form>
 </div>
 
+<!-- Subscriber List -->
+<div class="card" style="margin-bottom:1.5rem;">
+    <h3>Subscribers ({{ sub_count }})</h3>
+    {% if subscribers %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Subscribed</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for sub in subscribers %}
+            <tr>
+                <td>{{ sub.email }}</td>
+                <td>{{ sub.first_name or '—' }}</td>
+                <td>
+                    {% if sub.status == 'active' %}
+                    <span class="badge badge-success">active</span>
+                    {% elif sub.status == 'unsubscribed' %}
+                    <span class="badge" style="background:#666;">unsubscribed</span>
+                    {% else %}
+                    <span class="badge badge-info">{{ sub.status }}</span>
+                    {% endif %}
+                </td>
+                <td>{{ sub.subscribed_at or '—' }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% if sub_count > 50 %}
+    <p class="text-muted" style="margin-top:0.5rem;font-size:0.85rem;">Showing first 50 of {{ sub_count }} subscribers.</p>
+    {% endif %}
+    {% else %}
+    <p class="text-muted">No subscribers yet.</p>
+    {% endif %}
+</div>
+
+<!-- Revenue -->
+<div class="card" style="margin-bottom:1.5rem;">
+    <h3>Revenue</h3>
+    {% if revenue %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Month</th>
+                <th>Sponsors</th>
+                <th>Affiliates</th>
+                <th>Merch</th>
+                <th>Tickets</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for r in revenue %}
+            <tr>
+                <td>{{ r.month }}</td>
+                <td>${{ "%.2f"|format(r.sponsor_revenue_cents / 100) }}</td>
+                <td>${{ "%.2f"|format(r.affiliate_revenue_cents / 100) }}</td>
+                <td>${{ "%.2f"|format(r.merch_revenue_cents / 100) }}</td>
+                <td>${{ "%.2f"|format(r.ticket_revenue_cents / 100) }}</td>
+                <td style="font-weight:700;">${{ "%.2f"|format(r.total_revenue_cents / 100) }}</td>
+            </tr>
+        {% endfor %}
+            <tr style="border-top:2px solid #444;font-weight:700;">
+                <td>Total</td>
+                <td>${{ "%.2f"|format(revenue_total.sponsor / 100) }}</td>
+                <td>${{ "%.2f"|format(revenue_total.affiliate / 100) }}</td>
+                <td>${{ "%.2f"|format(revenue_total.merch / 100) }}</td>
+                <td>${{ "%.2f"|format(revenue_total.tickets / 100) }}</td>
+                <td style="color:#10b981;">${{ "%.2f"|format(revenue_total.total / 100) }}</td>
+            </tr>
+        </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted">No revenue data yet.</p>
+    {% endif %}
+</div>
+
+<!-- Issues -->
+<div class="card" style="margin-bottom:1.5rem;">
+    <h3>Issues</h3>
+    {% if issues %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Issue #</th>
+                <th>Subject</th>
+                <th>Status</th>
+                <th>Opens</th>
+                <th>Clicks</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for issue in issues %}
+            <tr>
+                <td>{{ issue.issue_number }}</td>
+                <td>{{ issue.subject }}</td>
+                <td>
+                    {% if issue.status == 'sent' %}
+                    <span class="badge badge-success">sent</span>
+                    {% elif issue.status == 'scheduled' %}
+                    <span class="badge badge-info">scheduled</span>
+                    {% else %}
+                    <span class="badge">draft</span>
+                    {% endif %}
+                </td>
+                <td>{{ issue.opens }}</td>
+                <td>{{ issue.clicks }}</td>
+                <td>{{ issue.created_at or '—' }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted">No issues yet. Create your first one below.</p>
+    {% endif %}
+</div>
+
+<!-- Settings + Create Issue -->
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
     <div class="card">
         <h3>Settings</h3>
@@ -78,46 +269,6 @@
             <div id="issue-result" style="margin-top:0.75rem;"></div>
         </form>
     </div>
-</div>
-
-<div class="card">
-    <h3>Issues</h3>
-    {% if issues %}
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>Issue #</th>
-                <th>Subject</th>
-                <th>Status</th>
-                <th>Opens</th>
-                <th>Clicks</th>
-                <th>Date</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for issue in issues %}
-            <tr>
-                <td>{{ issue.issue_number }}</td>
-                <td>{{ issue.subject }}</td>
-                <td>
-                    {% if issue.status == 'sent' %}
-                    <span class="badge badge-success">sent</span>
-                    {% elif issue.status == 'scheduled' %}
-                    <span class="badge badge-info">scheduled</span>
-                    {% else %}
-                    <span class="badge">draft</span>
-                    {% endif %}
-                </td>
-                <td>{{ issue.opens }}</td>
-                <td>{{ issue.clicks }}</td>
-                <td>{{ issue.created_at or '—' }}</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <p class="text-muted">No issues yet. Create your first one above.</p>
-    {% endif %}
 </div>
 
 {% endblock %}
