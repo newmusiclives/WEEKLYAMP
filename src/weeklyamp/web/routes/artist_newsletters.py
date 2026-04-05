@@ -17,6 +17,17 @@ async def waitlist_signup(request: Request, artist_name: str = Form(...), email:
     repo.create_artist_newsletter_waitlist(artist_name, email, website, genre=genre, fan_count=fan_count, message=message)
     return HTMLResponse('<div style="padding:24px;text-align:center;color:#10b981;font-size:18px;font-weight:600;">You\'re on the list! We\'ll be in touch soon.</div>')
 
+@router.post("/artist-newsletters/signup", response_class=HTMLResponse)
+async def artist_signup(request: Request, artist_name: str = Form(...), email: str = Form(...), website: str = Form(""), genre: str = Form(""), fan_count: str = Form("")):
+    repo = get_repo()
+    # Create the newsletter
+    import re
+    slug = re.sub(r'[^a-z0-9]+', '-', artist_name.lower()).strip('-')
+    newsletter_id = repo.create_artist_newsletter(artist_name, slug, tagline=f"{genre} artist", template_style="minimal")
+    # Also save to waitlist for tracking
+    repo.create_artist_newsletter_waitlist(artist_name, email, website, genre=genre, fan_count=fan_count)
+    return HTMLResponse(f'<div style="padding:40px;text-align:center;"><h2 style="color:#10b981;">Welcome, {artist_name}!</h2><p style="color:#9ca3af;font-size:18px;">Your newsletter is being set up. We\'ll email you at {email} with your dashboard login within 24 hours.</p><p style="margin-top:20px;"><a href="/n/{slug}" style="color:#e8645a;">Preview your subscribe page &rarr;</a></p></div>')
+
 @router.get("/admin/artist-newsletters", response_class=HTMLResponse)
 async def admin_page(request: Request):
     repo = get_repo()

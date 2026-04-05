@@ -137,9 +137,13 @@
 
     <section class="hero">
         <div class="container">
-            <div class="coming-soon-badge">Coming Soon</div>
-            <h1>Artist Newsletters<br><span>Your music. Your fans. Your newsletter.</span></h1>
-            <p>Launch a branded newsletter for your fanbase — powered by TrueFans. We handle the tech, content, and delivery so you can focus on making music.</p>
+            <div class="coming-soon-badge" style="background:#10b981;">Now Available</div>
+            <h1>Your Music. Your Fans.<br><span>Your Newsletter. Your Revenue.</span></h1>
+            <p>Launch a branded newsletter with built-in monetization — sponsor ads, affiliate links, merch sales, and ticket promotion. All powered by AI. Starting at $29/month.</p>
+            <div style="margin-top:24px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+                <a href="#pricing" class="cta-btn">Start Your Newsletter</a>
+                <a href="/n/fox-and-bones" class="cta-btn" style="background:transparent;border:2px solid #e8645a;">See Fox &amp; Bones Demo</a>
+            </div>
         </div>
     </section>
 
@@ -174,13 +178,99 @@
         </div>
     </section>
 
-    <section id="waitlist">
+    <!-- Revenue Potential -->
+    <section style="padding:60px 0;background:#111827;">
         <div class="container">
             <div class="section-header">
-                <h2>Join the Waitlist</h2>
-                <p>Be among the first artists to launch a TrueFans-powered newsletter.</p>
+                <h2>Turn Your Fans Into Revenue</h2>
+                <p>Here's what artists earn with just 500 newsletter subscribers</p>
             </div>
-            <form class="waitlist-form" hx-post="/artist-newsletters/waitlist" hx-target="#waitlist-result" hx-swap="innerHTML">
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;max-width:700px;margin:0 auto 24px;">
+                <div style="text-align:center;padding:20px;background:#1a1a2e;border-radius:10px;">
+                    <div style="font-size:24px;font-weight:900;color:#e8645a;">$200</div>
+                    <div style="font-size:12px;color:#9ca3af;margin-top:4px;">Sponsor Ads</div>
+                </div>
+                <div style="text-align:center;padding:20px;background:#1a1a2e;border-radius:10px;">
+                    <div style="font-size:24px;font-weight:900;color:#e8645a;">$75</div>
+                    <div style="font-size:12px;color:#9ca3af;margin-top:4px;">Affiliate Links</div>
+                </div>
+                <div style="text-align:center;padding:20px;background:#1a1a2e;border-radius:10px;">
+                    <div style="font-size:24px;font-weight:900;color:#e8645a;">$500</div>
+                    <div style="font-size:12px;color:#9ca3af;margin-top:4px;">Merch Sales</div>
+                </div>
+                <div style="text-align:center;padding:20px;background:#1a1a2e;border-radius:10px;">
+                    <div style="font-size:24px;font-weight:900;color:#e8645a;">$300</div>
+                    <div style="font-size:12px;color:#9ca3af;margin-top:4px;">Ticket Sales</div>
+                </div>
+            </div>
+            <div style="text-align:center;padding:20px;background:linear-gradient(135deg,#e8645a,#c7453b);border-radius:10px;max-width:700px;margin:0 auto;">
+                <div style="font-size:32px;font-weight:900;color:#fff;">$1,075/month</div>
+                <div style="font-size:14px;color:rgba(255,255,255,0.8);margin-top:4px;">from 500 subscribers — and it grows with your audience</div>
+            </div>
+            <p style="text-align:center;font-size:13px;color:#6b7280;margin-top:16px;">Fox &amp; Bones earned $1,700+ in their first 3 months with 247 subscribers</p>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section id="pricing" style="padding:60px 0;">
+        <div class="container">
+            <div class="section-header">
+                <h2>Simple Pricing</h2>
+                <p>Start free. Scale as you grow.</p>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:800px;margin:0 auto;">
+                <div style="background:#1a1a2e;border-radius:12px;padding:28px;text-align:center;border:1px solid #333;">
+                    <div style="font-size:18px;font-weight:700;color:#fff;">Starter</div>
+                    <div style="font-size:36px;font-weight:900;color:#e8645a;margin:12px 0;">$29<span style="font-size:14px;color:#9ca3af;">/mo</span></div>
+                    <div style="font-size:13px;color:#9ca3af;margin-bottom:16px;">Up to 1,000 subscribers</div>
+                    <div style="text-align:left;font-size:13px;color:#ccc;line-height:2;">
+                        ✓ Branded newsletter<br>
+                        ✓ 3 template styles<br>
+                        ✓ Sponsor ad slots<br>
+                        ✓ Affiliate links<br>
+                        ✓ Music &amp; merch links<br>
+                        ✓ Subscriber dashboard
+                    </div>
+                </div>
+                <div style="background:#1a1a2e;border-radius:12px;padding:28px;text-align:center;border:2px solid #e8645a;position:relative;">
+                    <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#e8645a;color:#fff;font-size:11px;font-weight:700;padding:4px 14px;border-radius:20px;">POPULAR</div>
+                    <div style="font-size:18px;font-weight:700;color:#fff;">Growth</div>
+                    <div style="font-size:36px;font-weight:900;color:#e8645a;margin:12px 0;">$49<span style="font-size:14px;color:#9ca3af;">/mo</span></div>
+                    <div style="font-size:13px;color:#9ca3af;margin-bottom:16px;">Up to 5,000 subscribers</div>
+                    <div style="text-align:left;font-size:13px;color:#ccc;line-height:2;">
+                        ✓ Everything in Starter<br>
+                        ✓ Priority sponsor matching<br>
+                        ✓ Revenue dashboard<br>
+                        ✓ Welcome sequence<br>
+                        ✓ Analytics &amp; insights<br>
+                        ✓ Custom domain support
+                    </div>
+                </div>
+                <div style="background:#1a1a2e;border-radius:12px;padding:28px;text-align:center;border:1px solid #333;">
+                    <div style="font-size:18px;font-weight:700;color:#fff;">Pro</div>
+                    <div style="font-size:36px;font-weight:900;color:#e8645a;margin:12px 0;">$99<span style="font-size:14px;color:#9ca3af;">/mo</span></div>
+                    <div style="font-size:13px;color:#9ca3af;margin-bottom:16px;">Unlimited subscribers</div>
+                    <div style="text-align:left;font-size:13px;color:#ccc;line-height:2;">
+                        ✓ Everything in Growth<br>
+                        ✓ Unlimited subscribers<br>
+                        ✓ A/B testing<br>
+                        ✓ AI content assistant<br>
+                        ✓ Dedicated account manager<br>
+                        ✓ White-label branding
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sign Up Form -->
+    <section id="signup" style="padding:60px 0;background:#111827;">
+        <div class="container">
+            <div class="section-header">
+                <h2>Start Your Newsletter Today</h2>
+                <p>Set up takes less than 5 minutes. No credit card required to start.</p>
+            </div>
+            <form class="waitlist-form" hx-post="/artist-newsletters/signup" hx-target="#signup-result" hx-swap="innerHTML">
                 <div class="form-row">
                     <label for="artist_name">Artist / Band Name *</label>
                     <input type="text" id="artist_name" name="artist_name" required placeholder="Your artist or band name">
@@ -239,8 +329,8 @@
                     <label for="message">Anything else you'd like us to know?</label>
                     <textarea id="message" name="message" placeholder="Tell us about your goals, current fan engagement, or any questions..."></textarea>
                 </div>
-                <button type="submit" class="btn-submit">Join the Waitlist</button>
-                <div id="waitlist-result" style="margin-top:1rem"></div>
+                <button type="submit" class="btn-submit">Start My Newsletter — Free</button>
+                <div id="signup-result" style="margin-top:1rem"></div>
             </form>
         </div>
     </section>
