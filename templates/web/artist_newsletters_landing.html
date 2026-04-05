@@ -118,10 +118,24 @@
 
         @media (max-width: 768px) {
             .features-grid { grid-template-columns: 1fr; }
-            .top-nav { padding: 12px 20px; }
-            .top-nav .nav-links { gap: 12px; }
-            section { padding: 48px 0; }
-            .waitlist-form { padding: 24px; }
+            .top-nav { padding: 12px 16px; }
+            .top-nav .nav-links { gap: 8px; }
+            .top-nav .nav-links a { font-size: 12px; }
+            section { padding: 40px 0; }
+            .hero h1 { font-size: 28px !important; }
+            .hero p { font-size: 15px; }
+            .waitlist-form { padding: 20px; }
+            [style*="grid-template-columns:repeat(4"] { grid-template-columns: repeat(2, 1fr) !important; }
+            [style*="grid-template-columns:repeat(3"] { grid-template-columns: 1fr !important; }
+            [style*="font-size:36px"] { font-size: 28px !important; }
+            [style*="font-size:32px"] { font-size: 24px !important; }
+            .container { padding: 0 16px; }
+        }
+        @media (max-width: 480px) {
+            .hero h1 { font-size: 24px !important; }
+            [style*="grid-template-columns:repeat(4"] { grid-template-columns: 1fr !important; }
+            .top-nav .brand { font-size: 0.9rem; }
+            .top-nav .nav-links .btn-sm { padding: 6px 12px; font-size: 12px; }
         }
     </style>
 </head>

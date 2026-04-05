@@ -192,10 +192,18 @@
 
         @media (max-width: 768px) {
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
-            .top-nav { padding: 12px 20px; }
-            .top-nav .nav-links { gap: 12px; }
-            section { padding: 48px 0; }
-            .inquiry-form { padding: 24px; }
+            .top-nav { padding: 12px 16px; }
+            .top-nav .nav-links { gap: 6px; }
+            .top-nav .nav-links a { font-size: 12px; }
+            section { padding: 40px 0; }
+            .inquiry-form { padding: 20px 16px; }
+            .container { padding: 0 16px; }
+            h1 { font-size: 28px !important; }
+            .rates-grid { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            h1 { font-size: 24px !important; }
         }
     </style>
 </head>

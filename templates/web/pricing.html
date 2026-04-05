@@ -176,9 +176,19 @@
 
         @media (max-width: 768px) {
             .pricing-grid { grid-template-columns: 1fr; }
-            .top-nav { padding: 12px 20px; }
-            .top-nav .nav-links { gap: 12px; }
-            section { padding: 48px 0; }
+            .top-nav { padding: 12px 16px; }
+            .top-nav .nav-links { gap: 8px; }
+            .top-nav .nav-links a { font-size: 12px; }
+            section { padding: 40px 0; }
+            .hero { padding-top: 100px; }
+            .hero h1 { font-size: 28px; }
+            .hero p { font-size: 15px; }
+            .tier-card { padding: 24px 20px; }
+            .container { padding: 0 16px; }
+        }
+        @media (max-width: 480px) {
+            .hero h1 { font-size: 24px; }
+            .top-nav .brand { font-size: 0.9rem; }
         }
     </style>
 </head>

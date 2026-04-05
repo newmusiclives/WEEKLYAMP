@@ -1,0 +1,228 @@
+/* ============================================================
+   TrueFans NEWSLETTERS — Mobile Responsive Overrides
+   Applied on screens <= 768px. Uses !important to override
+   inline styles on grid layouts.
+   ============================================================ */
+
+@media (max-width: 768px) {
+
+    /* ---- Force all multi-column grids to single column ---- */
+    [style*="grid-template-columns: repeat(3"],
+    [style*="grid-template-columns: repeat(4"],
+    [style*="grid-template-columns: repeat(5"],
+    [style*="grid-template-columns:repeat(3"],
+    [style*="grid-template-columns:repeat(4"],
+    [style*="grid-template-columns:repeat(5"],
+    [style*="grid-template-columns: 1fr 1fr"],
+    [style*="grid-template-columns:1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* 2-column grids stay 2-col on tablet-ish phones, 1-col on small */
+    [style*="grid-template-columns: repeat(2"],
+    [style*="grid-template-columns:repeat(2"] {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* ---- Admin layout ---- */
+    .main {
+        margin-left: 0 !important;
+        padding: 16px !important;
+        padding-top: 56px !important;
+    }
+
+    .page-header h2 {
+        font-size: 22px !important;
+    }
+
+    .page-header .subtitle {
+        font-size: 14px !important;
+    }
+
+    /* ---- Data tables: horizontal scroll ---- */
+    .card {
+        overflow-x: auto;
+    }
+
+    .data-table {
+        min-width: 500px;
+    }
+
+    /* ---- Stats/metric grids ---- */
+    .stats-grid {
+        grid-template-columns: 1fr 1fr !important;
+    }
+
+    /* ---- Cards: tighter padding ---- */
+    .card {
+        padding: 16px !important;
+    }
+
+    /* ---- Buttons: full width on mobile ---- */
+    .btn-primary, .btn[style*="display:inline-block"] {
+        display: block !important;
+        width: 100% !important;
+        text-align: center !important;
+    }
+
+    /* ---- Tab navigation: scrollable ---- */
+    [style*="display:flex"][style*="gap:4px"] {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        flex-wrap: nowrap !important;
+    }
+
+    .tab-btn {
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+    }
+
+    /* ---- Editor grid: stack vertically ---- */
+    .editor-wrap {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* ---- Forms: full width inputs ---- */
+    .form-grid,
+    [class*="form-grid"] {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* ---- Hero sections on public pages ---- */
+    .hero h1 {
+        font-size: 28px !important;
+        line-height: 1.15 !important;
+    }
+
+    .hero p {
+        font-size: 16px !important;
+    }
+
+    /* ---- Section header ---- */
+    .section-header h2 {
+        font-size: 24px !important;
+    }
+
+    .section-header p {
+        font-size: 15px !important;
+    }
+
+    /* ---- Feature cards grid ---- */
+    .features-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* ---- Pricing grid ---- */
+    .pricing-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .tier-card {
+        padding: 24px 20px !important;
+    }
+
+    /* ---- Revenue bars/breakdown ---- */
+    .revenue-grid {
+        padding: 24px 16px !important;
+    }
+
+    /* ---- Section picker ---- */
+    .section-picker {
+        flex-direction: column !important;
+    }
+
+    .section-category-group {
+        min-width: auto !important;
+    }
+
+    /* ---- Calendar grid ---- */
+    .calendar-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* ---- Font size adjustments for readability ---- */
+    [style*="font-size:48px"],
+    [style*="font-size: 48px"] {
+        font-size: 32px !important;
+    }
+
+    [style*="font-size:36px"],
+    [style*="font-size: 36px"] {
+        font-size: 28px !important;
+    }
+
+    [style*="font-size:32px"],
+    [style*="font-size: 32px"] {
+        font-size: 24px !important;
+    }
+
+    [style*="font-size:28px"],
+    [style*="font-size: 28px"] {
+        font-size: 22px !important;
+    }
+
+    /* ---- Nav links: smaller on mobile ---- */
+    .nav-links {
+        gap: 8px !important;
+    }
+
+    .nav-links a {
+        font-size: 12px !important;
+        padding: 6px 12px !important;
+    }
+
+    /* ---- Flex row buttons: stack vertically ---- */
+    [style*="display:flex"][style*="gap:12px"][style*="justify-content:center"] {
+        flex-direction: column !important;
+        align-items: center !important;
+    }
+
+    [style*="display:flex"][style*="gap:8px"][style*="margin-bottom:24px"] {
+        flex-wrap: wrap !important;
+    }
+
+    /* ---- Container padding ---- */
+    .container {
+        padding: 0 16px !important;
+    }
+
+    /* ---- City grid: 2 columns ---- */
+    .city-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    /* ---- Steps grid ---- */
+    .steps-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* ---- Wide content blocks: prevent overflow ---- */
+    pre, code, table {
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+
+    /* ---- Hide non-essential columns on very small screens ---- */
+    @media (max-width: 480px) {
+        .data-table th:nth-child(n+4),
+        .data-table td:nth-child(n+4) {
+            display: none;
+        }
+    }
+}
+
+/* ---- Small phone specific (< 480px) ---- */
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .hero h1 {
+        font-size: 24px !important;
+    }
+
+    [style*="grid-template-columns: repeat(2"],
+    [style*="grid-template-columns:repeat(2"] {
+        grid-template-columns: 1fr !important;
+    }
+}
