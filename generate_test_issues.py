@@ -172,7 +172,7 @@ def main():
         print(f"  WEEKLYAMP_SMTP_USER=your-user")
         print(f"  WEEKLYAMP_SMTP_PASSWORD=your-password")
         print(f"  WEEKLYAMP_EMAIL_FROM=your@email.com")
-        print(f"  WEEKLYAMP_EMAIL_FROM_NAME=TrueFans NEWSLETTERS")
+        print(f"  WEEKLYAMP_EMAIL_FROM_NAME=TrueFans SIGNAL")
         print(f"\nThen run: python3 generate_test_issues.py")
 
     # Open previews in browser

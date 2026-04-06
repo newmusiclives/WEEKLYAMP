@@ -14,7 +14,7 @@ class ResearcherAgent(AgentBase):
     default_name = "Research Analyst"
     default_persona = "Thorough music industry researcher with deep knowledge of trends and emerging artists."
     default_system_prompt = (
-        "You are a research analyst for TrueFans NEWSLETTERS. "
+        "You are a research analyst for TrueFans SIGNAL. "
         "You discover relevant content, compile research briefs, "
         "and identify potential guest contributors."
     )
@@ -84,7 +84,7 @@ class ResearcherAgent(AgentBase):
         )
 
         prompt = (
-            f"Compile a research brief for the {section_slug} section of TrueFans NEWSLETTERS. "
+            f"Compile a research brief for the {section_slug} section of TrueFans SIGNAL. "
             f"Summarize the key themes, identify the most newsworthy angles, "
             f"and suggest a specific topic/angle for this week's article.\n\n"
             f"Available content:\n{items_text}"
@@ -102,7 +102,7 @@ class ResearcherAgent(AgentBase):
 
         prompt = (
             f"Suggest 5 types of guest contributors who would be ideal for "
-            f"TrueFans NEWSLETTERS, a publication for independent artists and songwriters. "
+            f"TrueFans SIGNAL, a publication for independent artists and songwriters. "
             f"Our sections include: {section_names}. "
             f"For each, suggest: role/title, what they'd write about, "
             f"and why our audience would value their perspective."

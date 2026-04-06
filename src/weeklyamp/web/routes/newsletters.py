@@ -153,7 +153,7 @@ async def podcast_feed(request: Request):
         if ai.get("status") == "complete" and ai.get("audio_url"):
             issue_num = ai.get("issue_number", "")
             items += f"""<item>
-  <title>TrueFans NEWSLETTERS — Issue #{issue_num}</title>
+  <title>TrueFans SIGNAL — Issue #{issue_num}</title>
   <enclosure url="{cfg.site_domain}{ai['audio_url']}" type="audio/mpeg" length="{ai.get('file_size_bytes', 0)}"/>
   <pubDate>{ai.get('created_at', '')}</pubDate>
 </item>\n"""
@@ -161,8 +161,8 @@ async def podcast_feed(request: Request):
     feed = f"""<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
 <channel>
-  <title>TrueFans NEWSLETTERS Audio</title>
-  <description>Audio versions of TrueFans NEWSLETTERS</description>
+  <title>TrueFans SIGNAL Audio</title>
+  <description>Audio versions of TrueFans SIGNAL</description>
   <link>{cfg.site_domain}</link>
   <language>en-us</language>
   {items}

@@ -42,7 +42,7 @@ async def embed_subscribe(
 
 @router.get("/embed/badge", response_class=HTMLResponse)
 async def embed_badge(
-    text: str = Query("Featured in TrueFans NEWSLETTERS", description="Badge text"),
+    text: str = Query("Featured in TrueFans SIGNAL", description="Badge text"),
 ):
     """Return badge HTML."""
     cfg = get_config()

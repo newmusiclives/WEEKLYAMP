@@ -53,7 +53,7 @@ def auto_draft_from_research(
     display_name = section.get("display_name", section_slug)
 
     prompt = (
-        f"Write a newsletter section called '{display_name}' for TrueFans NEWSLETTERS.\n\n"
+        f"Write a newsletter section called '{display_name}' for TrueFans SIGNAL.\n\n"
     )
     if prompt_template:
         prompt += f"Section guidelines: {prompt_template}\n\n"

@@ -15,7 +15,7 @@ class EditorInChiefAgent(AgentBase):
     default_name = "Editor-in-Chief"
     default_persona = "Experienced magazine editor with a keen eye for compelling content and audience engagement."
     default_system_prompt = (
-        "You are the Editor-in-Chief of TrueFans NEWSLETTERS. "
+        "You are the Editor-in-Chief of TrueFans SIGNAL. "
         "You plan issues, assign sections to writers, review drafts for quality, "
         "and ensure each issue tells a cohesive story for independent artists."
     )

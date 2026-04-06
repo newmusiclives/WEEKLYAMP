@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vote Recorded — TrueFans NEWSLETTERS</title>
+    <title>Vote Recorded — TrueFans SIGNAL</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -119,7 +119,7 @@
 </head>
 <body>
     <div class="container">
-        <div class="brand">TrueFans NEWSLETTERS</div>
+        <div class="brand">TrueFans SIGNAL</div>
 
         {% if vote_result.already_voted %}
             <h1>Already Voted!</h1>
@@ -166,7 +166,7 @@
             {{ results.total_votes if results.total_votes is defined else 0 }} total vote{{ 's' if (results.total_votes if results.total_votes is defined else 0) != 1 else '' }}
         </div>
 
-        <a href="/subscribe" class="cta">Subscribe to TrueFans NEWSLETTERS</a>
+        <a href="/subscribe" class="cta">Subscribe to TrueFans SIGNAL</a>
     </div>
 </body>
 </html>

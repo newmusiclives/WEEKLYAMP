@@ -1,4 +1,4 @@
--- TrueFans NEWSLETTERS Database Schema (v10)
+-- TrueFans SIGNAL Database Schema (v10)
 
 CREATE TABLE IF NOT EXISTS schema_version (
     version INTEGER PRIMARY KEY,

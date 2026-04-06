@@ -1,1 +1,1 @@
-"""Artist submission system for TrueFans NEWSLETTERS."""
+"""Artist submission system for TrueFans SIGNAL."""

@@ -104,7 +104,7 @@ class GuestArticleManager:
             if not content and article.get("content_full"):
                 # AI-summarize
                 prompt = (
-                    f"Summarize this guest article for TrueFans NEWSLETTERS in 200-300 words. "
+                    f"Summarize this guest article for TrueFans SIGNAL in 200-300 words. "
                     f"Preserve the author's key points and voice.\n\n"
                     f"Title: {article['title']}\n"
                     f"Author: {article['author_name']}\n\n"

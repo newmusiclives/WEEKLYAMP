@@ -676,7 +676,7 @@ class GHLConfig(BaseModel):
 
 
 class NewsletterConfig(BaseModel):
-    name: str = "TrueFans NEWSLETTERS"
+    name: str = "TrueFans SIGNAL"
     tagline: str = "for Industry Professionals, Music Artists and Fans"
     from_name: str = "PS"
     reply_to: str = ""
@@ -714,7 +714,7 @@ class EmailConfig(BaseModel):
     smtp_user: str = ""
     smtp_password: str = ""
     from_address: str = ""
-    from_name: str = "TrueFans NEWSLETTERS"
+    from_name: str = "TrueFans SIGNAL"
 
 
 class AnalyticsConfig(BaseModel):
@@ -871,8 +871,8 @@ class I18nConfig(BaseModel):
 
 class PodcastConfig(BaseModel):
     enabled: bool = False
-    intro_text: str = "Welcome to TrueFans Newsletters, the podcast."
-    outro_text: str = "Thanks for listening to TrueFans Newsletters."
+    intro_text: str = "Welcome to TrueFans SIGNAL, the podcast."
+    outro_text: str = "Thanks for listening to TrueFans SIGNAL."
     rss_enabled: bool = False
 
 

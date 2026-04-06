@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Issue #{{ issue.issue_number }}{% if issue.title %} — {{ issue.title }}{% endif %} — TrueFans NEWSLETTERS</title>
+    <title>Issue #{{ issue.issue_number }}{% if issue.title %} — {{ issue.title }}{% endif %} — TrueFans SIGNAL</title>
     {% if description %}
     <meta name="description" content="{{ description }}">
     <meta property="og:title" content="{{ issue.title or ('TrueFans Issue #' + issue.issue_number|string) }}">
@@ -14,7 +14,7 @@
     <meta name="twitter:title" content="{{ issue.title or ('TrueFans Issue #' + issue.issue_number|string) }}">
     <meta name="twitter:description" content="{{ description }}">
     <script type="application/ld+json">
-    {"@context":"https://schema.org","@type":"Article","headline":"{{ issue.title or ('Issue #' + issue.issue_number|string) }}","datePublished":"{{ issue.publish_date or '' }}","publisher":{"@type":"Organization","name":"TrueFans NEWSLETTERS"}}
+    {"@context":"https://schema.org","@type":"Article","headline":"{{ issue.title or ('Issue #' + issue.issue_number|string) }}","datePublished":"{{ issue.publish_date or '' }}","publisher":{"@type":"Organization","name":"TrueFans SIGNAL"}}
     </script>
     {% endif %}
     <link rel="preconnect" href="https://fonts.googleapis.com">

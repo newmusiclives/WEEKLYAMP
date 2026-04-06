@@ -17,7 +17,7 @@ class MarketingAgent(AgentBase):
     default_name = "Chief Marketing Officer"
     default_persona = "Strategic marketing leader who orchestrates subscriber growth and sponsor sales."
     default_system_prompt = (
-        "You are the CMO of TrueFans NEWSLETTERS. "
+        "You are the CMO of TrueFans SIGNAL. "
         "You plan and execute marketing campaigns for subscriber growth "
         "and sponsor sales across email, SMS, voice, and AI channels."
     )
@@ -52,7 +52,7 @@ class MarketingAgent(AgentBase):
         edition_names = ", ".join(e["name"] for e in editions)
 
         prompt = (
-            f"Identify 5 companies that would be ideal sponsors for TrueFans NEWSLETTERS.\n\n"
+            f"Identify 5 companies that would be ideal sponsors for TrueFans SIGNAL.\n\n"
             f"We have {subscriber_count} subscribers across these editions: {edition_names}.\n"
             f"Our audience: music fans, independent artists, and industry professionals.\n\n"
             f"For each company provide:\n"
@@ -76,7 +76,7 @@ class MarketingAgent(AgentBase):
 
         for prospect in prospects[:5]:  # Batch of 5
             prompt = (
-                f"Write a personalized sponsorship outreach email for TrueFans NEWSLETTERS.\n\n"
+                f"Write a personalized sponsorship outreach email for TrueFans SIGNAL.\n\n"
                 f"Prospect: {prospect['company_name']}\n"
                 f"Contact: {prospect.get('contact_name', 'Marketing Team')}\n"
                 f"Website: {prospect.get('website', 'N/A')}\n"
@@ -107,7 +107,7 @@ class MarketingAgent(AgentBase):
         growth = self.repo.get_growth_trend(days=14)
 
         prompt = (
-            f"Generate 5 actionable subscriber growth tactics for TrueFans NEWSLETTERS.\n\n"
+            f"Generate 5 actionable subscriber growth tactics for TrueFans SIGNAL.\n\n"
             f"Current subscribers: {subscriber_count}\n"
             f"Editions: Fan (music fans), Artist (indie musicians), Industry (music business)\n"
             f"Frequency: 3x weekly per edition\n\n"
@@ -133,7 +133,7 @@ class MarketingAgent(AgentBase):
         for issue in issues:
             prompt = (
                 f"Write 3 social media posts promoting Issue #{issue['issue_number']} "
-                f"of TrueFans NEWSLETTERS ({issue.get('edition_slug', '')} edition).\n\n"
+                f"of TrueFans SIGNAL ({issue.get('edition_slug', '')} edition).\n\n"
                 f"1. Twitter/X (max 280 chars, include hashtags)\n"
                 f"2. LinkedIn (professional tone, 2-3 paragraphs)\n"
                 f"3. Instagram caption (engaging, include emojis)\n\n"
@@ -165,7 +165,7 @@ class MarketingAgent(AgentBase):
             return {"drafted": 0, "message": "No at-risk subscribers found"}
 
         prompt = (
-            f"Write a win-back email for TrueFans NEWSLETTERS subscribers who haven't "
+            f"Write a win-back email for TrueFans SIGNAL subscribers who haven't "
             f"opened an email in 2+ weeks.\n\n"
             f"The email should:\n"
             f"1. Acknowledge they've been away (no guilt)\n"
@@ -200,7 +200,7 @@ class MarketingAgent(AgentBase):
             pipeline[status] = pipeline.get(status, 0) + 1
 
         prompt = (
-            f"Write a concise weekly marketing report for TrueFans NEWSLETTERS.\n\n"
+            f"Write a concise weekly marketing report for TrueFans SIGNAL.\n\n"
             f"Subscriber count: {subscriber_count}\n"
             f"Total outreach sent: {stats.get('total_outreach', 0)}\n"
             f"Active campaigns: {stats.get('active_campaigns', 0)}\n"

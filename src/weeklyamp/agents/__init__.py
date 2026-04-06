@@ -1,1 +1,1 @@
-"""AI Staff system for TrueFans NEWSLETTERS."""
+"""AI Staff system for TrueFans SIGNAL."""

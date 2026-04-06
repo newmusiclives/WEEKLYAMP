@@ -1,4 +1,4 @@
-"""FastAPI web application for the TrueFans NEWSLETTERS dashboard."""
+"""FastAPI web application for the TrueFans SIGNAL dashboard."""
 
 from __future__ import annotations
 
@@ -135,7 +135,7 @@ def create_app() -> FastAPI:
         stop_scheduler()
         logger.info("Shutting down — closing database connections")
 
-    app = FastAPI(title="TrueFans NEWSLETTERS", docs_url="/docs", redoc_url="/redoc", lifespan=lifespan)
+    app = FastAPI(title="TrueFans SIGNAL", docs_url="/docs", redoc_url="/redoc", lifespan=lifespan)
 
     # Store config on app for access in routes
     app.state.config = config

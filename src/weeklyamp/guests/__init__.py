@@ -1,1 +1,1 @@
-"""Guest article system for TrueFans NEWSLETTERS."""
+"""Guest article system for TrueFans SIGNAL."""

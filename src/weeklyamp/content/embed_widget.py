@@ -50,13 +50,13 @@ def generate_embed_code(
     if edition_slug:
         edition_field = f'<input type="hidden" name="editions" value="{edition_val}">'
 
-    return f"""<!-- TrueFans NEWSLETTERS Subscribe Widget -->
+    return f"""<!-- TrueFans SIGNAL Subscribe Widget -->
 <div id="truefans-subscribe" style="max-width:400px;margin:0 auto;padding:24px;
      background:{bg};border-radius:12px;font-family:Arial,sans-serif;
      border:1px solid {input_border};">
   <div style="text-align:center;margin-bottom:16px;">
     <div style="font-size:18px;font-weight:700;color:{text_color};">
-      Subscribe to TrueFans NEWSLETTERS
+      Subscribe to TrueFans SIGNAL
     </div>
     <div style="font-size:13px;color:#9ca3af;margin-top:4px;">
       Free music industry intelligence, 3x weekly
@@ -79,7 +79,7 @@ def generate_embed_code(
   <div style="text-align:center;margin-top:10px;">
     <a href="{domain}" target="_blank"
        style="font-size:11px;color:#9ca3af;text-decoration:none;">
-      Powered by TrueFans NEWSLETTERS
+      Powered by TrueFans SIGNAL
     </a>
   </div>
 </div>
@@ -88,7 +88,7 @@ def generate_embed_code(
 
 def generate_badge_html(
     site_domain: str,
-    text: str = "Featured in TrueFans NEWSLETTERS",
+    text: str = "Featured in TrueFans SIGNAL",
 ) -> str:
     """Generate an "As Featured In" badge HTML snippet.
 

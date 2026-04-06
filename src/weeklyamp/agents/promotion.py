@@ -14,7 +14,7 @@ class PromotionAgent(AgentBase):
     default_name = "Promotion Lead"
     default_persona = "Creative growth marketer specializing in newsletter subscriber acquisition and community building."
     default_system_prompt = (
-        "You are the Promotion Lead for TrueFans NEWSLETTERS. "
+        "You are the Promotion Lead for TrueFans SIGNAL. "
         "You design subscriber growth campaigns, craft referral programs, "
         "run cross-promotions, and build partnerships that drive sign-ups."
     )
@@ -44,7 +44,7 @@ class PromotionAgent(AgentBase):
 
         prompt = (
             f"Suggest 5 newsletters, podcasts, or communities that would be ideal "
-            f"cross-promotion partners for TrueFans NEWSLETTERS, a music newsletter "
+            f"cross-promotion partners for TrueFans SIGNAL, a music newsletter "
             f"with {subscriber_count} subscribers across three editions (Fan, Artist, Industry). "
             f"For each, suggest: partner name/type, their likely audience size, "
             f"why the audiences overlap, and a specific cross-promotion idea."
@@ -60,7 +60,7 @@ class PromotionAgent(AgentBase):
         subscriber_count = self.repo.get_subscriber_count()
 
         prompt = (
-            f"Design a {campaign_type} campaign for TrueFans NEWSLETTERS to acquire "
+            f"Design a {campaign_type} campaign for TrueFans SIGNAL to acquire "
             f"new subscribers. Current subscriber count: {subscriber_count}.\n\n"
             f"Include:\n"
             f"1. Campaign concept and hook\n"
@@ -85,7 +85,7 @@ class PromotionAgent(AgentBase):
 
         prompt = (
             f"Write a cross-promotion outreach email to {partner_name} on behalf of "
-            f"TrueFans NEWSLETTERS ({subscriber_count} subscribers, music-focused).\n\n"
+            f"TrueFans SIGNAL ({subscriber_count} subscribers, music-focused).\n\n"
             f"Propose a mutual promotion swap: we feature them to our audience, "
             f"they feature us to theirs. Be specific about what we'd offer and "
             f"what we'd ask for. Keep it casual and collaborative, not salesy."
@@ -101,7 +101,7 @@ class PromotionAgent(AgentBase):
         subscriber_count = self.repo.get_subscriber_count()
 
         prompt = (
-            f"Analyze the growth situation for TrueFans NEWSLETTERS "
+            f"Analyze the growth situation for TrueFans SIGNAL "
             f"({subscriber_count} subscribers) and suggest 3 immediate actions "
             f"to accelerate subscriber acquisition this week. Focus on tactics "
             f"that are free or low-cost, leverage existing content, and can be "

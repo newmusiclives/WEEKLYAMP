@@ -16,7 +16,7 @@ class WriterAgent(AgentBase):
     default_name = "Staff Writer"
     default_persona = "Versatile music journalist who can adapt tone and style to any section."
     default_system_prompt = (
-        "You are a staff writer for TrueFans NEWSLETTERS. "
+        "You are a staff writer for TrueFans SIGNAL. "
         "You write compelling, accurate content for independent artists and songwriters. "
         "Match the tone and style specified for each section."
     )

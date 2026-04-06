@@ -84,11 +84,11 @@ def generate_media_kit_text(repo: Repository, config) -> str:
     subscriber_count = repo.get_subscriber_count()
     editions = repo.get_editions()
 
-    kit = f"""TRUEFANS NEWSLETTERS — MEDIA KIT
+    kit = f"""TRUEFANS SIGNAL — MEDIA KIT
 {'=' * 50}
 
 OVERVIEW
-TrueFans NEWSLETTERS is a music industry newsletter platform
+TrueFans SIGNAL is a music industry newsletter platform
 publishing {len(editions)} editions, 3x weekly.
 
 AUDIENCE

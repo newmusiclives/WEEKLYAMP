@@ -1,11 +1,11 @@
 newsletter:
-  name: "TrueFans NEWSLETTERS"
+  name: "TrueFans SIGNAL"
   tagline: "The music newsletters for industry professionals, music artists and their fans."
   from_name: "PS"
   reply_to: ""
   header_image_url: "https://web-production-88ebc.up.railway.app/static/header-logo.png"
   intro_copy: "<p style='font-size:18px;font-weight:600;color:#000000;margin:0'>The independent artist's edge — music industry intelligence, creative strategy, and the tools to build your career on your own terms.</p>"
-  footer_html: "<p><strong>TrueFans NEWSLETTERS</strong> — for Industry Professionals, Music Artists and Fans</p><p style='margin:8px 0'>&copy; 2026 TrueFans NEWSLETTERS. All rights reserved.</p><p style='margin:8px 0'><a href='#'>Twitter</a> &nbsp;|&nbsp; <a href='#'>Instagram</a> &nbsp;|&nbsp; <a href='#'>LinkedIn</a></p>"
+  footer_html: "<p><strong>TrueFans SIGNAL</strong> — for Industry Professionals, Music Artists and Fans</p><p style='margin:8px 0'>&copy; 2026 TrueFans SIGNAL. All rights reserved.</p><p style='margin:8px 0'><a href='#'>Twitter</a> &nbsp;|&nbsp; <a href='#'>Instagram</a> &nbsp;|&nbsp; <a href='#'>LinkedIn</a></p>"
 
 ai:
   provider: "anthropic"
@@ -52,7 +52,7 @@ email:
   smtp_user: ""                   # your-user@yourdomain.com (from GHL SMTP settings)
   smtp_password: ""               # from GHL SMTP settings
   from_address: ""                # your sending email address
-  from_name: "TrueFans NEWSLETTERS"
+  from_name: "TrueFans SIGNAL"
 
 analytics:
   plausible_domain: ""  # e.g. "truefansnewsletters.com" — leave empty to disable
@@ -267,8 +267,8 @@ i18n:
 # --- Podcast generation from newsletter content (INACTIVE) ---
 podcast:
   enabled: false
-  intro_text: "Welcome to TrueFans Newsletters, the podcast."
-  outro_text: "Thanks for listening to TrueFans Newsletters."
+  intro_text: "Welcome to TrueFans SIGNAL, the podcast."
+  outro_text: "Thanks for listening to TrueFans SIGNAL."
   rss_enabled: false
 
 # --- Franchise / territory model (INACTIVE) ---
