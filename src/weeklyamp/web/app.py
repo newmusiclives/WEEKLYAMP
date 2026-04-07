@@ -200,35 +200,81 @@ def create_app() -> FastAPI:
 
     @app.get("/health/ready")
     def readiness():
-        """Readiness check — verifies all dependencies are available."""
+        """Readiness check — verifies all dependencies are available.
+
+        This endpoint is designed to be hit every 30-60 seconds by an
+        uptime monitor (Better Stack, Railway, etc.). It must return in
+        under 500ms and must NOT perform any operation that contacts an
+        external service synchronously (no SMTP handshake, no outbound
+        HTTP). External-service health is reported by last-known-state
+        checks against the database only.
+        """
         checks = {}
         overall = True
 
-        # Database
+        # --- Database (read + write) ---
         try:
             from weeklyamp.web.deps import get_repo
             repo = get_repo()
             repo.get_editions()
-            checks["db"] = "ok"
+            checks["db_read"] = "ok"
         except Exception as exc:
-            checks["db"] = f"error: {exc}"
+            checks["db_read"] = f"error: {exc}"
             overall = False
 
-        # AI provider (check key is set, don't make a call)
+        # DB backend + schema version — helps diagnose env var confusion
+        try:
+            from weeklyamp.core.database import _get_backend, get_schema_version
+            backend = _get_backend()
+            version = get_schema_version()
+            checks["db_backend"] = backend
+            checks["db_schema_version"] = version if version is not None else "unknown"
+        except Exception as exc:
+            checks["db_backend"] = f"error: {exc}"
+            overall = False
+
+        # --- AI provider (key presence only, no outbound call) ---
         if os.environ.get("ANTHROPIC_API_KEY") or os.environ.get("OPENAI_API_KEY"):
             checks["ai_provider"] = "configured"
         else:
             checks["ai_provider"] = "not configured"
 
-        # Email
+        # --- Email (config only — no SMTP handshake on health check) ---
         if config.email.enabled:
             if config.email.smtp_host:
-                checks["email"] = "configured"
+                checks["email"] = "enabled"
             else:
                 checks["email"] = "enabled but smtp_host missing"
                 overall = False
         else:
             checks["email"] = "disabled"
+
+        # --- Scheduler / background workers ---
+        workers_on = os.environ.get("WEEKLYAMP_WORKERS_ENABLED", "").lower() in (
+            "true", "1", "yes",
+        )
+        checks["workers"] = "enabled" if workers_on else "disabled"
+
+        # --- Last successful send (indirect scheduler/delivery heartbeat) ---
+        try:
+            from weeklyamp.core.database import _get_backend as _gb
+            from weeklyamp.web.deps import get_repo
+            repo = get_repo()
+            conn = repo._conn()
+            ph = "%s" if _gb() == "postgres" else "?"
+            row = conn.execute(
+                "SELECT MAX(updated_at) AS last_send FROM assembled_issues "
+                f"WHERE status IN ({ph}, {ph})",
+                ("sent", "published"),
+            ).fetchone()
+            conn.close()
+            last = None
+            if row:
+                # Row shape differs between sqlite (tuple) and pg (dict)
+                last = row["last_send"] if isinstance(row, dict) else row[0]
+            checks["last_send"] = str(last) if last else "never"
+        except Exception as exc:
+            checks["last_send"] = f"error: {exc}"
 
         status_code = 200 if overall else 503
         return JSONResponse(
