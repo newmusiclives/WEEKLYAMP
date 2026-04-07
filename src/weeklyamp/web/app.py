@@ -257,24 +257,23 @@ def create_app() -> FastAPI:
 
         # --- Last successful send (indirect scheduler/delivery heartbeat) ---
         try:
-            from weeklyamp.core.database import _get_backend as _gb
             from weeklyamp.web.deps import get_repo
             repo = get_repo()
             conn = repo._conn()
-            ph = "%s" if _gb() == "postgres" else "?"
             row = conn.execute(
-                "SELECT MAX(updated_at) AS last_send FROM assembled_issues "
-                f"WHERE status IN ({ph}, {ph})",
-                ("sent", "published"),
+                "SELECT MAX(published_at) AS last_send FROM assembled_issues"
             ).fetchone()
             conn.close()
             last = None
             if row:
-                # Row shape differs between sqlite (tuple) and pg (dict)
-                last = row["last_send"] if isinstance(row, dict) else row[0]
+                # Row shape differs between sqlite (tuple-like) and pg (dict)
+                try:
+                    last = row["last_send"]
+                except (KeyError, IndexError, TypeError):
+                    last = row[0] if row else None
             checks["last_send"] = str(last) if last else "never"
         except Exception as exc:
-            checks["last_send"] = f"error: {exc}"
+            checks["last_send"] = f"error: {str(exc)[:80]}"
 
         status_code = 200 if overall else 503
         return JSONResponse(
