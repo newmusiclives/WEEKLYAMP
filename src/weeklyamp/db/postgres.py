@@ -78,13 +78,24 @@ class PgConnection:
         return PgCursor(cur)
 
     def executescript(self, sql: str) -> None:
-        """Run a multi-statement SQL script (used for schema init / migrations)."""
+        """Run a multi-statement SQL script (used for schema init / migrations).
+
+        psycopg2 refuses to change autocommit mode while a transaction is open,
+        so we commit any pending work first before switching into autocommit
+        mode to execute the script.
+        """
         old_autocommit = self._conn.autocommit
+        if not old_autocommit:
+            # Close any in-flight transaction from prior queries on this
+            # connection; otherwise set_session raises ProgrammingError.
+            self._conn.commit()
         self._conn.autocommit = True
-        cur = self._conn.cursor()
-        cur.execute(sql)
-        cur.close()
-        self._conn.autocommit = old_autocommit
+        try:
+            cur = self._conn.cursor()
+            cur.execute(sql)
+            cur.close()
+        finally:
+            self._conn.autocommit = old_autocommit
 
     def commit(self) -> None:
         self._conn.commit()

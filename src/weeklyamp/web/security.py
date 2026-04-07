@@ -89,16 +89,16 @@ def _get_client_ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
-def _is_rate_limited(ip: str) -> bool:
-    """Check if an IP has exceeded the login attempt limit."""
+def _is_rate_limited(ip: str, limit_type: str = "login") -> bool:
+    """Check if an IP has exceeded the attempt limit for the given limit type."""
     max_attempts, window = _get_login_rate_config()
     try:
         conn = _rate_limit_conn()
         row = conn.execute(
             "SELECT COUNT(*) FROM rate_limits "
-            "WHERE ip_address = ? AND limit_type = 'login' "
+            "WHERE ip_address = ? AND limit_type = ? "
             "AND attempted_at >= datetime('now', '-' || ? || ' seconds')",
-            (ip, window),
+            (ip, limit_type, window),
         ).fetchone()
         conn.close()
         return (row[0] if row else 0) >= max_attempts
@@ -107,32 +107,32 @@ def _is_rate_limited(ip: str) -> bool:
         return False
 
 
-def _record_attempt(ip: str) -> None:
-    """Record a failed login attempt for an IP."""
+def _record_attempt(ip: str, limit_type: str = "login") -> None:
+    """Record a failed attempt for an IP under the given limit type."""
     try:
         conn = _rate_limit_conn()
         conn.execute(
-            "INSERT INTO rate_limits (ip_address, limit_type) VALUES (?, 'login')",
-            (ip,),
+            "INSERT INTO rate_limits (ip_address, limit_type) VALUES (?, ?)",
+            (ip, limit_type),
         )
         conn.commit()
         conn.close()
     except Exception:
-        logger.warning("Failed to record login attempt", exc_info=True)
+        logger.warning("Failed to record attempt for limit_type=%s", limit_type, exc_info=True)
 
 
-def _clear_attempts(ip: str) -> None:
-    """Clear login attempts for an IP after successful login."""
+def _clear_attempts(ip: str, limit_type: str = "login") -> None:
+    """Clear attempts for an IP under the given limit type after a successful action."""
     try:
         conn = _rate_limit_conn()
         conn.execute(
-            "DELETE FROM rate_limits WHERE ip_address = ? AND limit_type = 'login'",
-            (ip,),
+            "DELETE FROM rate_limits WHERE ip_address = ? AND limit_type = ?",
+            (ip, limit_type),
         )
         conn.commit()
         conn.close()
     except Exception:
-        logger.warning("Failed to clear login attempts", exc_info=True)
+        logger.warning("Failed to clear attempts for limit_type=%s", limit_type, exc_info=True)
 
 
 # ---- Secure cookie helpers ----
@@ -207,6 +207,51 @@ def is_authenticated(request: Request) -> bool:
         return True
     except (BadSignature, SignatureExpired):
         return False
+
+
+# ---- Licensee session helpers ----
+
+_LICENSEE_SESSION_COOKIE = "_licensee_session"
+
+
+def create_licensee_session(response: Response, licensee_id: int, request: Request | None = None) -> Response:
+    """Sign and set a licensee session cookie identifying which licensee is logged in."""
+    signer = _get_signer()
+    signed = signer.sign(f"licensee:{int(licensee_id)}".encode()).decode()
+    secure = _is_secure(request) if request else False
+    response.set_cookie(
+        _LICENSEE_SESSION_COOKIE,
+        signed,
+        max_age=_get_session_max_age(),
+        httponly=True,
+        samesite="lax",
+        secure=secure,
+    )
+    return response
+
+
+def get_licensee_id_from_session(request: Request) -> int | None:
+    """Return the authenticated licensee_id from the session cookie, or None."""
+    cookie = request.cookies.get(_LICENSEE_SESSION_COOKIE)
+    if not cookie:
+        return None
+    signer = _get_signer()
+    try:
+        raw = signer.unsign(cookie, max_age=_get_session_max_age()).decode()
+    except (BadSignature, SignatureExpired):
+        return None
+    if not raw.startswith("licensee:"):
+        return None
+    try:
+        return int(raw.split(":", 1)[1])
+    except (ValueError, IndexError):
+        return None
+
+
+def clear_licensee_session(response: Response) -> Response:
+    """Remove the licensee session cookie."""
+    response.delete_cookie(_LICENSEE_SESSION_COOKIE)
+    return response
 
 
 def _is_public(path: str) -> bool:

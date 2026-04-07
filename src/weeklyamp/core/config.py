@@ -312,7 +312,7 @@ def load_config(config_path: Optional[str] = None) -> AppConfig:
     # DB path and backend
     db_path = os.getenv("WEEKLYAMP_DB_PATH", yaml_data.get("db_path", "data/weeklyamp.db"))
     db_backend = os.getenv("WEEKLYAMP_DB_BACKEND", yaml_data.get("db_backend", "sqlite"))
-    database_url = os.getenv("WEEKLYAMP_DATABASE_URL", yaml_data.get("database_url", ""))
+    database_url = os.getenv("WEEKLYAMP_DATABASE_URL", "") or os.getenv("DATABASE_URL", "") or yaml_data.get("database_url", "")
 
     # Site domain
     site_domain = os.getenv("WEEKLYAMP_SITE_DOMAIN", yaml_data.get("site_domain", "https://truefansnewsletters.com"))

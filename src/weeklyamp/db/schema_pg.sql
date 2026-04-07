@@ -601,7 +601,10 @@ CREATE INDEX IF NOT EXISTS idx_edition_markets_edition ON edition_markets(editio
 
 CREATE TABLE IF NOT EXISTS artist_newsletters (
     id SERIAL PRIMARY KEY,
-    artist_profile_id INTEGER REFERENCES artist_profiles(id),
+    -- FK to artist_profiles is added later by migrations.py (the table is
+    -- defined there, not in this base schema). Keep as a plain INTEGER here
+    -- so the base schema loads cleanly before migrations run.
+    artist_profile_id INTEGER,
     artist_name TEXT NOT NULL,
     slug TEXT UNIQUE NOT NULL,
     brand_color TEXT DEFAULT '#e8645a',

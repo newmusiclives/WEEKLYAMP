@@ -25,6 +25,15 @@ def _get_backend() -> str:
     return os.getenv("WEEKLYAMP_DB_BACKEND", "sqlite").lower()
 
 
+def _get_database_url() -> str:
+    """Return the Postgres DSN, checking WEEKLYAMP_DATABASE_URL first, then
+    the Railway-conventional DATABASE_URL as a fallback."""
+    return (
+        os.getenv("WEEKLYAMP_DATABASE_URL", "")
+        or os.getenv("DATABASE_URL", "")
+    )
+
+
 # ---------------------------------------------------------------------------
 # SQLite helpers (original behaviour)
 # ---------------------------------------------------------------------------
@@ -57,7 +66,7 @@ def get_connection(db_path: str = "", database_url: str = "", backend: str = "")
     backend = backend or _get_backend()
 
     if backend == "postgres":
-        url = database_url or os.getenv("WEEKLYAMP_DATABASE_URL", "")
+        url = database_url or _get_database_url()
         if not url:
             raise RuntimeError(
                 "WEEKLYAMP_DATABASE_URL must be set when using the postgres backend"
@@ -75,7 +84,7 @@ def init_database(db_path: str = "", database_url: str = "", backend: str = "") 
     backend = backend or _get_backend()
 
     if backend == "postgres":
-        url = database_url or os.getenv("WEEKLYAMP_DATABASE_URL", "")
+        url = database_url or _get_database_url()
         from weeklyamp.db.postgres import init_pg_database
         init_pg_database(url)
         return
@@ -97,7 +106,7 @@ def get_schema_version(db_path: str = "", database_url: str = "", backend: str =
     backend = backend or _get_backend()
 
     if backend == "postgres":
-        url = database_url or os.getenv("WEEKLYAMP_DATABASE_URL", "")
+        url = database_url or _get_database_url()
         from weeklyamp.db.postgres import get_pg_schema_version
         return get_pg_schema_version(url)
 
