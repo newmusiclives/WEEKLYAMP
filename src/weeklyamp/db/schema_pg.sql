@@ -458,19 +458,24 @@ CREATE TABLE IF NOT EXISTS subscriber_tiers (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Note: the original v26 migration used stripe_* column names. Those were
+-- later renamed to payment_* (payment_customer_id, payment_subscription_id)
+-- to make the payment provider generic. This base schema uses the final
+-- names so re-runs remain idempotent. The index on the subscription id
+-- uses the new column name too.
 CREATE TABLE IF NOT EXISTS subscriber_billing (
     id SERIAL PRIMARY KEY,
     subscriber_id INTEGER NOT NULL REFERENCES subscribers(id),
     tier_id INTEGER NOT NULL REFERENCES subscriber_tiers(id),
-    stripe_customer_id TEXT DEFAULT '',
-    stripe_subscription_id TEXT DEFAULT '',
+    payment_customer_id TEXT DEFAULT '',
+    payment_subscription_id TEXT DEFAULT '',
     status TEXT DEFAULT 'active' CHECK (status IN ('active','cancelled','past_due')),
     current_period_end TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_billing_subscriber ON subscriber_billing(subscriber_id);
-CREATE INDEX IF NOT EXISTS idx_billing_stripe ON subscriber_billing(stripe_subscription_id);
+CREATE INDEX IF NOT EXISTS idx_billing_payment ON subscriber_billing(payment_subscription_id);
 
 -- Audio newsletter
 CREATE TABLE IF NOT EXISTS audio_issues (
