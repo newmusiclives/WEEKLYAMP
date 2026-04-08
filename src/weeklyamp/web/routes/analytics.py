@@ -1,10 +1,162 @@
 """Advanced analytics routes — NPS, reports, forecasting, media kit."""
 from __future__ import annotations
+
+from datetime import datetime, timedelta
+
 from fastapi import APIRouter, Request
-from fastapi.responses import HTMLResponse, PlainTextResponse
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
+
 from weeklyamp.web.deps import get_config, get_repo, render
 
 router = APIRouter()
+
+
+@router.get("/cohorts")
+async def cohorts_dashboard(request: Request):
+    """Subscriber retention cohort dashboard.
+
+    Buckets active subscribers by signup month and reports how many
+    are still active and how many have unsubscribed for each cohort.
+    Optional ?source=<channel> filter narrows by source_channel.
+
+    Returns JSON. The HTML dashboard can be added later — for now
+    this is consumable by an internal tool or a curl call.
+    """
+    repo = get_repo()
+    source = request.query_params.get("source", "").strip()
+    conn = repo._conn()
+
+    sql = (
+        "SELECT subscribed_at, status, source_channel FROM subscribers "
+        "WHERE subscribed_at IS NOT NULL"
+    )
+    params: tuple = ()
+    if source:
+        sql += " AND source_channel = ?"
+        params = (source,)
+    try:
+        rows = conn.execute(sql, params).fetchall()
+        rows = [dict(r) for r in rows]
+    except Exception:
+        rows = []
+
+    # Bucket by year-month of signup
+    cohorts: dict[str, dict[str, int]] = {}
+    for r in rows:
+        ts = r.get("subscribed_at")
+        if not ts:
+            continue
+        # Cope with both datetime objects (postgres) and ISO strings (sqlite)
+        try:
+            if isinstance(ts, str):
+                month = ts[:7]  # YYYY-MM
+            else:
+                month = ts.strftime("%Y-%m")
+        except Exception:
+            continue
+        bucket = cohorts.setdefault(
+            month, {"signups": 0, "active": 0, "unsubscribed": 0}
+        )
+        bucket["signups"] += 1
+        if r.get("status") == "active":
+            bucket["active"] += 1
+        elif r.get("status") == "unsubscribed":
+            bucket["unsubscribed"] += 1
+
+    # Sources distribution
+    sources: dict[str, int] = {}
+    for r in rows:
+        src = r.get("source_channel") or "(unknown)"
+        sources[src] = sources.get(src, 0) + 1
+
+    conn.close()
+
+    # Build sorted cohort list with retention rate
+    cohort_list = []
+    for month in sorted(cohorts.keys(), reverse=True):
+        c = cohorts[month]
+        signups = c["signups"]
+        retention = round(c["active"] / signups * 100, 1) if signups else 0.0
+        cohort_list.append({
+            "month": month,
+            "signups": signups,
+            "active": c["active"],
+            "unsubscribed": c["unsubscribed"],
+            "retention_pct": retention,
+        })
+
+    return JSONResponse({
+        "filter_source": source or None,
+        "cohorts": cohort_list,
+        "sources": sorted(
+            [{"source": k, "count": v} for k, v in sources.items()],
+            key=lambda x: -x["count"],
+        ),
+        "total_subscribers": sum(c["signups"] for c in cohort_list),
+    })
+
+
+@router.get("/sections-heatmap")
+async def section_engagement_heatmap(request: Request):
+    """Per-section engagement heatmap.
+
+    Returns aggregate sends, opens, clicks per section across the last
+    30 days, sorted by click rate. Highlights which sections drive
+    engagement and which drag it down.
+    """
+    repo = get_repo()
+    cutoff = (datetime.utcnow() - timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")
+    conn = repo._conn()
+    rows: list[dict] = []
+    try:
+        # section_engagement_scores is the materialised aggregate; fall back
+        # to live event counting if the score table is empty.
+        score_rows = conn.execute(
+            "SELECT section_slug, sends, opens, clicks "
+            "FROM section_engagement_scores ORDER BY clicks DESC LIMIT 100"
+        ).fetchall()
+        rows = [dict(r) for r in score_rows]
+    except Exception:
+        try:
+            ev_rows = conn.execute(
+                "SELECT section_slug, event_type, COUNT(*) as n "
+                "FROM section_engagement_events WHERE occurred_at >= ? "
+                "GROUP BY section_slug, event_type",
+                (cutoff,),
+            ).fetchall()
+            buckets: dict[str, dict[str, int]] = {}
+            for r in ev_rows:
+                rd = dict(r)
+                slug = rd["section_slug"]
+                b = buckets.setdefault(slug, {"sends": 0, "opens": 0, "clicks": 0})
+                et = rd["event_type"]
+                if et in b:
+                    b[et] += int(rd["n"] or 0)
+            rows = [{"section_slug": k, **v} for k, v in buckets.items()]
+        except Exception:
+            rows = []
+    conn.close()
+
+    # Compute click + open rates per section
+    sections = []
+    for r in rows:
+        sends = max(int(r.get("sends") or 0), 1)
+        opens = int(r.get("opens") or 0)
+        clicks = int(r.get("clicks") or 0)
+        sections.append({
+            "section_slug": r.get("section_slug"),
+            "sends": sends,
+            "opens": opens,
+            "clicks": clicks,
+            "open_rate_pct": round(opens / sends * 100, 1),
+            "click_rate_pct": round(clicks / sends * 100, 1),
+        })
+    sections.sort(key=lambda s: -s["click_rate_pct"])
+    return JSONResponse({
+        "window_days": 30,
+        "section_count": len(sections),
+        "sections": sections,
+    })
 
 @router.get("/", response_class=HTMLResponse)
 async def analytics_hub(request: Request):

@@ -5,11 +5,54 @@ from __future__ import annotations
 import json
 
 from fastapi import APIRouter, Form, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 
 from weeklyamp.web.deps import get_config, get_repo, render
 
 router = APIRouter()
+
+
+@router.get("/events.json")
+async def calendar_events_json():
+    """Calendar entries shaped for FullCalendar.io and similar JS calendars.
+
+    Returns a list of events with id, title, date, status. The HTML
+    page can drop in a calendar widget that fetches this and POSTs
+    drag-to-reschedule events to /calendar/reschedule.
+    """
+    repo = get_repo()
+    entries = repo.get_calendar(limit=200)
+    events = []
+    for e in entries:
+        events.append({
+            "id": e.get("id"),
+            "title": e.get("theme") or f"Issue #{e.get('issue_id') or '?'}",
+            "start": e.get("planned_date"),
+            "extendedProps": {
+                "status": e.get("status"),
+                "issue_id": e.get("issue_id"),
+                "notes": e.get("notes"),
+            },
+        })
+    return JSONResponse(events)
+
+
+@router.post("/reschedule")
+async def calendar_reschedule(
+    entry_id: int = Form(...),
+    new_date: str = Form(...),
+):
+    """Drag-and-drop reschedule endpoint. Accepts the new ISO date and
+    updates the calendar entry. Returns 200 on success or 4xx on error.
+    """
+    if not new_date:
+        return JSONResponse({"error": "new_date required"}, status_code=400)
+    repo = get_repo()
+    try:
+        repo.update_calendar_entry(entry_id, planned_date=new_date)
+        return JSONResponse({"ok": True, "entry_id": entry_id, "new_date": new_date})
+    except Exception as exc:
+        return JSONResponse({"error": str(exc)[:200]}, status_code=500)
 
 
 @router.get("/", response_class=HTMLResponse)
