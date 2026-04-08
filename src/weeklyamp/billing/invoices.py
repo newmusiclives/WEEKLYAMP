@@ -148,6 +148,106 @@ class InvoiceManager:
         """Mark an invoice as paid."""
         self.repo.update_invoice_status(invoice_id, "paid", transaction_id)
 
+    # ---- Email delivery ----
+
+    def render_invoice_html(self, invoice: dict, recipient_name: str = "") -> str:
+        """Render a simple HTML invoice email body. Not a PDF — just clean
+        HTML the recipient can read in their inbox or print to PDF in the
+        browser. Real PDF generation is a follow-up that needs WeasyPrint.
+        """
+        line_items = []
+        try:
+            line_items = json.loads(invoice.get("line_items_json") or "[]")
+        except Exception:
+            line_items = []
+
+        rows_html = "\n".join(
+            f"""<tr>
+                <td style="padding:8px 12px;border-bottom:1px solid #eee;">{item.get('description','')}</td>
+                <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;">${(item.get('amount_cents',0)/100):.2f}</td>
+            </tr>"""
+            for item in line_items
+        )
+
+        total = (invoice.get("amount_cents") or 0) / 100
+        return f"""<!DOCTYPE html>
+<html><body style="font-family:-apple-system,Segoe UI,sans-serif;color:#1a1a1a;max-width:600px;margin:0 auto;padding:24px;">
+  <h1 style="margin:0 0 8px;">Invoice {invoice.get('invoice_number','')}</h1>
+  <p style="color:#666;margin:0 0 24px;">From TrueFans SIGNAL</p>
+  <p>Hi {recipient_name or 'there'},</p>
+  <p>Your invoice for the period is ready. Details below.</p>
+  <table style="width:100%;border-collapse:collapse;margin:24px 0;">
+    <thead><tr>
+      <th style="text-align:left;padding:8px 12px;border-bottom:2px solid #1a1a1a;">Description</th>
+      <th style="text-align:right;padding:8px 12px;border-bottom:2px solid #1a1a1a;">Amount</th>
+    </tr></thead>
+    <tbody>
+      {rows_html}
+      <tr>
+        <td style="padding:12px;font-weight:600;text-align:right;">Total</td>
+        <td style="padding:12px;font-weight:600;text-align:right;">${total:.2f}</td>
+      </tr>
+    </tbody>
+  </table>
+  <p><strong>Due:</strong> {invoice.get('due_date','')}</p>
+  <p>{invoice.get('notes','')}</p>
+  <p style="color:#666;font-size:12px;margin-top:48px;">
+    TrueFans SIGNAL · Questions? Reply to this email.
+  </p>
+</body></html>"""
+
+    def send_invoice_email(self, invoice_id: int, smtp_config) -> bool:
+        """Email the invoice HTML to the entity it belongs to. Returns
+        True on success, False on any failure (config off, no recipient,
+        SMTP error). Logs but does not raise.
+        """
+        try:
+            invoice = self.repo.get_invoice(invoice_id)
+        except Exception:
+            invoice = None
+        if not invoice:
+            logger.warning("send_invoice_email: invoice %s not found", invoice_id)
+            return False
+
+        # Resolve the recipient email by entity_type
+        entity_type = invoice.get("entity_type", "")
+        entity_id = invoice.get("entity_id")
+        to_email = ""
+        recipient_name = ""
+        if entity_type == "licensee":
+            lic = self.repo.get_licensee(entity_id) if entity_id else None
+            if lic:
+                to_email = lic.get("email") or ""
+                recipient_name = lic.get("contact_name") or lic.get("company_name") or ""
+        # Other entity types (artist_newsletter, subscriber) handled
+        # similarly when their ops require email delivery — keep this
+        # method narrowly scoped for now.
+
+        if not to_email:
+            logger.warning("send_invoice_email: no recipient for invoice %s", invoice_id)
+            return False
+
+        if not smtp_config or not smtp_config.enabled:
+            logger.info("send_invoice_email: smtp disabled, skipping invoice %s", invoice_id)
+            return False
+
+        from weeklyamp.delivery.smtp_sender import SMTPSender
+        sender = SMTPSender(smtp_config)
+        html = self.render_invoice_html(invoice, recipient_name=recipient_name)
+        subject = f"Invoice {invoice.get('invoice_number','')} from TrueFans SIGNAL"
+        ok = sender.send_single(
+            to_email=to_email,
+            subject=subject,
+            html_body=html,
+            plain_text=f"Invoice {invoice.get('invoice_number','')} — view in HTML",
+        )
+        if ok:
+            try:
+                self.repo.update_invoice_status(invoice_id, "sent")
+            except Exception:
+                pass
+        return ok
+
     # ---- Bulk Operations ----
 
     def generate_all_licensee_invoices(self, month: str = "") -> list[int]:

@@ -264,16 +264,36 @@ def _billing_dunning():
 
 
 def _billing_invoice_generation():
-    """Monthly: Generate invoices for all licensees and artist newsletters."""
+    """Monthly: Generate invoices for all licensees and artist newsletters,
+    then email each freshly-generated invoice to the entity it belongs to.
+    """
     try:
         config = _load_config()
         from weeklyamp.billing.invoices import InvoiceManager
         from weeklyamp.db.repository import Repository
-        repo = Repository(config.db_path)
+        repo = Repository(
+            db_path=config.db_path,
+            database_url=config.database_url,
+            backend=config.db_backend,
+        )
         mgr = InvoiceManager(repo, config)
         lic_ids = mgr.generate_all_licensee_invoices()
         art_ids = mgr.generate_all_artist_newsletter_invoices()
-        logger.info("Invoice generation: %d licensee, %d artist newsletter", len(lic_ids), len(art_ids))
+        logger.info(
+            "Invoice generation: %d licensee, %d artist newsletter",
+            len(lic_ids), len(art_ids),
+        )
+
+        # Email each fresh invoice. Failures are logged per-invoice and
+        # don't stop the loop — we'd rather send 9/10 than fail closed.
+        sent = 0
+        for inv_id in lic_ids + art_ids:
+            try:
+                if mgr.send_invoice_email(inv_id, config.email):
+                    sent += 1
+            except Exception:
+                logger.exception("Failed to email invoice %s", inv_id)
+        logger.info("Invoice delivery: %d/%d emailed", sent, len(lic_ids) + len(art_ids))
     except Exception:
         logger.exception("Invoice generation job failed")
 

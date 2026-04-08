@@ -3533,6 +3533,15 @@ class Repository:
         conn.close()
         return [dict(r) for r in rows]
 
+    def get_invoice(self, invoice_id: int) -> Optional[dict]:
+        """Return a single invoice row by id, or None."""
+        conn = self._conn()
+        row = conn.execute(
+            "SELECT * FROM invoices WHERE id = ?", (invoice_id,)
+        ).fetchone()
+        conn.close()
+        return dict(row) if row else None
+
     def update_invoice_status(self, invoice_id: int, status: str, payment_transaction_id: str = "") -> None:
         conn = self._conn()
         if status == "paid":
