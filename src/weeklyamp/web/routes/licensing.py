@@ -1,10 +1,135 @@
 """Licensing management — city edition franchise administration with Manifest billing."""
 from __future__ import annotations
+
+import socket
+
 from fastapi import APIRouter, Form, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+
 from weeklyamp.web.deps import get_config, get_repo, render
 
 router = APIRouter()
+
+
+@router.post("/{licensee_id}/branding")
+async def update_licensee_branding(
+    licensee_id: int,
+    request: Request,
+    custom_domain: str = Form(""),
+    logo_url: str = Form(""),
+    primary_color: str = Form(""),
+    footer_html: str = Form(""),
+    sender_name: str = Form(""),
+    reply_to_email: str = Form(""),
+):
+    """Update branding fields for a licensee. Setting a new custom_domain
+    automatically clears the verified flag and generates a fresh DNS
+    verification token.
+    """
+    repo = get_repo()
+    repo.update_licensee_branding(
+        licensee_id,
+        custom_domain=custom_domain or None,
+        logo_url=logo_url or None,
+        primary_color=primary_color or None,
+        footer_html=footer_html or None,
+        sender_name=sender_name or None,
+        reply_to_email=reply_to_email or None,
+    )
+    repo.log_admin_action(
+        action="licensee.branding.update",
+        target_type="licensee",
+        target_id=str(licensee_id),
+        ip_address=request.client.host if request.client else "",
+    )
+    return RedirectResponse(f"/admin/licensing/{licensee_id}", status_code=303)
+
+
+@router.post("/{licensee_id}/verify-domain")
+async def verify_licensee_domain(licensee_id: int, request: Request):
+    """Verify ownership of a licensee's custom domain via DNS TXT record.
+
+    Looks up `_truefans-verify.<domain>` and checks for a TXT record
+    matching the stored verify token. Returns JSON with verified status.
+    Idempotent — safe to call repeatedly.
+    """
+    repo = get_repo()
+    lic = repo.get_licensee(licensee_id)
+    if not lic:
+        return JSONResponse({"error": "licensee not found"}, status_code=404)
+
+    domain = (lic.get("custom_domain") or "").strip()
+    expected_token = (lic.get("domain_verify_token") or "").strip()
+    if not domain or not expected_token:
+        return JSONResponse({
+            "verified": False,
+            "error": "no custom_domain or verify_token set",
+        }, status_code=400)
+
+    record_name = f"_truefans-verify.{domain}"
+    found_records: list[str] = []
+    verified = False
+
+    # Best-effort DNS TXT lookup. Try dnspython if available, fall back
+    # to a stub that just reports "lookup unavailable".
+    try:
+        import dns.resolver  # type: ignore
+        try:
+            answers = dns.resolver.resolve(record_name, "TXT", lifetime=5)
+            for r in answers:
+                # Strings come as a list of byte segments per record
+                txt = "".join(
+                    s.decode() if isinstance(s, bytes) else str(s) for s in r.strings
+                )
+                found_records.append(txt)
+                if txt.strip() == expected_token:
+                    verified = True
+        except Exception as exc:
+            return JSONResponse({
+                "verified": False,
+                "domain": domain,
+                "expected_record": record_name,
+                "expected_value": expected_token,
+                "error": f"DNS lookup failed: {type(exc).__name__}",
+            })
+    except ImportError:
+        return JSONResponse({
+            "verified": False,
+            "domain": domain,
+            "expected_record": record_name,
+            "expected_value": expected_token,
+            "error": "dnspython not installed — cannot verify automatically",
+        }, status_code=503)
+
+    if verified:
+        repo.mark_licensee_domain_verified(licensee_id)
+        repo.log_admin_action(
+            action="licensee.domain.verified",
+            target_type="licensee",
+            target_id=str(licensee_id),
+            detail=domain,
+            ip_address=request.client.host if request.client else "",
+        )
+        # Tell the running domain router to rebuild its cache so the
+        # new tenant becomes routable immediately.
+        try:
+            for mw in request.app.user_middleware:
+                if mw.cls.__name__ == "DomainRoutingMiddleware":
+                    # The middleware instance is constructed lazily; we
+                    # can't reach it here without app.middleware_stack
+                    # introspection. Skipping — the next request will
+                    # rebuild the cache when its TTL expires anyway.
+                    pass
+        except Exception:
+            pass
+
+    return JSONResponse({
+        "verified": verified,
+        "domain": domain,
+        "expected_record": record_name,
+        "expected_value": expected_token,
+        "found_records": found_records,
+    })
 
 @router.get("/", response_class=HTMLResponse)
 async def licensing_page(request: Request):

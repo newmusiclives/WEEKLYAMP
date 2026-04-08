@@ -4108,6 +4108,67 @@ class Repository:
         conn.close()
         return dict(row) if row else None
 
+    def update_licensee_branding(
+        self,
+        licensee_id: int,
+        *,
+        custom_domain: Optional[str] = None,
+        logo_url: Optional[str] = None,
+        primary_color: Optional[str] = None,
+        footer_html: Optional[str] = None,
+        sender_name: Optional[str] = None,
+        reply_to_email: Optional[str] = None,
+    ) -> None:
+        """Update branding fields on a licensee. Setting custom_domain to a
+        new non-empty value clears the verified flag and generates a fresh
+        verification token (caller must check for this and surface the
+        token in the admin UI for DNS TXT setup).
+        """
+        sets = []
+        params: list = []
+        if custom_domain is not None:
+            sets.append("custom_domain = ?")
+            params.append(custom_domain.strip().lower())
+            # Reset verification when domain changes
+            sets.append("domain_verified = 0")
+            import secrets as _s
+            sets.append("domain_verify_token = ?")
+            params.append(_s.token_hex(16))
+        if logo_url is not None:
+            sets.append("logo_url = ?")
+            params.append(logo_url)
+        if primary_color is not None:
+            sets.append("primary_color = ?")
+            params.append(primary_color)
+        if footer_html is not None:
+            sets.append("footer_html = ?")
+            params.append(footer_html)
+        if sender_name is not None:
+            sets.append("sender_name = ?")
+            params.append(sender_name)
+        if reply_to_email is not None:
+            sets.append("reply_to_email = ?")
+            params.append(reply_to_email)
+        if not sets:
+            return
+        sets.append("updated_at = CURRENT_TIMESTAMP")
+        sql = f"UPDATE licensees SET {', '.join(sets)} WHERE id = ?"
+        params.append(licensee_id)
+        conn = self._conn()
+        conn.execute(sql, tuple(params))
+        conn.commit()
+        conn.close()
+
+    def mark_licensee_domain_verified(self, licensee_id: int) -> None:
+        conn = self._conn()
+        conn.execute(
+            "UPDATE licensees SET domain_verified = 1, "
+            "updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            (licensee_id,),
+        )
+        conn.commit()
+        conn.close()
+
     def update_licensee_status(self, licensee_id: int, status: str) -> None:
         conn = self._conn()
         updates = "status = ?, updated_at = CURRENT_TIMESTAMP"

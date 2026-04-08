@@ -289,8 +289,11 @@ def load_config(config_path: Optional[str] = None) -> AppConfig:
     lic_data = yaml_data.get("licensing", {})
     licensing = LicensingConfig(**lic_data) if lic_data else LicensingConfig()
 
-    # White-label SaaS config
+    # White-label SaaS config — env override lets us flip it on without
+    # touching the YAML, useful for staged rollout in production.
     wl_data = yaml_data.get("white_label", {})
+    if os.getenv("WEEKLYAMP_WHITE_LABEL_ENABLED", "").lower() in ("1", "true", "yes"):
+        wl_data = {**wl_data, "enabled": True}
     white_label = WhiteLabelConfig(**wl_data) if wl_data else WhiteLabelConfig()
 
     # Internationalization config

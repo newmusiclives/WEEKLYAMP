@@ -715,9 +715,19 @@ CREATE TABLE IF NOT EXISTS licensees (
     trial_ends_at TIMESTAMP,
     activated_at TIMESTAMP,
     notes TEXT DEFAULT '',
+    -- White-label branding (Task #47-49)
+    custom_domain TEXT DEFAULT '',
+    domain_verified INTEGER DEFAULT 0,
+    domain_verify_token TEXT DEFAULT '',
+    logo_url TEXT DEFAULT '',
+    primary_color TEXT DEFAULT '',
+    footer_html TEXT DEFAULT '',
+    sender_name TEXT DEFAULT '',
+    reply_to_email TEXT DEFAULT '',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+CREATE INDEX IF NOT EXISTS idx_licensees_custom_domain ON licensees(custom_domain) WHERE custom_domain != '';
 CREATE INDEX IF NOT EXISTS idx_licensees_email ON licensees(email);
 CREATE INDEX IF NOT EXISTS idx_licensees_status ON licensees(status);
 
