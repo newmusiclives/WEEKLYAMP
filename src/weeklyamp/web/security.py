@@ -59,6 +59,7 @@ _CSRF_COOKIE = "_csrf"
 # Routes that don't require authentication
 _PUBLIC_PREFIXES = (
     "/health", "/login", "/static", "/submit", "/subscribe", "/unsubscribe",
+    "/resubscribe", "/feedback",
     "/verify", "/newsletters", "/api/", "/feed.xml", "/feed.json", "/feed/", "/t/", "/preferences/",
     "/webhooks/inbound", "/artists", "/trivia/leaderboard", "/advertise",
     "/resources", "/refer", "/contests", "/contribute", "/embed",

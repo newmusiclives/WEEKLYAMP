@@ -105,6 +105,26 @@ async def push():
     # Get recipients: all active subscribers (or filtered by edition tag via GHL)
     recipients = repo.get_subscribers("active")
 
+    # Pre-send checklist — block on hard violations, surface warnings.
+    from weeklyamp.delivery.preflight import run_preflight
+    preflight = run_preflight(
+        subject=subject,
+        html_body=assembled["html_content"],
+        plain_text=assembled.get("plain_text", "") or "",
+        recipients=recipients,
+    )
+    if preflight["blockers"]:
+        msg = "Preflight check failed: " + "; ".join(preflight["blockers"])
+        return render("partials/alert.html", message=msg, level="error")
+    if preflight["warnings"]:
+        # Log warnings but don't block — send proceeds.
+        import logging as _log
+        _log.getLogger(__name__).info(
+            "preflight warnings on issue %s: %s",
+            issue.get("id"),
+            "; ".join(preflight["warnings"]),
+        )
+
     sender = SMTPSender(cfg.email)
     try:
         result = sender.send_bulk(

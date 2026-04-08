@@ -1763,6 +1763,20 @@ ALTER TABLE engagement_metrics RENAME COLUMN beehiiv_post_id TO ghl_campaign_id;
 INSERT INTO schema_version (version) VALUES (19) ON CONFLICT DO NOTHING;
 """
 
+# v33: Add 'marketing' to the ai_agents.agent_type CHECK constraint.
+# The SQLite version uses a PRAGMA + table-swap dance because SQLite
+# doesn't support ALTER CONSTRAINT. Postgres supports it directly,
+# so we drop and re-add the check with the new value list.
+PG_MIGRATIONS[33] = """
+ALTER TABLE ai_agents DROP CONSTRAINT IF EXISTS ai_agents_agent_type_check;
+ALTER TABLE ai_agents ADD CONSTRAINT ai_agents_agent_type_check
+    CHECK (agent_type IN (
+        'editor_in_chief','editor','writer','researcher',
+        'sales','promotion','growth','marketing'
+    ));
+INSERT INTO schema_version (version) VALUES (33) ON CONFLICT DO NOTHING;
+"""
+
 
 def run_pg_migrations(database_url: str) -> list[int]:
     """Run all pending PostgreSQL migrations. Returns list of versions applied."""

@@ -10,7 +10,7 @@ import time
 from pathlib import Path
 
 from fastapi import APIRouter, Form, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -191,6 +191,91 @@ async def unsubscribe_survey(request: Request):
         repo.save_unsubscribe_survey(email=email, reason=reason, feedback=feedback)
     tpl = _env.get_template("unsubscribe.html")
     return HTMLResponse(tpl.render(success=True, survey_submitted=True))
+
+
+@router.get("/resubscribe", response_class=HTMLResponse)
+async def resubscribe(request: Request):
+    """One-click resubscribe link for users who unsubscribed by accident.
+
+    Reuses the unsubscribe_token (kept on the row even after status flips
+    to 'unsubscribed') so the link in old footers continues to work.
+    """
+    token = request.query_params.get("token", "").strip()
+    tpl = _env.get_template("resubscribe.html") if (
+        Path(__file__).parent.parent.parent.parent.parent / "templates" / "web" / "resubscribe.html"
+    ).exists() else _env.get_template("unsubscribe.html")
+    if not token:
+        return HTMLResponse("Invalid link", status_code=400)
+    repo = _get_repo()
+    conn = repo._conn()
+    row = conn.execute(
+        "SELECT id, status FROM subscribers WHERE unsubscribe_token = ?",
+        (token,),
+    ).fetchone()
+    if not row:
+        conn.close()
+        return HTMLResponse("This link is no longer valid.", status_code=400)
+    sub_id = row["id"] if isinstance(row, dict) else row[0]
+    conn.execute(
+        "UPDATE subscribers SET status = 'active', synced_at = CURRENT_TIMESTAMP WHERE id = ?",
+        (sub_id,),
+    )
+    conn.commit()
+    conn.close()
+    try:
+        return HTMLResponse(tpl.render(resubscribed=True))
+    except Exception:
+        return HTMLResponse(
+            "<h1>You're back in!</h1><p>We re-activated your subscription. "
+            "Welcome back to TrueFans SIGNAL.</p>"
+        )
+
+
+@router.post("/feedback")
+async def issue_feedback(request: Request):
+    """Footer widget: subscribers click love-it / meh / unsubscribe-me on
+    a sent issue. Records to engagement_metrics for editorial review.
+
+    Form params: token, issue_id, rating ('love'|'meh'|'unsub').
+    """
+    form = await request.form()
+    token = (form.get("token", "") or "").strip()
+    issue_id_raw = (form.get("issue_id", "") or "").strip()
+    rating = (form.get("rating", "") or "").strip().lower()
+    if rating not in ("love", "meh", "unsub"):
+        return JSONResponse({"error": "invalid rating"}, status_code=400)
+    repo = _get_repo()
+    conn = repo._conn()
+    sub_row = conn.execute(
+        "SELECT id FROM subscribers WHERE unsubscribe_token = ?", (token,)
+    ).fetchone()
+    if not sub_row:
+        conn.close()
+        return JSONResponse({"error": "invalid token"}, status_code=400)
+    sub_id = sub_row["id"] if isinstance(sub_row, dict) else sub_row[0]
+    try:
+        issue_id = int(issue_id_raw) if issue_id_raw else None
+    except ValueError:
+        issue_id = None
+    try:
+        conn.execute(
+            "INSERT INTO email_tracking_events "
+            "(subscriber_id, issue_id, event_type, occurred_at) "
+            "VALUES (?, ?, ?, CURRENT_TIMESTAMP)",
+            (sub_id, issue_id, f"feedback:{rating}"),
+        )
+        conn.commit()
+    except Exception:
+        # email_tracking_events might not exist on dev DBs — fall through
+        pass
+    if rating == "unsub":
+        conn.execute(
+            "UPDATE subscribers SET status = 'unsubscribed' WHERE id = ?",
+            (sub_id,),
+        )
+        conn.commit()
+    conn.close()
+    return JSONResponse({"recorded": True, "rating": rating})
 
 
 @router.get("/verify", response_class=HTMLResponse)
