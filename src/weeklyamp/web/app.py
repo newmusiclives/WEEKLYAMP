@@ -522,6 +522,7 @@ def create_app() -> FastAPI:
     from weeklyamp.web.routes import edition_pages as edition_pages_routes
     from weeklyamp.web.routes import notifications as notifications_routes
     from weeklyamp.web.routes import licensee_portal as licensee_portal_routes
+    from weeklyamp.web.routes import admin_account as admin_account_routes
     from weeklyamp.web.routes import analytics as analytics_hub_routes
     # v36+ future vision features
     from weeklyamp.web.routes import events as events_routes
@@ -605,6 +606,8 @@ def create_app() -> FastAPI:
     app.include_router(notifications_routes.router, prefix="/notifications")
     # White-label licensee portal
     app.include_router(licensee_portal_routes.router, prefix="/licensee")
+    # Admin self-service: change password
+    app.include_router(admin_account_routes.router, prefix="/admin")
     # Analytics hub (NPS, content reports, forecasting, media kit)
     app.include_router(analytics_hub_routes.router, prefix="/admin/analytics")
     # v36+ future vision features

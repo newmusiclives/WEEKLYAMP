@@ -4474,6 +4474,44 @@ class Repository:
         conn.commit()
         conn.close()
 
+    # ---- Admin settings (runtime-mutable admin config) ----
+
+    def get_admin_setting(self, key: str) -> str:
+        """Return the stored value for `key`, or '' if not set."""
+        conn = self._conn()
+        try:
+            row = conn.execute(
+                "SELECT value FROM admin_settings WHERE key = ?", (key,),
+            ).fetchone()
+        finally:
+            conn.close()
+        if not row:
+            return ""
+        return row["value"] or ""
+
+    def set_admin_setting(self, key: str, value: str) -> None:
+        """Insert or update an admin setting. Uses backend-appropriate
+        upsert syntax."""
+        conn = self._conn()
+        try:
+            if self._is_pg:
+                conn.execute(
+                    "INSERT INTO admin_settings (key, value) VALUES (?, ?) "
+                    "ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, "
+                    "updated_at = CURRENT_TIMESTAMP",
+                    (key, value),
+                )
+            else:
+                conn.execute(
+                    "INSERT INTO admin_settings (key, value) VALUES (?, ?) "
+                    "ON CONFLICT(key) DO UPDATE SET value = excluded.value, "
+                    "updated_at = CURRENT_TIMESTAMP",
+                    (key, value),
+                )
+            conn.commit()
+        finally:
+            conn.close()
+
     def log_outreach(self, campaign_id: int = 0, channel: str = "email", recipient_email: str = "", recipient_phone: str = "", recipient_name: str = "", recipient_type: str = "subscriber", status: str = "sent") -> int:
         conn = self._conn()
         cur = conn.execute(

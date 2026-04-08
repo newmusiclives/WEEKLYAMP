@@ -1691,6 +1691,23 @@ CREATE INDEX IF NOT EXISTS idx_cross_promo_edition ON cross_promo_partners(editi
 
 INSERT OR IGNORE INTO schema_version (version) VALUES (43);
 """,
+    44: """
+-- v44: admin_settings key/value table for runtime-mutable admin config.
+-- Today's primary use is the admin password override: when an operator
+-- changes their password via the in-app UI, the new bcrypt hash is
+-- written here under key='admin_password_hash'. The auth code checks
+-- this row first and falls back to WEEKLYAMP_ADMIN_HASH / WEEKLYAMP_ADMIN_PASSWORD
+-- env vars when the row is missing. This decouples password rotation
+-- from Railway env-var editing, which proved error-prone (the dollar
+-- sign in bcrypt hashes was being eaten as a variable reference).
+CREATE TABLE IF NOT EXISTS admin_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL DEFAULT '',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT OR IGNORE INTO schema_version (version) VALUES (44);
+""",
 }
 
 

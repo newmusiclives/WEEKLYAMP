@@ -25,21 +25,65 @@ _cached_admin_hash: str | None = None
 
 
 def _get_admin_hash() -> str:
+    """Return the active admin bcrypt hash.
+
+    Resolution order (highest priority first):
+        1. admin_settings.admin_password_hash row in the DB
+           — this is the runtime-mutable override written by the
+           in-app change-password UI. It exists so operators can
+           rotate the admin password without editing Railway env vars.
+        2. WEEKLYAMP_ADMIN_HASH env var (legacy / bootstrap path)
+        3. WEEKLYAMP_ADMIN_PASSWORD env var, hashed at runtime
+           (legacy convenience for dev / bootstrap)
+        4. Empty string — auth is disabled, every request is allowed
+           (only used during local dev with no admin configured)
+
+    The result is cached in-process. Call `invalidate_admin_hash_cache()`
+    after writing a new override (the change-password route does this)
+    so subsequent requests pick up the new value without a restart.
+    """
     global _cached_admin_hash
-    # Only use cache if we got a real hash (not empty)
     if _cached_admin_hash:
         return _cached_admin_hash
+
+    # 1. DB override
+    try:
+        from weeklyamp.web.deps import get_repo
+        repo = get_repo()
+        db_hash = repo.get_admin_setting("admin_password_hash")
+        if db_hash:
+            _cached_admin_hash = db_hash
+            return db_hash
+    except Exception:
+        # DB may not be initialized yet on very early startup, or the
+        # admin_settings table may not exist on a pre-v44 deploy. Fall
+        # through to env-var resolution rather than blocking auth.
+        logger.debug("admin_settings lookup failed", exc_info=True)
+
+    # 2. Env var hash
     h = os.environ.get("WEEKLYAMP_ADMIN_HASH", "").strip()
     if h:
         _cached_admin_hash = h
         return h
+
+    # 3. Env var raw password (hashed at runtime)
     pw = os.environ.get("WEEKLYAMP_ADMIN_PASSWORD", "").strip()
     if pw:
         _cached_admin_hash = bcrypt.hashpw(pw.encode(), bcrypt.gensalt()).decode()
         logger.info("WEEKLYAMP_ADMIN_PASSWORD set — hashed at runtime (pw length=%d)", len(pw))
         return _cached_admin_hash
-    # Don't cache empty — re-check env vars on next call
+
+    # 4. Nothing configured — auth disabled
     return ""
+
+
+def invalidate_admin_hash_cache() -> None:
+    """Drop the cached admin hash so the next call to `_get_admin_hash()`
+    re-resolves from DB / env. Call this immediately after writing a new
+    `admin_password_hash` row via the change-password route — otherwise
+    the new password won't take effect until the next worker restart."""
+    global _cached_admin_hash
+    _cached_admin_hash = ""
 
 
 # Fallback secret key for dev when env var is not set
