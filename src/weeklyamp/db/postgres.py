@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+import weakref
 from pathlib import Path
 from typing import Any, Optional
 
@@ -43,6 +44,23 @@ def close_pool() -> None:
         _pool = None
 
 
+def _safe_putconn(dsn: str, conn) -> None:
+    """Return a connection to the pool, swallowing any error.
+
+    Used as a `weakref.finalize` callback on PgConnection so that a
+    connection always finds its way back to the pool — even when the
+    caller raised an exception before reaching its explicit close().
+    Errors here are intentionally swallowed: the finalizer runs at GC
+    time, often during interpreter shutdown, when the pool may already
+    be closed and there is nothing useful we can do with the failure.
+    """
+    try:
+        pool = _get_pool(dsn)
+        pool.putconn(conn)
+    except Exception:
+        pass
+
+
 class PgConnection:
     """Thin wrapper around a psycopg2 connection that provides a dict-row
     interface compatible with the SQLite ``sqlite3.Row`` usage in the
@@ -55,11 +73,24 @@ class PgConnection:
     def __init__(self, dsn: str, use_pool: bool = True) -> None:
         self._dsn = dsn
         self._use_pool = use_pool
+        self._closed = False
         if use_pool:
             pool = _get_pool(dsn)
             self._conn = pool.getconn()
+            # Safety net: return the connection to the pool when this
+            # wrapper is garbage-collected, even if the caller forgot
+            # to call close(). This is what prevents an unhandled
+            # exception inside a Repository method (which has no
+            # try/finally around its `conn = self._conn(); ...;
+            # conn.close()` block) from leaking a connection on every
+            # failure. Without this, one buggy query in a hot loop
+            # exhausts the pool in minutes — see incident 2026-04-08.
+            self._finalizer = weakref.finalize(
+                self, _safe_putconn, dsn, self._conn
+            )
         else:
             self._conn = psycopg2.connect(dsn)
+            self._finalizer = None
         self._conn.autocommit = False
 
     # -- Context-manager support (matches sqlite3.Connection) --
@@ -104,7 +135,14 @@ class PgConnection:
         self._conn.rollback()
 
     def close(self) -> None:
+        if self._closed:
+            return
+        self._closed = True
         if self._use_pool:
+            # Detach the finalizer first so it doesn't double-return the
+            # connection when this wrapper is GC'd later.
+            if self._finalizer is not None:
+                self._finalizer.detach()
             pool = _get_pool(self._dsn)
             try:
                 pool.putconn(self._conn)
