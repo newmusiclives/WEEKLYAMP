@@ -1012,6 +1012,16 @@ CREATE TABLE IF NOT EXISTS payment_webhook_events (
     processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Feature flags — env vars take precedence (WEEKLYAMP_FF_<NAME>),
+-- this table holds DB-controlled flags with optional percentage rollout.
+CREATE TABLE IF NOT EXISTS feature_flags (
+    name TEXT PRIMARY KEY,
+    is_active INTEGER DEFAULT 1,
+    rollout_percent INTEGER DEFAULT 100 CHECK (rollout_percent BETWEEN 0 AND 100),
+    description TEXT DEFAULT '',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Admin audit log — records state-changing actions by admins and
 -- licensees for security review and incident investigation.
 CREATE TABLE IF NOT EXISTS admin_audit_log (

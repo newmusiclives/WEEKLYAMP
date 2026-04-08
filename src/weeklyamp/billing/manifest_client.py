@@ -246,10 +246,6 @@ class PaymentClient:
             return None
 
 
-# Backwards compatibility alias
-StripeClient = PaymentClient
-
-
 def check_tier_access(billing_record: Optional[dict], required_tier: str) -> bool:
     """Check if a subscriber has access to a required tier level.
 

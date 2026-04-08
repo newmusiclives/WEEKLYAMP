@@ -31,7 +31,7 @@ async def create_checkout(request: Request, tier_slug: str = Form(...), email: s
     if not config.paid_tiers.enabled:
         return HTMLResponse('<div class="alert alert-warning">Paid tiers are not yet active.</div>')
 
-    from weeklyamp.billing.stripe_client import PaymentClient
+    from weeklyamp.billing.manifest_client import PaymentClient
     client = PaymentClient(config.paid_tiers)
     url = client.create_checkout_session(
         price_id=tier_slug,
@@ -61,7 +61,7 @@ async def manifest_webhook(request: Request):
     double-create billing records or double-fire dunning state changes.
     """
     config = get_config()
-    from weeklyamp.billing.stripe_client import PaymentClient
+    from weeklyamp.billing.manifest_client import PaymentClient
     client = PaymentClient(config.paid_tiers)
     payload = await request.body()
     sig = request.headers.get("x-manifest-signature", "")
@@ -140,7 +140,7 @@ async def cancel_subscription(request: Request):
     if not billing or billing.get("status") != "active":
         return JSONResponse({"error": "No active subscription"}, status_code=400)
 
-    from weeklyamp.billing.stripe_client import PaymentClient
+    from weeklyamp.billing.manifest_client import PaymentClient
     client = PaymentClient(config.paid_tiers)
     success = client.cancel_subscription(billing.get("payment_subscription_id", ""))
     if success:
@@ -165,7 +165,7 @@ async def billing_portal(request: Request):
     if not billing:
         return RedirectResponse("/pricing", status_code=303)
 
-    from weeklyamp.billing.stripe_client import PaymentClient
+    from weeklyamp.billing.manifest_client import PaymentClient
     client = PaymentClient(config.paid_tiers)
     url = client.create_billing_portal_session(
         billing.get("payment_customer_id", ""),
@@ -199,7 +199,7 @@ async def apply_coupon(request: Request, coupon_code: str = Form(...)):
     if not billing or billing.get("status") != "active":
         return HTMLResponse('<div class="alert alert-danger">No active subscription to apply coupon to.</div>')
 
-    from weeklyamp.billing.stripe_client import PaymentClient
+    from weeklyamp.billing.manifest_client import PaymentClient
     client = PaymentClient(config.paid_tiers)
     success = client.apply_coupon(billing.get("payment_subscription_id", ""), coupon_code)
     if success:

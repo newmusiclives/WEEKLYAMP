@@ -34,10 +34,93 @@ _TEMPLATES_DIR = Path(__file__).parent.parent.parent.parent / "templates"
 _STATIC_DIR = _TEMPLATES_DIR / "web" / "static"
 
 
+def _setup_sentry() -> None:
+    """Initialise Sentry SDK if SENTRY_DSN is configured.
+
+    Gracefully no-ops when SENTRY_DSN is not set, so production can
+    adopt Sentry later without a code change. PII scrubbing: we keep
+    ``send_default_pii=False`` and explicitly strip email addresses
+    from event messages via a before_send hook.
+    """
+    dsn = os.environ.get("SENTRY_DSN", "").strip()
+    if not dsn:
+        return
+    try:
+        import sentry_sdk
+        from sentry_sdk.integrations.fastapi import FastApiIntegration
+        from sentry_sdk.integrations.starlette import StarletteIntegration
+    except ImportError:
+        # sentry-sdk declared in requirements.txt but not installed — log
+        # and continue. Don't block app startup on observability tooling.
+        logging.getLogger(__name__).warning(
+            "SENTRY_DSN set but sentry-sdk not installed — skipping init"
+        )
+        return
+
+    import re
+    _EMAIL_RE = re.compile(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}")
+
+    def _scrub_pii(event, hint):
+        # Walk message + exception values and redact any email-shaped strings
+        try:
+            if event.get("message"):
+                event["message"] = _EMAIL_RE.sub("<redacted-email>", event["message"])
+            for ex in (event.get("exception") or {}).get("values", []):
+                if ex.get("value"):
+                    ex["value"] = _EMAIL_RE.sub("<redacted-email>", ex["value"])
+        except Exception:
+            pass
+        return event
+
+    sentry_sdk.init(
+        dsn=dsn,
+        environment=os.environ.get("WEEKLYAMP_ENV", "development"),
+        release=os.environ.get("RAILWAY_DEPLOYMENT_ID", "unknown"),
+        traces_sample_rate=float(os.environ.get("SENTRY_TRACES_SAMPLE_RATE", "0.05")),
+        profiles_sample_rate=0.0,
+        send_default_pii=False,
+        before_send=_scrub_pii,
+        integrations=[FastApiIntegration(), StarletteIntegration()],
+    )
+    logging.getLogger(__name__).info(
+        "Sentry initialised (env=%s)",
+        os.environ.get("WEEKLYAMP_ENV", "development"),
+    )
+
+
 def _setup_logging():
-    """Configure structured logging with JSON-compatible format."""
+    """Configure structured logging with JSON-compatible format.
+
+    PII scrubbing: every log record's message is passed through a
+    regex that redacts email addresses and long digit sequences
+    before the record leaves the process. This is a defense-in-depth
+    against accidentally logging subscriber emails or tokens —
+    individual log calls still shouldn't include PII on purpose.
+    """
     log_format = os.environ.get("LOG_FORMAT", "text")
     level = os.environ.get("LOG_LEVEL", "INFO").upper()
+
+    import re
+    _EMAIL_RE = re.compile(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}")
+    _TOKEN_RE = re.compile(r"\b[a-fA-F0-9]{32,}\b")
+
+    def _scrub(text: str) -> str:
+        if not isinstance(text, str):
+            return text
+        text = _EMAIL_RE.sub("<redacted-email>", text)
+        text = _TOKEN_RE.sub("<redacted-token>", text)
+        return text
+
+    class PIIScrubFilter(logging.Filter):
+        def filter(self, record: logging.LogRecord) -> bool:
+            # Scrub the formatted message and the raw msg so both text
+            # and JSON formatters see the clean version.
+            try:
+                record.msg = _scrub(record.getMessage())
+                record.args = ()  # args already merged into msg above
+            except Exception:
+                pass
+            return True
 
     if log_format == "json":
         import json
@@ -53,14 +136,18 @@ def _setup_logging():
                 })
         handler = logging.StreamHandler()
         handler.setFormatter(JSONFormatter())
+        handler.addFilter(PIIScrubFilter())
         logging.root.handlers = [handler]
         logging.root.setLevel(level)
     else:
-        logging.basicConfig(
-            level=level,
-            format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+        handler = logging.StreamHandler()
+        handler.setFormatter(logging.Formatter(
+            "%(asctime)s %(levelname)s %(name)s: %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
-        )
+        ))
+        handler.addFilter(PIIScrubFilter())
+        logging.root.handlers = [handler]
+        logging.root.setLevel(level)
 
 
 def _is_production() -> bool:
@@ -70,6 +157,7 @@ def _is_production() -> bool:
 
 def create_app() -> FastAPI:
     _setup_logging()
+    _setup_sentry()
 
     config = load_config()
 

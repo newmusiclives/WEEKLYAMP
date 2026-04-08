@@ -6,7 +6,7 @@ from typing import Optional
 
 from fastapi import HTTPException, Request
 
-from weeklyamp.billing.stripe_client import check_tier_access
+from weeklyamp.billing.manifest_client import check_tier_access
 from weeklyamp.web.deps import get_config, get_repo
 
 

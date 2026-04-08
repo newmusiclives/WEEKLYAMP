@@ -50,7 +50,7 @@ async def register_event(event_id: int, request: Request, email: str = Form(...)
     ticket_price = event.get("ticket_price_cents", 0)
     if ticket_price > 0 and config.paid_tiers.enabled:
         conn.close()
-        from weeklyamp.billing.stripe_client import PaymentClient
+        from weeklyamp.billing.manifest_client import PaymentClient
         client = PaymentClient(config.paid_tiers)
         ticket_code = secrets.token_urlsafe(8).upper()
         checkout_url = client.create_checkout_session(

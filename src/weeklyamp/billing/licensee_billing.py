@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-from weeklyamp.billing.stripe_client import PaymentClient
+from weeklyamp.billing.manifest_client import PaymentClient
 from weeklyamp.core.models import AppConfig
 from weeklyamp.db.repository import Repository
 

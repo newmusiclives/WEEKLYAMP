@@ -36,7 +36,7 @@ async def artist_signup(request: Request, artist_name: str = Form(...), email: s
     if config.paid_tiers.enabled and config.artist_newsletters.enabled:
         plan_prices = {"starter": "artist_starter", "growth": "artist_growth", "pro": "artist_pro"}
         price_id = plan_prices.get(plan, "artist_starter")
-        from weeklyamp.billing.stripe_client import PaymentClient
+        from weeklyamp.billing.manifest_client import PaymentClient
         client = PaymentClient(config.paid_tiers)
         checkout_url = client.create_checkout_session(
             price_id=price_id,
