@@ -102,7 +102,7 @@ _CSRF_COOKIE = "_csrf"
 
 # Routes that don't require authentication
 _PUBLIC_PREFIXES = (
-    "/health", "/login", "/signin", "/auth-gate-8k2m", "/static", "/submit", "/subscribe", "/unsubscribe",
+    "/health", "/login", "/signin", "/auth-gate-8k2m", "/portal-enter-q3", "/static", "/submit", "/subscribe", "/unsubscribe",
     "/resubscribe", "/feedback",
     "/verify", "/newsletters", "/api/", "/feed.xml", "/feed.json", "/feed/", "/t/", "/preferences/",
     "/webhooks/inbound", "/artists", "/trivia/leaderboard", "/advertise",
@@ -421,6 +421,41 @@ async def auth_gate_page(request: Request) -> Response:
 async def auth_gate_submit(request: Request) -> Response:
     """POST /auth-gate-8k2m — fallback login submission."""
     return await _login_submit_impl(request, form_action="/auth-gate-8k2m")
+
+
+async def portal_enter_page(request: Request) -> Response:
+    """GET /portal-enter-q3 — another fresh-URL login fallback."""
+    return await _login_page_at(request, "/portal-enter-q3")
+
+
+async def portal_enter_submit(request: Request) -> Response:
+    """POST /portal-enter-q3 — session creation on valid password.
+
+    First access path: this endpoint returns 302 to /dashboard on success.
+    If the edge cache grabs the 401 the first request generates, future
+    requests are poisoned — so this handler:
+      1) Never returns 401 bodies that match login.html (uses plain text).
+      2) Always 302s to /dashboard (on success) OR back to itself with ?e=1.
+    This defeats any response-body-based cache pattern.
+    """
+    ip = _get_client_ip(request)
+    form = await request.form()
+    password = form.get("password", "").strip()
+    admin_hash = _get_admin_hash()
+    env_pw = os.environ.get("WEEKLYAMP_ADMIN_PASSWORD", "").strip()
+    password_ok = verify_password(password, admin_hash) if admin_hash else False
+    if not password_ok and env_pw and password == env_pw:
+        password_ok = True
+    if password_ok:
+        _clear_attempts(ip)
+        _log_security_event(request, "login_success")
+        response = RedirectResponse("/dashboard", status_code=302)
+        create_session(response, request)
+        return response
+    _record_attempt(ip)
+    _log_security_event(request, "login_failure")
+    # 302 back with error flag — never returns the cached 401 body
+    return RedirectResponse("/portal-enter-q3?e=1", status_code=302)
 
 
 async def _login_page_at(request: Request, path: str) -> Response:
