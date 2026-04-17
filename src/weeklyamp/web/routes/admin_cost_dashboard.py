@@ -77,10 +77,20 @@ async def cost_dashboard(request: Request) -> Response:
     repo = get_repo()
     pricing = _pricing()
 
-    # Window: last 30 days of runs — aligns with the agent_output_log
-    # retention we expect in a live system.
-    stats = repo.get_cost_stats_by_edition(since_days=30)
-    sub_counts = repo.get_subscriber_counts_by_edition()
+    # TEMP DIAG (remove once green on prod): surface exception inline so
+    # we don't have to dig through Railway logs. Admin-only route.
+    import logging, traceback
+    _logger = logging.getLogger(__name__)
+    try:
+        stats = repo.get_cost_stats_by_edition(since_days=30)
+        sub_counts = repo.get_subscriber_counts_by_edition()
+    except Exception as e:
+        _logger.exception("cost-dashboard query failed")
+        tb = traceback.format_exc()
+        return HTMLResponse(
+            f"<pre style='padding:20px;font-size:12px;'>cost-dashboard error:\n{tb}</pre>",
+            status_code=500,
+        )
     measured_by_slug = {s["edition_slug"]: s for s in stats}
 
     # Monthly infra amortization: split Railway + Postgres across the
