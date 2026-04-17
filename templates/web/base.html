@@ -261,6 +261,25 @@
         sidebar.querySelectorAll('nav a').forEach(function(a) {
             a.addEventListener('click', close);
         });
+
+        // Preserve sidebar scroll position across navigations.
+        // Without this, the sidebar scrolls back to the top on every
+        // page load — annoying when clicking a nav item deep in the list.
+        var SCROLL_KEY = 'sidebarScrollTop';
+        try {
+            var saved = sessionStorage.getItem(SCROLL_KEY);
+            if (saved !== null) sidebar.scrollTop = parseInt(saved, 10) || 0;
+        } catch (e) { /* storage can be blocked — fail silent */ }
+        sidebar.addEventListener('scroll', function() {
+            try { sessionStorage.setItem(SCROLL_KEY, sidebar.scrollTop); } catch (e) {}
+        });
+        // Also capture position the moment a nav link is clicked, in
+        // case the scroll event hasn't fired yet for the final position.
+        sidebar.querySelectorAll('nav a').forEach(function(a) {
+            a.addEventListener('click', function() {
+                try { sessionStorage.setItem(SCROLL_KEY, sidebar.scrollTop); } catch (e) {}
+            });
+        });
     })();
     </script>
 </body>
