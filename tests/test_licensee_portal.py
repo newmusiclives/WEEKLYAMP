@@ -12,6 +12,23 @@ import pytest
 from weeklyamp.web.security import hash_password
 
 
+@pytest.fixture(autouse=True)
+def _enable_white_label(tmp_db):
+    """These tests exercise the white-label licensee portal, which is
+    now behind the `white_label` feature flag. Pre-seed the flag to on
+    BEFORE the app starts (via `client`) so seed_from_config (which
+    only writes when no row exists) doesn't overwrite, and drop any
+    cached False value from a previous test.
+    """
+    from weeklyamp.core import feature_flags as ff
+    from weeklyamp.db.repository import Repository
+
+    Repository(tmp_db).set_feature_flag("white_label", True)
+    ff.invalidate_cache()
+    yield
+    ff.invalidate_cache()
+
+
 @pytest.fixture()
 def licensee(repo):
     """Create an active licensee with a known bcrypt password."""

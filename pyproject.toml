@@ -35,3 +35,8 @@ weeklyamp = "weeklyamp.__main__:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/weeklyamp"]
+
+[tool.pytest.ini_options]
+markers = [
+    "live: live smoke tests that hit a deployed URL (opt-in via -m live)",
+]

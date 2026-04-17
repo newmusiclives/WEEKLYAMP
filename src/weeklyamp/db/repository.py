@@ -4512,6 +4512,86 @@ class Repository:
         finally:
             conn.close()
 
+    # ---- Feature flags (runtime-mutable feature toggles) ----
+    # Table schema (from db/schema.sql): feature_flags(
+    #   name TEXT PK, is_active INTEGER, rollout_percent INTEGER,
+    #   description TEXT, updated_at TIMESTAMP
+    # ). We expose a simple on/off API here; rollout_percent stays at
+    # its default of 100 for now — percentage rollouts are future work.
+
+    def get_feature_flag(self, key: str) -> bool | None:
+        """Return the DB-stored flag value, or None if no row exists.
+
+        None distinguishes 'never set' (fall back to config default)
+        from 'explicitly set to false'.
+        """
+        conn = self._conn()
+        try:
+            row = conn.execute(
+                "SELECT is_active FROM feature_flags WHERE name = ?", (key,),
+            ).fetchone()
+        finally:
+            conn.close()
+        if not row:
+            return None
+        return bool(row["is_active"])
+
+    def set_feature_flag(
+        self, key: str, enabled: bool, description: str = "", category: str = "",
+    ) -> None:
+        """Insert or update a feature flag row.
+
+        ``category`` is accepted for API symmetry with the callers but
+        the underlying table doesn't store it — category lives in
+        :data:`weeklyamp.core.feature_flags.FLAG_METADATA`.
+        """
+        del category  # category lives in FLAG_METADATA, not the DB
+        conn = self._conn()
+        try:
+            if self._is_pg:
+                conn.execute(
+                    "INSERT INTO feature_flags (name, is_active, description) "
+                    "VALUES (?, ?, ?) "
+                    "ON CONFLICT (name) DO UPDATE SET "
+                    "is_active = EXCLUDED.is_active, "
+                    "description = EXCLUDED.description, "
+                    "updated_at = CURRENT_TIMESTAMP",
+                    (key, 1 if enabled else 0, description),
+                )
+            else:
+                conn.execute(
+                    "INSERT INTO feature_flags (name, is_active, description) "
+                    "VALUES (?, ?, ?) "
+                    "ON CONFLICT(name) DO UPDATE SET "
+                    "is_active = excluded.is_active, "
+                    "description = excluded.description, "
+                    "updated_at = CURRENT_TIMESTAMP",
+                    (key, 1 if enabled else 0, description),
+                )
+            conn.commit()
+        finally:
+            conn.close()
+
+    def list_feature_flags(self) -> list[dict]:
+        """Return all feature flag rows (for the admin UI)."""
+        conn = self._conn()
+        try:
+            rows = conn.execute(
+                "SELECT name, is_active, description, updated_at "
+                "FROM feature_flags ORDER BY name"
+            ).fetchall()
+        finally:
+            conn.close()
+        return [
+            {
+                "key": r["name"],
+                "enabled": bool(r["is_active"]),
+                "description": r["description"] or "",
+                "updated_at": r["updated_at"],
+            }
+            for r in rows
+        ]
+
     def log_outreach(self, campaign_id: int = 0, channel: str = "email", recipient_email: str = "", recipient_phone: str = "", recipient_name: str = "", recipient_type: str = "subscriber", status: str = "sent") -> int:
         conn = self._conn()
         cur = conn.execute(

@@ -329,6 +329,14 @@ def load_config(config_path: Optional[str] = None) -> AppConfig:
     # Max request body size
     max_request_body = int(os.getenv("WEEKLYAMP_MAX_REQUEST_BODY", yaml_data.get("max_request_body", 1_048_576)))
 
+    # Feature flags: parse the `features:` block and coerce to bool. These
+    # are the baseline defaults; the DB feature_flags table overrides at
+    # runtime via the admin UI.
+    features_raw = yaml_data.get("features", {}) or {}
+    features: dict[str, bool] = {
+        str(k): bool(v) for k, v in features_raw.items() if isinstance(v, (bool, int))
+    }
+
     return AppConfig(
         newsletter=newsletter,
         ai=ai,
@@ -369,6 +377,7 @@ def load_config(config_path: Optional[str] = None) -> AppConfig:
         franchise=franchise,
         data_product=data_product,
         rate_limits=rate_limits,
+        features=features,
         db_path=db_path,
         db_backend=db_backend,
         database_url=database_url,

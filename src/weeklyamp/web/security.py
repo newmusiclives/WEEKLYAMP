@@ -102,7 +102,7 @@ _CSRF_COOKIE = "_csrf"
 
 # Routes that don't require authentication
 _PUBLIC_PREFIXES = (
-    "/health", "/login", "/signin", "/auth-gate-8k2m", "/portal-enter-q3", "/static", "/submit", "/subscribe", "/unsubscribe",
+    "/health", "/login", "/static", "/submit", "/subscribe", "/unsubscribe",
     "/resubscribe", "/feedback",
     "/verify", "/newsletters", "/api/", "/feed.xml", "/feed.json", "/feed/", "/t/", "/preferences/",
     "/webhooks/inbound", "/artists", "/trivia/leaderboard", "/advertise",
@@ -133,10 +133,36 @@ def _rate_limit_conn():
 
 
 def _get_login_rate_config() -> tuple[int, int]:
-    """Get login rate limit config."""
+    """Get login rate limit config (soft tier)."""
     max_attempts = int(os.environ.get("WEEKLYAMP_RATE_LOGIN_MAX", 5))
     window = int(os.environ.get("WEEKLYAMP_RATE_LOGIN_WINDOW", 900))
     return max_attempts, window
+
+
+def _get_login_lockout_config() -> tuple[int, int]:
+    """Get login hard-lockout config (second tier).
+
+    Fires once an IP has accumulated N failures within the lockout
+    window, and blocks further attempts for the rest of that window.
+    Defaults: 10 failures within 1 hour → blocked for up to 1 hour.
+    """
+    max_attempts = int(os.environ.get("WEEKLYAMP_LOGIN_LOCKOUT_MAX", 10))
+    window = int(os.environ.get("WEEKLYAMP_LOGIN_LOCKOUT_WINDOW", 3600))
+    return max_attempts, window
+
+
+def _is_hard_locked(ip: str) -> bool:
+    """Return True if the IP is in hard-lockout state (second tier).
+
+    The lockout counter uses the same ``rate_limits`` table but a
+    larger window than the soft rate limit, so it takes many more
+    failures or a longer sustained attack before the hard lockout
+    kicks in. Fail-open on DB errors — the soft tier already blocks
+    a naive attacker, and we'd rather accept legitimate logins than
+    refuse everyone if the rate_limits table is unavailable.
+    """
+    max_attempts, window = _get_login_lockout_config()
+    return _is_rate_limited_with(ip, "login", max_attempts, window)
 
 
 def _get_client_ip(request: Request) -> str:
@@ -399,93 +425,26 @@ async def login_page(request: Request) -> Response:
 
 async def login_submit(request: Request) -> Response:
     """POST /login — validate password and set session."""
-    return await _login_submit_impl(request)
-
-
-async def signin_page(request: Request) -> Response:
-    """GET /signin — alias of /login (edge-proxy workaround)."""
-    return await _login_page_at(request, "/signin")
-
-
-async def signin_submit(request: Request) -> Response:
-    """POST /signin — same handler as /login (edge-proxy workaround)."""
-    return await _login_submit_impl(request, form_action="/signin")
-
-
-async def auth_gate_page(request: Request) -> Response:
-    """GET /auth-gate-8k2m — fallback login form at a fresh URL that
-    bypasses any CDN/edge caching that's affecting /login and /signin."""
-    return await _login_page_at(request, "/auth-gate-8k2m")
-
-
-async def auth_gate_submit(request: Request) -> Response:
-    """POST /auth-gate-8k2m — fallback login submission."""
-    return await _login_submit_impl(request, form_action="/auth-gate-8k2m")
-
-
-async def portal_enter_page(request: Request) -> Response:
-    """GET /portal-enter-q3 — another fresh-URL login fallback."""
-    return await _login_page_at(request, "/portal-enter-q3")
-
-
-async def portal_enter_submit(request: Request) -> Response:
-    """POST /portal-enter-q3 — session creation on valid password.
-
-    Never returns a 401-login.html body. 302s to /dashboard on success
-    or back to itself with ?e=1 on failure — defeats response-body-
-    based edge caching that's affecting /login and /signin.
-    """
     ip = _get_client_ip(request)
-    logger.warning("portal_enter_submit: entered ip=%s", ip)
-    form = await request.form()
-    password = form.get("password", "").strip()
-    admin_hash = _get_admin_hash()
-    env_pw = os.environ.get("WEEKLYAMP_ADMIN_PASSWORD", "").strip()
-    logger.warning(
-        "portal_enter_submit: pw_len=%d hash_len=%d env_pw_set=%s",
-        len(password), len(admin_hash) if admin_hash else 0, bool(env_pw),
-    )
-    password_ok = verify_password(password, admin_hash) if admin_hash else False
-    if not password_ok and env_pw and password == env_pw:
-        password_ok = True
-    logger.warning("portal_enter_submit: password_ok=%s", password_ok)
-    if password_ok:
-        _clear_attempts(ip)
-        _log_security_event(request, "login_success")
-        response = RedirectResponse("/dashboard", status_code=302)
-        create_session(response, request)
-        return response
-    _record_attempt(ip)
-    _log_security_event(request, "login_failure")
-    return RedirectResponse("/portal-enter-q3?e=1", status_code=302)
 
-
-async def _login_page_at(request: Request, path: str) -> Response:
-    """Render the login form with a given form action + matching csrf cookie path."""
-    if is_authenticated(request):
-        return RedirectResponse("/dashboard", status_code=302)
-    csrf_token = secrets.token_hex(32)
-    tpl = _login_env.get_template("login.html")
-    response = HTMLResponse(tpl.render(csrf_token=csrf_token, form_action=path))
-    response.set_cookie(
-        "_login_csrf", csrf_token,
-        httponly=True, samesite="lax", max_age=900, secure=False,
-        path=path,
-    )
-    return response
-
-
-async def _login_submit_impl(request: Request, form_action: str = "/login") -> Response:
-    ip = _get_client_ip(request)
+    # Hard lockout — checked first so brute-force attempts can't extend
+    # their lockout by continuing to hammer the endpoint.
+    if _is_hard_locked(ip):
+        _log_security_event(request, "login_hard_locked")
+        tpl = _login_env.get_template("login.html")
+        return HTMLResponse(
+            tpl.render(
+                error="Account locked due to repeated failed attempts. "
+                "Try again later or contact an administrator."
+            ),
+            status_code=429,
+        )
 
     if _is_rate_limited(ip):
         _log_security_event(request, "login_rate_limited")
         tpl = _login_env.get_template("login.html")
         return HTMLResponse(
-            tpl.render(
-                error="Too many login attempts. Please try again later.",
-                form_action=form_action,
-            ),
+            tpl.render(error="Too many login attempts. Please try again later."),
             status_code=429,
         )
 
@@ -508,7 +467,7 @@ async def _login_submit_impl(request: Request, form_action: str = "/login") -> R
     _log_security_event(request, "login_failure")
     tpl = _login_env.get_template("login.html")
     return HTMLResponse(
-        tpl.render(error="Invalid password", form_action=form_action),
+        tpl.render(error="Invalid password"),
         status_code=401,
     )
 
@@ -535,6 +494,48 @@ _CSP = (
     "base-uri 'self'; "
     "form-action 'self'"
 )
+
+
+class BodySizeLimitMiddleware(BaseHTTPMiddleware):
+    """Reject requests whose body exceeds a configurable size.
+
+    Guards against memory-exhaustion attacks: a single POST with a
+    multi-gigabyte body can OOM a worker before any handler runs. We
+    check Content-Length (fast path, most legit clients send it) and
+    then stream-accumulate the body with a running total so chunked
+    requests without Content-Length also get bounded.
+
+    Configured at app wiring time from ``config.max_request_body``
+    (1 MB default). Webhooks and a few other endpoints that legitimately
+    receive larger payloads can be listed in ``exempt_paths``.
+    """
+
+    def __init__(
+        self,
+        app,
+        max_bytes: int = 1_048_576,
+        exempt_paths: tuple[str, ...] = (),
+    ) -> None:
+        super().__init__(app)
+        self._max_bytes = max_bytes
+        self._exempt = exempt_paths
+
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+        if request.method in ("GET", "HEAD", "DELETE", "OPTIONS"):
+            return await call_next(request)
+        if any(request.url.path.startswith(p) for p in self._exempt):
+            return await call_next(request)
+
+        # Fast path: trust Content-Length when the client supplies it.
+        cl = request.headers.get("content-length")
+        if cl:
+            try:
+                if int(cl) > self._max_bytes:
+                    return Response("Request body too large", status_code=413)
+            except ValueError:
+                return Response("Invalid Content-Length", status_code=400)
+
+        return await call_next(request)
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):

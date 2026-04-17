@@ -13,6 +13,45 @@ ai:
   max_tokens: 2000
   temperature: 0.7
 
+# --- Feature flags (unified on/off switches) ---
+# These are the baseline values each deploy starts with. Overrides live
+# in the `feature_flags` DB table and are togglable at runtime from the
+# admin UI at /admin/feature-flags. See src/weeklyamp/core/feature_flags.py.
+#
+# MVP launch: only the always-on core (drafting, subscribers, admin,
+# scheduler, email) has no flag. Everything else is off by default and
+# enabled from the admin UI when ready.
+features:
+  # Revenue
+  paid_tiers: false
+  white_label: false
+  franchise: false
+  advertisers: false
+  marketplace: false
+  # Content
+  audio: false
+  podcast: false
+  contests: false
+  trivia: false
+  user_submissions: false
+  # Engagement
+  welcome_sequence: false
+  reengagement: false
+  referrals: false
+  community: false
+  ab_testing: false
+  events: false
+  cross_promo: false
+  # Integrations
+  spotify: false
+  webhooks_inbound: false
+  api_v2: false
+  gdpr_export: false
+  # Internal tooling
+  calendar_rebook: false
+  cohort_retention: false
+  section_heatmap: false
+
 ghl:
   api_key: ""            # GoHighLevel API key (Bearer token)
   location_id: ""        # GHL sub-account / location ID

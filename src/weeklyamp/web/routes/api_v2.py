@@ -8,6 +8,7 @@ INACTIVE by default — requires valid API key.
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
 import time
 from typing import Optional
@@ -30,12 +31,27 @@ router = APIRouter(
 # ---- API Key Authentication ----
 
 async def verify_api_key(request: Request) -> dict:
-    """FastAPI dependency — verify API key from Authorization header."""
-    auth = request.headers.get("authorization", "")
-    if not auth.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="API key required (Bearer token)")
+    """FastAPI dependency — verify API key from Authorization header.
 
-    key = auth[7:]
+    Security properties:
+      - Bearer header check is length-safe (no partial-header leak).
+      - Keys are stored as SHA-256 hashes; we never compare the raw key
+        to anything in the DB.
+      - The returned-hash vs computed-hash comparison uses
+        ``hmac.compare_digest`` even though a dict lookup is already
+        constant-time w.r.t. value; this is belt-and-suspenders against
+        future refactors that might iterate rows.
+      - Generic 401 message — never say *which* field (header, prefix,
+        lookup) failed, to deny an attacker the ability to triangulate.
+    """
+    auth = request.headers.get("authorization", "")
+    if not auth or not auth.startswith("Bearer ") or len(auth) <= 7:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    key = auth[7:].strip()
+    if not key:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
     key_hash = hashlib.sha256(key.encode()).hexdigest()
     repo = get_repo()
 
@@ -47,20 +63,24 @@ async def verify_api_key(request: Request) -> dict:
     conn.close()
 
     if not row:
-        raise HTTPException(status_code=401, detail="Invalid or inactive API key")
+        raise HTTPException(status_code=401, detail="Unauthorized")
 
     api_key = dict(row)
 
-    # Check rate limit
-    rate_limit = api_key.get("rate_limit", 100)
-    # Simple per-minute rate tracking via request count
-    # (production would use Redis or similar)
+    # Defense in depth: explicitly compare the stored hash to the
+    # computed one with a constant-time comparator.
+    stored_hash = str(api_key.get("key_hash", ""))
+    if not hmac.compare_digest(stored_hash, key_hash):
+        raise HTTPException(status_code=401, detail="Unauthorized")
 
-    # Update last_used
-    conn = repo._conn()
-    conn.execute("UPDATE api_keys SET last_used_at = CURRENT_TIMESTAMP WHERE id = ?", (api_key["id"],))
-    conn.commit()
-    conn.close()
+    # Update last_used (best-effort; don't fail auth on write errors)
+    try:
+        conn = repo._conn()
+        conn.execute("UPDATE api_keys SET last_used_at = CURRENT_TIMESTAMP WHERE id = ?", (api_key["id"],))
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass
 
     return api_key
 

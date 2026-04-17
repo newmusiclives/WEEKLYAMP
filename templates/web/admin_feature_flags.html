@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Feature Flags — TrueFans SIGNAL{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Feature Flags</h2>
+    <p class="page-subtitle">Flip features on/off without a redeploy. Changes take effect immediately.</p>
+</div>
+
+<style>
+.ff-group { margin-bottom: 32px; }
+.ff-group h3 { margin: 0 0 12px; font-size: 14px; text-transform: uppercase; letter-spacing: .08em; color: #666; }
+.ff-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border: 1px solid #e5e5e5; border-radius: 8px; margin-bottom: 8px; background: #fff; }
+.ff-row .ff-meta { max-width: 75%; }
+.ff-row .ff-label { font-weight: 600; font-size: 15px; color: #111; }
+.ff-row .ff-desc { font-size: 13px; color: #666; margin-top: 2px; }
+.ff-toggle { position: relative; width: 44px; height: 24px; }
+.ff-toggle input { opacity: 0; width: 0; height: 0; }
+.ff-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #ccc; border-radius: 12px; transition: .2s; }
+.ff-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: .2s; }
+.ff-toggle input:checked + .ff-slider { background: #2d8a2d; }
+.ff-toggle input:checked + .ff-slider:before { transform: translateX(20px); }
+.ff-warn { font-size: 12px; color: #b06000; background: #fff6e0; padding: 8px 12px; border-radius: 6px; margin-top: 16px; }
+</style>
+
+{% for category, flags in groups.items() %}
+<div class="ff-group">
+    <h3>{{ category }}</h3>
+    {% for flag in flags %}
+    {% include "admin_feature_flags_row.html" %}
+    {% endfor %}
+</div>
+{% endfor %}
+
+<div class="ff-warn">
+    <strong>Note:</strong> Disabling a feature returns 404 for its routes. Any existing links/nav items pointing at a disabled feature will visibly break until you re-enable it. Background jobs tied to a feature also stop running.
+</div>
+{% endblock %}

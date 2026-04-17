@@ -1,8 +1,10 @@
-"""Security CLI commands: set-password, check-auth, logs."""
+"""Security CLI commands: set-password, check-auth, logs, rotate-api-key."""
 
 from __future__ import annotations
 
+import hashlib
 import os
+import secrets
 
 import typer
 from rich.console import Console
@@ -56,6 +58,64 @@ def check_auth() -> None:
         console.print("\n  [red]Auth is disabled![/red] Set WEEKLYAMP_ADMIN_HASH or WEEKLYAMP_ADMIN_PASSWORD.")
     else:
         console.print("\n  [green]Auth is enabled.[/green]")
+
+
+@security_app.command("rotate-api-key")
+def rotate_api_key(
+    name: str = typer.Argument(..., help="Human-readable key name (e.g. 'mobile-app')"),
+    permissions: str = typer.Option("read", help="Comma-separated: read,write"),
+    rate_limit: int = typer.Option(1000, help="Per-minute rate limit"),
+) -> None:
+    """Generate a new API key and insert it as active.
+
+    Prints the raw key ONCE to stdout — it is never recoverable after
+    this run because only the SHA-256 hash is stored. Deactivates any
+    existing active key with the same `name` so the rotation is atomic
+    from the caller's point of view.
+    """
+    cfg = load_config()
+    repo = Repository(cfg.db_path, cfg.database_url, cfg.db_backend)
+
+    # Generate a cryptographically random 32-byte key, URL-safe b64.
+    # Prefix with `tfs_` so operators can recognise it in logs.
+    raw = "tfs_" + secrets.token_urlsafe(32)
+    key_hash = hashlib.sha256(raw.encode()).hexdigest()
+    key_prefix = raw[:12]
+
+    conn = repo._conn()
+    try:
+        # Deactivate prior keys with this name so the rotation replaces
+        # the old one atomically.
+        if repo._is_pg:
+            conn.execute(
+                "UPDATE api_keys SET is_active = 0 WHERE name = ?", (name,),
+            )
+            conn.execute(
+                "INSERT INTO api_keys (name, key_hash, key_prefix, permissions, rate_limit, is_active) "
+                "VALUES (?, ?, ?, ?, ?, 1)",
+                (name, key_hash, key_prefix, permissions, rate_limit),
+            )
+        else:
+            conn.execute(
+                "UPDATE api_keys SET is_active = 0 WHERE name = ?", (name,),
+            )
+            conn.execute(
+                "INSERT INTO api_keys (name, key_hash, key_prefix, permissions, rate_limit, is_active) "
+                "VALUES (?, ?, ?, ?, ?, 1)",
+                (name, key_hash, key_prefix, permissions, rate_limit),
+            )
+        conn.commit()
+    finally:
+        conn.close()
+
+    console.print(f"\n[bold green]New API key for '{name}':[/bold green]")
+    console.print(f"  [bold]{raw}[/bold]")
+    console.print(
+        "\n[yellow]Store this now — it will not be shown again.[/yellow]"
+    )
+    console.print(
+        "[dim]Send as: Authorization: Bearer <key>[/dim]\n"
+    )
 
 
 @security_app.command("logs")

@@ -1,0 +1,48 @@
+name: security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Re-run weekly against main so we notice newly-disclosed CVEs in
+    # dependencies even when no PRs are open.
+    - cron: "17 6 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  # ---- Secret scan: refuse to merge anything that leaks credentials ----
+  gitleaks:
+    name: gitleaks (secret scan)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ---- Dependency CVE scan: surface known-vulnerable pinned versions ----
+  pip-audit:
+    name: pip-audit (CVE scan)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install pip-audit
+        run: |
+          python -m pip install --upgrade pip
+          pip install pip-audit
+      - name: Audit pyproject.toml + requirements.txt
+        # We don't block on findings yet — the first run will surface a
+        # baseline and we'll tighten to --strict once we've triaged.
+        run: |
+          pip-audit -r requirements.txt --desc || true
+          pip-audit --desc || true

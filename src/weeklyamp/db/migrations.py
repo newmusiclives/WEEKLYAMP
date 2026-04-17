@@ -1708,6 +1708,23 @@ CREATE TABLE IF NOT EXISTS admin_settings (
 
 INSERT OR IGNORE INTO schema_version (version) VALUES (44);
 """,
+    45: """
+-- v45: bump schema_version so the FeatureFlagsService knows the
+-- feature_flags table (added in schema.sql) is present. The table
+-- itself is created by schema.sql with columns
+-- (name, is_active, rollout_percent, description, updated_at) —
+-- pre-v45 deploys that only ran migrations (never schema.sql)
+-- will pick up the table via the IF NOT EXISTS below.
+CREATE TABLE IF NOT EXISTS feature_flags (
+    name TEXT PRIMARY KEY,
+    is_active INTEGER DEFAULT 1,
+    rollout_percent INTEGER DEFAULT 100 CHECK (rollout_percent BETWEEN 0 AND 100),
+    description TEXT DEFAULT '',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT OR IGNORE INTO schema_version (version) VALUES (45);
+""",
 }
 
 

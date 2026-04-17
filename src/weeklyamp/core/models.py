@@ -965,6 +965,7 @@ class AppConfig(BaseModel):
     franchise: FranchiseConfig = Field(default_factory=FranchiseConfig)
     data_product: DataProductConfig = Field(default_factory=DataProductConfig)
     rate_limits: RateLimitConfig = Field(default_factory=RateLimitConfig)
+    features: dict[str, bool] = Field(default_factory=dict)
     db_path: str = "data/weeklyamp.db"
     db_backend: str = "sqlite"  # "sqlite" or "postgres"
     database_url: str = ""  # PostgreSQL connection string

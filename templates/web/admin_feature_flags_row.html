@@ -1,0 +1,16 @@
+<div class="ff-row" id="ff-row-{{ flag.key }}">
+    <div class="ff-meta">
+        <div class="ff-label">{{ flag.label }}</div>
+        <div class="ff-desc">{{ flag.description }}</div>
+    </div>
+    <form hx-post="/admin/feature-flags/toggle"
+          hx-target="#ff-row-{{ flag.key }}"
+          hx-swap="outerHTML"
+          hx-trigger="change from:find input">
+        <input type="hidden" name="key" value="{{ flag.key }}">
+        <label class="ff-toggle">
+            <input type="checkbox" name="enabled_value" value="on" {% if flag.enabled %}checked{% endif %}>
+            <span class="ff-slider"></span>
+        </label>
+    </form>
+</div>

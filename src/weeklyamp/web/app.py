@@ -9,7 +9,7 @@ import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi import Response as FastAPIResponse
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -21,17 +21,12 @@ from weeklyamp.core.database import init_database, seed_agents, seed_content, se
 from weeklyamp.research.sources import sync_sources_from_config
 from weeklyamp.web.security import (
     AuthMiddleware,
+    BodySizeLimitMiddleware,
     CSRFMiddleware,
     SecurityHeadersMiddleware,
-    auth_gate_page,
-    auth_gate_submit,
     login_page,
     login_submit,
     logout,
-    portal_enter_page,
-    portal_enter_submit,
-    signin_page,
-    signin_submit,
 )
 
 logger = logging.getLogger(__name__)
@@ -97,36 +92,18 @@ def _setup_sentry() -> None:
 def _setup_logging():
     """Configure structured logging with JSON-compatible format.
 
-    PII scrubbing: every log record's message is passed through a
-    regex that redacts email addresses and long digit sequences
-    before the record leaves the process. This is a defense-in-depth
-    against accidentally logging subscriber emails or tokens —
-    individual log calls still shouldn't include PII on purpose.
+    PII scrubbing: every log record's message is passed through
+    :class:`weeklyamp.core.logging_filters.PIIRedactionFilter`, which
+    redacts email addresses, phone numbers, bearer tokens, and
+    ``tfs_*`` API keys before the record leaves the process. This is a
+    defense-in-depth against accidentally logging subscriber emails or
+    tokens — individual log calls still shouldn't include PII on purpose.
     """
     log_format = os.environ.get("LOG_FORMAT", "text")
     level = os.environ.get("LOG_LEVEL", "INFO").upper()
 
-    import re
-    _EMAIL_RE = re.compile(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}")
-    _TOKEN_RE = re.compile(r"\b[a-fA-F0-9]{32,}\b")
-
-    def _scrub(text: str) -> str:
-        if not isinstance(text, str):
-            return text
-        text = _EMAIL_RE.sub("<redacted-email>", text)
-        text = _TOKEN_RE.sub("<redacted-token>", text)
-        return text
-
-    class PIIScrubFilter(logging.Filter):
-        def filter(self, record: logging.LogRecord) -> bool:
-            # Scrub the formatted message and the raw msg so both text
-            # and JSON formatters see the clean version.
-            try:
-                record.msg = _scrub(record.getMessage())
-                record.args = ()  # args already merged into msg above
-            except Exception:
-                pass
-            return True
+    from weeklyamp.core.logging_filters import PIIRedactionFilter
+    PIIScrubFilter = PIIRedactionFilter  # keep local name for the block below
 
     if log_format == "json":
         import json
@@ -225,6 +202,11 @@ def create_app() -> FastAPI:
             added = sync_sources_from_config(repo)
             if added:
                 logger.info("Synced %d new sources from sources.yaml", added)
+            # Feature flags: register config defaults + seed any missing
+            # DB rows so /admin/feature-flags has a complete list to toggle.
+            from weeklyamp.core import feature_flags as ff
+            ff.set_config_defaults(config.features)
+            ff.seed_from_config(repo, config.features)
             logger.info("Database initialized at %s (backend=%s)", db_path, backend)
         except Exception:
             logger.exception("Failed to initialize database")
@@ -250,6 +232,14 @@ def create_app() -> FastAPI:
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(CSRFMiddleware)
     app.add_middleware(AuthMiddleware)
+    app.add_middleware(
+        BodySizeLimitMiddleware,
+        max_bytes=config.max_request_body,
+        # Webhooks occasionally carry larger payloads from external systems;
+        # size enforcement there happens inside the webhook handler which
+        # validates the HMAC before reading the full body.
+        exempt_paths=("/webhooks/inbound",),
+    )
     app.add_middleware(GZipMiddleware, minimum_size=500)
 
     # White-label domain routing (inactive unless white_label.enabled=true)
@@ -260,12 +250,6 @@ def create_app() -> FastAPI:
     # Auth routes
     app.add_api_route("/login", login_page, methods=["GET"])
     app.add_api_route("/login", login_submit, methods=["POST"])
-    app.add_api_route("/signin", signin_page, methods=["GET"])
-    app.add_api_route("/signin", signin_submit, methods=["POST"])
-    app.add_api_route("/auth-gate-8k2m", auth_gate_page, methods=["GET"])
-    app.add_api_route("/auth-gate-8k2m", auth_gate_submit, methods=["POST"])
-    app.add_api_route("/portal-enter-q3", portal_enter_page, methods=["GET"])
-    app.add_api_route("/portal-enter-q3", portal_enter_submit, methods=["POST"])
     app.add_api_route("/logout", logout, methods=["GET"])
 
     # Custom error pages
@@ -535,6 +519,7 @@ def create_app() -> FastAPI:
     from weeklyamp.web.routes import notifications as notifications_routes
     from weeklyamp.web.routes import licensee_portal as licensee_portal_routes
     from weeklyamp.web.routes import admin_account as admin_account_routes
+    from weeklyamp.web.routes import admin_feature_flags as admin_feature_flags_routes
     from weeklyamp.web.routes import analytics as analytics_hub_routes
     # v36+ future vision features
     from weeklyamp.web.routes import events as events_routes
@@ -542,6 +527,10 @@ def create_app() -> FastAPI:
     from weeklyamp.web.routes import developer_api as developer_api_routes
     # v38+ Developer API v2
     from weeklyamp.web.routes import api_v2 as api_v2_routes
+
+    # Feature-flag-gated routers. Each gated router 404s when its flag
+    # is off; flip at /admin/feature-flags to turn on.
+    from weeklyamp.core.feature_flags import FeatureFlag, require_feature
 
     # Routes
     app.include_router(dashboard.router)
@@ -561,36 +550,84 @@ def create_app() -> FastAPI:
     app.include_router(newsletters_routes.router)
     app.include_router(editor_articles_routes.router, prefix="/editor-articles")
     app.include_router(guests_routes.router, prefix="/guests")
-    app.include_router(calendar_routes.router, prefix="/calendar")
+    app.include_router(
+        calendar_routes.router, prefix="/calendar",
+        dependencies=[Depends(require_feature(FeatureFlag.CALENDAR_REBOOK))],
+    )
     app.include_router(growth_routes.router, prefix="/growth")
     # v21+ advanced feature routes
     app.include_router(tracking_routes.router)
     app.include_router(preferences_routes.router)
-    app.include_router(ab_tests_routes.router, prefix="/ab-tests")
-    app.include_router(webhooks_routes.router, prefix="/webhooks")
+    app.include_router(
+        ab_tests_routes.router, prefix="/ab-tests",
+        dependencies=[Depends(require_feature(FeatureFlag.AB_TESTING))],
+    )
+    app.include_router(
+        webhooks_routes.router, prefix="/webhooks",
+        dependencies=[Depends(require_feature(FeatureFlag.WEBHOOKS_INBOUND))],
+    )
     app.include_router(backup_routes.router, prefix="/backup")
     # v22+ music-specific feature routes
-    app.include_router(spotify_routes.router, prefix="/spotify")
+    app.include_router(
+        spotify_routes.router, prefix="/spotify",
+        dependencies=[Depends(require_feature(FeatureFlag.SPOTIFY))],
+    )
     app.include_router(artists_routes.router)
-    app.include_router(section_analytics_routes.router, prefix="/sections/analytics")
-    app.include_router(trivia_routes.router)
+    app.include_router(
+        section_analytics_routes.router, prefix="/sections/analytics",
+        dependencies=[Depends(require_feature(FeatureFlag.SECTION_HEATMAP))],
+    )
+    app.include_router(
+        trivia_routes.router,
+        dependencies=[Depends(require_feature(FeatureFlag.TRIVIA))],
+    )
     # v23+ growth & monetization routes
-    app.include_router(refer_routes.router)
-    app.include_router(advertise_routes.router)
+    app.include_router(
+        refer_routes.router,
+        dependencies=[Depends(require_feature(FeatureFlag.REFERRALS))],
+    )
+    app.include_router(
+        advertise_routes.router,
+        dependencies=[Depends(require_feature(FeatureFlag.ADVERTISERS))],
+    )
     app.include_router(lead_magnets_routes.router)
-    app.include_router(contests_routes.router)
-    app.include_router(reader_content_routes.router)
+    app.include_router(
+        contests_routes.router,
+        dependencies=[Depends(require_feature(FeatureFlag.CONTESTS))],
+    )
+    app.include_router(
+        reader_content_routes.router,
+        dependencies=[Depends(require_feature(FeatureFlag.USER_SUBMISSIONS))],
+    )
     app.include_router(embed_routes.router)
-    app.include_router(welcome_routes.router, prefix="/admin/welcome-sequence")
-    app.include_router(reengagement_routes.router, prefix="/admin/reengagement")
+    app.include_router(
+        welcome_routes.router, prefix="/admin/welcome-sequence",
+        dependencies=[Depends(require_feature(FeatureFlag.WELCOME_SEQUENCE))],
+    )
+    app.include_router(
+        reengagement_routes.router, prefix="/admin/reengagement",
+        dependencies=[Depends(require_feature(FeatureFlag.REENGAGEMENT))],
+    )
     # v26+ paid tiers & billing
-    app.include_router(billing_routes.router)
+    app.include_router(
+        billing_routes.router,
+        dependencies=[Depends(require_feature(FeatureFlag.PAID_TIERS))],
+    )
     # v26+ advertiser self-serve portal
-    app.include_router(advertiser_portal_routes.router)
+    app.include_router(
+        advertiser_portal_routes.router,
+        dependencies=[Depends(require_feature(FeatureFlag.ADVERTISERS))],
+    )
     # v26+ community forum
-    app.include_router(community_routes.router)
+    app.include_router(
+        community_routes.router,
+        dependencies=[Depends(require_feature(FeatureFlag.COMMUNITY))],
+    )
     # v27+ affiliate programs
-    app.include_router(affiliates_routes.router, prefix="/affiliates")
+    app.include_router(
+        affiliates_routes.router, prefix="/affiliates",
+        dependencies=[Depends(require_feature(FeatureFlag.REFERRALS))],
+    )
     # v28+ revenue dashboard
     app.include_router(revenue_routes.router, prefix="/admin/revenue")
     # v28+ markets & artist newsletters
@@ -607,7 +644,10 @@ def create_app() -> FastAPI:
     # v29+ admin user management
     app.include_router(users_routes.router, prefix="/admin/users")
     # v30+ city edition licensing
-    app.include_router(licensing_routes.router, prefix="/admin/licensing")
+    app.include_router(
+        licensing_routes.router, prefix="/admin/licensing",
+        dependencies=[Depends(require_feature(FeatureFlag.FRANCHISE))],
+    )
     # Revenue calculator
     app.include_router(pricing_calc_routes.router, prefix="/admin/calculator")
     # v32+ marketing & promotion hub
@@ -617,17 +657,30 @@ def create_app() -> FastAPI:
     # Notification center
     app.include_router(notifications_routes.router, prefix="/notifications")
     # White-label licensee portal
-    app.include_router(licensee_portal_routes.router, prefix="/licensee")
-    # Admin self-service: change password
+    app.include_router(
+        licensee_portal_routes.router, prefix="/licensee",
+        dependencies=[Depends(require_feature(FeatureFlag.WHITE_LABEL))],
+    )
+    # Admin self-service: change password + feature flags
     app.include_router(admin_account_routes.router, prefix="/admin")
+    app.include_router(admin_feature_flags_routes.router, prefix="/admin")
     # Analytics hub (NPS, content reports, forecasting, media kit)
     app.include_router(analytics_hub_routes.router, prefix="/admin/analytics")
     # v36+ future vision features
-    app.include_router(events_routes.router, prefix="/events")
-    app.include_router(marketplace_routes.router, prefix="/marketplace")
+    app.include_router(
+        events_routes.router, prefix="/events",
+        dependencies=[Depends(require_feature(FeatureFlag.EVENTS))],
+    )
+    app.include_router(
+        marketplace_routes.router, prefix="/marketplace",
+        dependencies=[Depends(require_feature(FeatureFlag.MARKETPLACE))],
+    )
     app.include_router(developer_api_routes.router, prefix="/admin/api")
     # v38+ Developer API v2 (public, auth via API key)
-    app.include_router(api_v2_routes.router)
+    app.include_router(
+        api_v2_routes.router,
+        dependencies=[Depends(require_feature(FeatureFlag.API_V2))],
+    )
 
     # Convenience redirects for common short URLs
     from fastapi.responses import RedirectResponse as _Redir
