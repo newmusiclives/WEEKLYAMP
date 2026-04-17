@@ -7,6 +7,7 @@ from typing import Optional
 
 from weeklyamp.agents.base import AgentBase
 from weeklyamp.content.generator import generate_draft, generate_draft_with_usage
+from weeklyamp.content.images import ensure_images
 from weeklyamp.core.config import get_prompt_template
 from weeklyamp.core.models import WORD_COUNT_MAX_TOKENS
 
@@ -96,6 +97,13 @@ class WriterAgent(AgentBase):
         content, model, tokens_used = generate_draft_with_usage(
             prompt, self.config, max_tokens_override=max_tokens, system_prompt=agent_system_prompt,
         )
+
+        # Enforce the 2-image floor per Paul 2026-04-17: every edition
+        # / genre / city / artist issue needs at least 2 images. The
+        # helper tries content-matched CC0 images first, falls back to
+        # generic music imagery placed near any poll/survey block.
+        section_title = (section.get("display_name") or section_slug).strip()
+        content = ensure_images(content, section_slug=section_slug, section_title=section_title, min_images=2)
 
         # Save draft
         draft_id = self.repo.create_draft(
