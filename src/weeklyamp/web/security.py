@@ -102,7 +102,7 @@ _CSRF_COOKIE = "_csrf"
 
 # Routes that don't require authentication
 _PUBLIC_PREFIXES = (
-    "/health", "/login", "/static", "/submit", "/subscribe", "/unsubscribe",
+    "/health", "/login", "/signin", "/static", "/submit", "/subscribe", "/unsubscribe",
     "/resubscribe", "/feedback",
     "/verify", "/newsletters", "/api/", "/feed.xml", "/feed.json", "/feed/", "/t/", "/preferences/",
     "/webhooks/inbound", "/artists", "/trivia/leaderboard", "/advertise",
@@ -399,12 +399,47 @@ async def login_page(request: Request) -> Response:
 
 async def login_submit(request: Request) -> Response:
     """POST /login — validate password and set session."""
+    return await _login_submit_impl(request)
+
+
+async def signin_page(request: Request) -> Response:
+    """GET /signin — alias of /login. Exists because an edge/CDN layer
+    intermittently intercepts POST /login on the Railway deployment and
+    returns a stale 401 before the request reaches us. Having a second
+    URL for the same form lets operators log in when /login is stuck."""
+    if is_authenticated(request):
+        return RedirectResponse("/dashboard", status_code=302)
+    csrf_token = secrets.token_hex(32)
+    tpl = _login_env.get_template("login.html")
+    response = HTMLResponse(tpl.render(csrf_token=csrf_token, form_action="/signin"))
+    response.set_cookie(
+        "_login_csrf", csrf_token,
+        httponly=True, samesite="lax", max_age=900, secure=False,
+        path="/signin",
+    )
+    return response
+
+
+async def signin_submit(request: Request) -> Response:
+    """POST /signin — same handler as /login (edge-proxy workaround)."""
+    resp = await _login_submit_impl(request)
+    # Re-render the form action as /signin on failure so retries don't bounce to /login
+    if resp.status_code in (401, 429):
+        tpl = _login_env.get_template("login.html")
+        error = "Invalid password" if resp.status_code == 401 else \
+            "Too many login attempts. Please try again later."
+        return HTMLResponse(
+            tpl.render(error=error, form_action="/signin"),
+            status_code=resp.status_code,
+        )
+    return resp
+
+
+async def _login_submit_impl(request: Request) -> Response:
     ip = _get_client_ip(request)
-    logger.warning("login_submit: entered ip=%s path=%s", ip, request.url.path)
 
     if _is_rate_limited(ip):
         _log_security_event(request, "login_rate_limited")
-        logger.warning("login_submit: rate-limited ip=%s", ip)
         tpl = _login_env.get_template("login.html")
         return HTMLResponse(
             tpl.render(error="Too many login attempts. Please try again later."),
@@ -416,14 +451,9 @@ async def login_submit(request: Request) -> Response:
 
     admin_hash = _get_admin_hash()
     env_pw = os.environ.get("WEEKLYAMP_ADMIN_PASSWORD", "").strip()
-    logger.warning(
-        "login_submit: check pw_len=%d hash_len=%d env_pw_set=%s",
-        len(password), len(admin_hash) if admin_hash else 0, bool(env_pw),
-    )
     password_ok = verify_password(password, admin_hash) if admin_hash else False
     if not password_ok and env_pw and password == env_pw:
         password_ok = True
-    logger.warning("login_submit: password_ok=%s", password_ok)
     if password_ok:
         _clear_attempts(ip)
         _log_security_event(request, "login_success")

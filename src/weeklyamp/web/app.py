@@ -26,6 +26,8 @@ from weeklyamp.web.security import (
     login_page,
     login_submit,
     logout,
+    signin_page,
+    signin_submit,
 )
 
 logger = logging.getLogger(__name__)
@@ -254,6 +256,8 @@ def create_app() -> FastAPI:
     # Auth routes
     app.add_api_route("/login", login_page, methods=["GET"])
     app.add_api_route("/login", login_submit, methods=["POST"])
+    app.add_api_route("/signin", signin_page, methods=["GET"])
+    app.add_api_route("/signin", signin_submit, methods=["POST"])
     app.add_api_route("/logout", logout, methods=["GET"])
 
     # Custom error pages
