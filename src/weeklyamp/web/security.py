@@ -400,10 +400,11 @@ async def login_page(request: Request) -> Response:
 async def login_submit(request: Request) -> Response:
     """POST /login — validate password and set session."""
     ip = _get_client_ip(request)
+    logger.warning("login_submit: entered ip=%s path=%s", ip, request.url.path)
 
-    # Rate limit check
     if _is_rate_limited(ip):
         _log_security_event(request, "login_rate_limited")
+        logger.warning("login_submit: rate-limited ip=%s", ip)
         tpl = _login_env.get_template("login.html")
         return HTMLResponse(
             tpl.render(error="Too many login attempts. Please try again later."),
@@ -414,11 +415,15 @@ async def login_submit(request: Request) -> Response:
     password = form.get("password", "").strip()
 
     admin_hash = _get_admin_hash()
-    # Also check direct password match as fallback for Railway env issues
     env_pw = os.environ.get("WEEKLYAMP_ADMIN_PASSWORD", "").strip()
+    logger.warning(
+        "login_submit: check pw_len=%d hash_len=%d env_pw_set=%s",
+        len(password), len(admin_hash) if admin_hash else 0, bool(env_pw),
+    )
     password_ok = verify_password(password, admin_hash) if admin_hash else False
     if not password_ok and env_pw and password == env_pw:
         password_ok = True
+    logger.warning("login_submit: password_ok=%s", password_ok)
     if password_ok:
         _clear_attempts(ip)
         _log_security_event(request, "login_success")
