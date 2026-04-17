@@ -4490,15 +4490,20 @@ class Repository:
         return row["value"] or ""
 
     def set_admin_setting(self, key: str, value: str) -> None:
-        """Insert or update an admin setting. Uses backend-appropriate
-        upsert syntax."""
+        """Insert or update an admin setting.
+
+        PG branch ends with ``RETURNING key`` to defeat the adapter's
+        ``RETURNING id`` auto-append (repository.py:51-52) — this table
+        has no ``id`` column, PK is ``key``.
+        """
         conn = self._conn()
         try:
             if self._is_pg:
                 conn.execute(
                     "INSERT INTO admin_settings (key, value) VALUES (?, ?) "
                     "ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, "
-                    "updated_at = CURRENT_TIMESTAMP",
+                    "updated_at = CURRENT_TIMESTAMP "
+                    "RETURNING key",
                     (key, value),
                 )
             else:
@@ -4544,6 +4549,11 @@ class Repository:
         ``category`` is accepted for API symmetry with the callers but
         the underlying table doesn't store it — category lives in
         :data:`weeklyamp.core.feature_flags.FLAG_METADATA`.
+
+        Important: the PG branch ends with ``RETURNING name``. This
+        defeats the ``_PgConnAdapter`` auto-append of ``RETURNING id``
+        (repository.py:51-52), which would otherwise reference a
+        non-existent column on tables keyed by ``name``.
         """
         del category  # category lives in FLAG_METADATA, not the DB
         conn = self._conn()
@@ -4555,7 +4565,8 @@ class Repository:
                     "ON CONFLICT (name) DO UPDATE SET "
                     "is_active = EXCLUDED.is_active, "
                     "description = EXCLUDED.description, "
-                    "updated_at = CURRENT_TIMESTAMP",
+                    "updated_at = CURRENT_TIMESTAMP "
+                    "RETURNING name",
                     (key, 1 if enabled else 0, description),
                 )
             else:
