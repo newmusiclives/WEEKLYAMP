@@ -1708,6 +1708,15 @@ CREATE TABLE IF NOT EXISTS admin_settings (
 
 INSERT OR IGNORE INTO schema_version (version) VALUES (44);
 """,
+    46: """
+-- v46: no-op on SQLite (schema.sql already has issues.edition_slug).
+-- The PG_MIGRATIONS override below does the real work: adds
+-- issues.edition_slug idempotently on Postgres, where the column is
+-- missing in schema_pg.sql and v18's ALTER TABLE evidently did not
+-- land on the prod DB (discovered 2026-04-17 via cost-dashboard 500).
+SELECT 1;
+INSERT OR IGNORE INTO schema_version (version) VALUES (46);
+""",
     45: """
 -- v45: bump schema_version so the FeatureFlagsService knows the
 -- feature_flags table (added in schema.sql) is present. The table
@@ -1821,6 +1830,15 @@ ALTER TABLE assembled_issues RENAME COLUMN beehiiv_post_id TO ghl_campaign_id;
 ALTER TABLE subscribers RENAME COLUMN beehiiv_id TO ghl_contact_id;
 ALTER TABLE engagement_metrics RENAME COLUMN beehiiv_post_id TO ghl_campaign_id;
 INSERT INTO schema_version (version) VALUES (19) ON CONFLICT DO NOTHING;
+"""
+
+# v46 (PG-specific): backfill issues.edition_slug on prod Postgres where
+# it's missing. Uses IF NOT EXISTS so it's idempotent — safe to re-run
+# on any DB that already has the column.
+PG_MIGRATIONS[46] = """
+ALTER TABLE issues ADD COLUMN IF NOT EXISTS edition_slug TEXT DEFAULT '';
+CREATE INDEX IF NOT EXISTS idx_issues_edition ON issues(edition_slug);
+INSERT INTO schema_version (version) VALUES (46) ON CONFLICT DO NOTHING;
 """
 
 # v33: Add 'marketing' to the ai_agents.agent_type CHECK constraint.

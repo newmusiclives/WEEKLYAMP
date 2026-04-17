@@ -77,20 +77,18 @@ async def cost_dashboard(request: Request) -> Response:
     repo = get_repo()
     pricing = _pricing()
 
-    # TEMP DIAG (remove once green on prod): surface exception inline so
-    # we don't have to dig through Railway logs. Admin-only route.
-    import logging, traceback
-    _logger = logging.getLogger(__name__)
+    # Defensive: if the underlying query fails (schema drift,
+    # connection issues), fall back to modeled data instead of 500ing
+    # the entire page. Users still get the dashboard with "modeled"
+    # tags everywhere.
     try:
         stats = repo.get_cost_stats_by_edition(since_days=30)
         sub_counts = repo.get_subscriber_counts_by_edition()
-    except Exception as e:
-        _logger.exception("cost-dashboard query failed")
-        tb = traceback.format_exc()
-        return HTMLResponse(
-            f"<pre style='padding:20px;font-size:12px;'>cost-dashboard error:\n{tb}</pre>",
-            status_code=500,
-        )
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception("cost-dashboard query failed; falling back to modeled data")
+        stats = []
+        sub_counts = {}
     measured_by_slug = {s["edition_slug"]: s for s in stats}
 
     # Monthly infra amortization: split Railway + Postgres across the
