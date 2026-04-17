@@ -431,21 +431,24 @@ async def portal_enter_page(request: Request) -> Response:
 async def portal_enter_submit(request: Request) -> Response:
     """POST /portal-enter-q3 — session creation on valid password.
 
-    First access path: this endpoint returns 302 to /dashboard on success.
-    If the edge cache grabs the 401 the first request generates, future
-    requests are poisoned — so this handler:
-      1) Never returns 401 bodies that match login.html (uses plain text).
-      2) Always 302s to /dashboard (on success) OR back to itself with ?e=1.
-    This defeats any response-body-based cache pattern.
+    Never returns a 401-login.html body. 302s to /dashboard on success
+    or back to itself with ?e=1 on failure — defeats response-body-
+    based edge caching that's affecting /login and /signin.
     """
     ip = _get_client_ip(request)
+    logger.warning("portal_enter_submit: entered ip=%s", ip)
     form = await request.form()
     password = form.get("password", "").strip()
     admin_hash = _get_admin_hash()
     env_pw = os.environ.get("WEEKLYAMP_ADMIN_PASSWORD", "").strip()
+    logger.warning(
+        "portal_enter_submit: pw_len=%d hash_len=%d env_pw_set=%s",
+        len(password), len(admin_hash) if admin_hash else 0, bool(env_pw),
+    )
     password_ok = verify_password(password, admin_hash) if admin_hash else False
     if not password_ok and env_pw and password == env_pw:
         password_ok = True
+    logger.warning("portal_enter_submit: password_ok=%s", password_ok)
     if password_ok:
         _clear_attempts(ip)
         _log_security_event(request, "login_success")
@@ -454,7 +457,6 @@ async def portal_enter_submit(request: Request) -> Response:
         return response
     _record_attempt(ip)
     _log_security_event(request, "login_failure")
-    # 302 back with error flag — never returns the cached 401 body
     return RedirectResponse("/portal-enter-q3?e=1", status_code=302)
 
 
