@@ -40,7 +40,7 @@ class MarketingAgent(AgentBase):
     default_name = "Chief Marketing Officer"
     default_persona = "Strategic marketing leader who orchestrates subscriber growth and sponsor sales."
     default_system_prompt = (
-        "You are the CMO of TrueFans SIGNAL. "
+        "You are the CMO of TrueFans DISPATCH. "
         "You coordinate the Sales and Promotion leads across all editions, "
         "set portfolio-level priorities, and report on results."
     )
@@ -128,7 +128,7 @@ class MarketingAgent(AgentBase):
         growth = self.repo.get_growth_trend(days=14)
 
         prompt = (
-            f"Generate 5 actionable subscriber growth tactics for TrueFans SIGNAL.\n\n"
+            f"Generate 5 actionable subscriber growth tactics for TrueFans DISPATCH.\n\n"
             f"Current subscribers: {subscriber_count}\n"
             f"Editions: Fan (music fans), Artist (indie musicians), Industry (music business)\n"
             f"Frequency: 3x weekly per edition\n\n"
@@ -154,7 +154,7 @@ class MarketingAgent(AgentBase):
         for issue in issues:
             prompt = (
                 f"Write 3 social media posts promoting Issue #{issue['issue_number']} "
-                f"of TrueFans SIGNAL ({issue.get('edition_slug', '')} edition).\n\n"
+                f"of TrueFans DISPATCH ({issue.get('edition_slug', '')} edition).\n\n"
                 f"1. Twitter/X (max 280 chars, include hashtags)\n"
                 f"2. LinkedIn (professional tone, 2-3 paragraphs)\n"
                 f"3. Instagram caption (engaging, include emojis)\n\n"
@@ -186,7 +186,7 @@ class MarketingAgent(AgentBase):
             return {"drafted": 0, "message": "No at-risk subscribers found"}
 
         prompt = (
-            f"Write a win-back email for TrueFans SIGNAL subscribers who haven't "
+            f"Write a win-back email for TrueFans DISPATCH subscribers who haven't "
             f"opened an email in 2+ weeks.\n\n"
             f"The email should:\n"
             f"1. Acknowledge they've been away (no guilt)\n"
@@ -221,7 +221,7 @@ class MarketingAgent(AgentBase):
             pipeline[status] = pipeline.get(status, 0) + 1
 
         prompt = (
-            f"Write a concise weekly marketing report for TrueFans SIGNAL.\n\n"
+            f"Write a concise weekly marketing report for TrueFans DISPATCH.\n\n"
             f"Subscriber count: {subscriber_count}\n"
             f"Total outreach sent: {stats.get('total_outreach', 0)}\n"
             f"Active campaigns: {stats.get('active_campaigns', 0)}\n"

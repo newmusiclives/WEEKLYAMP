@@ -179,7 +179,7 @@ class InvoiceManager:
         return f"""<!DOCTYPE html>
 <html><body style="font-family:-apple-system,Segoe UI,sans-serif;color:#1a1a1a;max-width:600px;margin:0 auto;padding:24px;">
   <h1 style="margin:0 0 8px;">Invoice {invoice.get('invoice_number','')}</h1>
-  <p style="color:#666;margin:0 0 24px;">From TrueFans SIGNAL</p>
+  <p style="color:#666;margin:0 0 24px;">From TrueFans DISPATCH</p>
   <p>Hi {recipient_name or 'there'},</p>
   <p>Your invoice for the period is ready. Details below.</p>
   <table style="width:100%;border-collapse:collapse;margin:24px 0;">
@@ -198,7 +198,7 @@ class InvoiceManager:
   <p><strong>Due:</strong> {invoice.get('due_date','')}</p>
   <p>{invoice.get('notes','')}</p>
   <p style="color:#666;font-size:12px;margin-top:48px;">
-    TrueFans SIGNAL · Questions? Reply to this email.
+    TrueFans DISPATCH · Questions? Reply to this email.
   </p>
 </body></html>"""
 
@@ -240,7 +240,7 @@ class InvoiceManager:
         from weeklyamp.delivery.smtp_sender import SMTPSender
         sender = SMTPSender(smtp_config)
         html = self.render_invoice_html(invoice, recipient_name=recipient_name)
-        subject = f"Invoice {invoice.get('invoice_number','')} from TrueFans SIGNAL"
+        subject = f"Invoice {invoice.get('invoice_number','')} from TrueFans DISPATCH"
         ok = sender.send_single(
             to_email=to_email,
             subject=subject,

@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ profile.artist_name }} — TrueFans SIGNAL</title>
-    <meta name="description" content="{{ profile.bio[:160] if profile.bio else profile.artist_name + ' on TrueFans SIGNAL' }}">
-    <meta property="og:title" content="{{ profile.artist_name }} — TrueFans SIGNAL">
-    <meta property="og:description" content="{{ profile.bio[:200] if profile.bio else 'Discover ' + profile.artist_name + ' on TrueFans SIGNAL' }}">
+    <title>{{ profile.artist_name }} — TrueFans DISPATCH</title>
+    <meta name="description" content="{{ profile.bio[:160] if profile.bio else profile.artist_name + ' on TrueFans DISPATCH' }}">
+    <meta property="og:title" content="{{ profile.artist_name }} — TrueFans DISPATCH">
+    <meta property="og:description" content="{{ profile.bio[:200] if profile.bio else 'Discover ' + profile.artist_name + ' on TrueFans DISPATCH' }}">
     {% if profile.image_url %}<meta property="og:image" content="{{ profile.image_url }}">{% endif %}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -226,7 +226,7 @@
                 <a href="{{ profile.website }}" class="website-link" target="_blank" rel="noopener">Website</a>
                 {% endif %}
                 {% if profile.features %}
-                <span class="featured-badge">Featured in TrueFans SIGNAL</span>
+                <span class="featured-badge">Featured in TrueFans DISPATCH</span>
                 {% endif %}
             </div>
         </div>
@@ -317,7 +317,7 @@
     </div>
 
     <footer class="footer">
-        <a href="/">TrueFans SIGNAL</a> — for Industry Professionals, Music Artists and Fans
+        <a href="/">TrueFans DISPATCH</a> — for Industry Professionals, Music Artists and Fans
     </footer>
 </body>
 </html>

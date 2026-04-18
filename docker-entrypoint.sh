@@ -23,5 +23,5 @@ if [ "$WEEKLYAMP_ENV" = "production" ] || [ "$WEEKLYAMP_ENV" = "prod" ]; then
     echo "Configuration validated."
 fi
 
-echo "Starting TrueFans SIGNAL on port $PORT"
+echo "Starting TrueFans DISPATCH on port $PORT"
 exec python /app/start.py

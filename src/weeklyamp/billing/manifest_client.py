@@ -1,6 +1,6 @@
 """Payment integration via Manifest Financial.
 
-Manifest Financial is the exclusive payment provider for TrueFans SIGNAL.
+Manifest Financial is the exclusive payment provider for TrueFans DISPATCH.
 DISABLED by default — requires paid_tiers.enabled=true and valid API keys.
 """
 

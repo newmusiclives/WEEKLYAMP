@@ -305,7 +305,7 @@ editions = [
 paths = []
 for slug, intro, section_data in editions:
     html = render_newsletter(
-        newsletter_name="TrueFans SIGNAL",
+        newsletter_name="TrueFans DISPATCH",
         tagline="for Industry Professionals, Music Artists and Fans",
         issue_number=42,
         title=f"{slug.title()} Edition Preview",

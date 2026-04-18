@@ -24,7 +24,7 @@ from weeklyamp.db.repository import Repository
 console = Console()
 app = typer.Typer(
     name="weeklyamp",
-    help="TrueFans SIGNAL — AI-powered magazine platform for independent artists.",
+    help="TrueFans DISPATCH — AI-powered magazine platform for independent artists.",
     no_args_is_help=True,
 )
 
@@ -48,7 +48,7 @@ def init() -> None:
     backend = cfg.db_backend
     database_url = cfg.database_url
 
-    console.print(f"[bold]Initializing TrueFans SIGNAL...[/bold]")
+    console.print(f"[bold]Initializing TrueFans DISPATCH...[/bold]")
     console.print(f"  Backend: [cyan]{backend}[/cyan]")
 
     # Create DB
@@ -84,7 +84,7 @@ def status() -> None:
 
     # Current issue
     issue = repo.get_current_issue()
-    console.print("\n[bold]TrueFans SIGNAL Dashboard[/bold]")
+    console.print("\n[bold]TrueFans DISPATCH Dashboard[/bold]")
     console.print(f"Newsletter: [cyan]{cfg.newsletter.name}[/cyan]")
     console.print(f"AI: [cyan]{cfg.ai.provider.value}[/cyan] / [cyan]{cfg.ai.model}[/cyan]\n")
 
@@ -138,7 +138,7 @@ def serve(
     """Start the web dashboard."""
     import uvicorn
 
-    console.print(f"\n[bold]TrueFans SIGNAL Dashboard[/bold]")
+    console.print(f"\n[bold]TrueFans DISPATCH Dashboard[/bold]")
     console.print(f"Starting at [cyan]http://{host}:{port}[/cyan]\n")
     uvicorn.run(
         "weeklyamp.web.app:create_app",

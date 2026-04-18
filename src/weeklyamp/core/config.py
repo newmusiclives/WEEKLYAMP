@@ -147,7 +147,7 @@ def load_config(config_path: Optional[str] = None) -> AppConfig:
         smtp_user=os.getenv("WEEKLYAMP_SMTP_USER", email_data.get("smtp_user", "")),
         smtp_password=os.getenv("WEEKLYAMP_SMTP_PASSWORD", email_data.get("smtp_password", "")),
         from_address=os.getenv("WEEKLYAMP_EMAIL_FROM", email_data.get("from_address", "")),
-        from_name=os.getenv("WEEKLYAMP_EMAIL_FROM_NAME", email_data.get("from_name", "TrueFans SIGNAL")),
+        from_name=os.getenv("WEEKLYAMP_EMAIL_FROM_NAME", email_data.get("from_name", "TrueFans DISPATCH")),
     )
 
     # Rate limit config

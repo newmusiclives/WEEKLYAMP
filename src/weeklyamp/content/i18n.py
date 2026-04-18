@@ -18,7 +18,7 @@ TRANSLATIONS = {
         "unsubscribe": "Unsubscribe",
         "read_more": "Read More",
         "share": "Share This Issue",
-        "powered_by": "Powered by TrueFans SIGNAL",
+        "powered_by": "Powered by TrueFans DISPATCH",
         "weekly_digest": "Your Weekly Music Digest",
     },
     "es": {
@@ -26,7 +26,7 @@ TRANSLATIONS = {
         "unsubscribe": "Cancelar Suscripción",
         "read_more": "Leer Más",
         "share": "Compartir Este Número",
-        "powered_by": "Impulsado por TrueFans SIGNAL",
+        "powered_by": "Impulsado por TrueFans DISPATCH",
         "weekly_digest": "Tu Resumen Musical Semanal",
     },
     "pt": {
@@ -34,7 +34,7 @@ TRANSLATIONS = {
         "unsubscribe": "Cancelar Inscrição",
         "read_more": "Leia Mais",
         "share": "Compartilhe Esta Edição",
-        "powered_by": "Desenvolvido por TrueFans SIGNAL",
+        "powered_by": "Desenvolvido por TrueFans DISPATCH",
         "weekly_digest": "Seu Resumo Musical Semanal",
     },
     "fr": {
@@ -42,7 +42,7 @@ TRANSLATIONS = {
         "unsubscribe": "Se Désabonner",
         "read_more": "Lire la Suite",
         "share": "Partager Ce Numéro",
-        "powered_by": "Propulsé par TrueFans SIGNAL",
+        "powered_by": "Propulsé par TrueFans DISPATCH",
         "weekly_digest": "Votre Résumé Musical Hebdomadaire",
     },
 }

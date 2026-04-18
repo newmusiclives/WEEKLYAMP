@@ -1,4 +1,4 @@
--- TrueFans SIGNAL Database Schema (v10)
+-- TrueFans DISPATCH Database Schema (v10)
 
 CREATE TABLE IF NOT EXISTS schema_version (
     version INTEGER PRIMARY KEY,

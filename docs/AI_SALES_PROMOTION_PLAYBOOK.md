@@ -64,7 +64,7 @@ Each Sales lead operates on the same task types (`identify_prospects`, `draft_ou
 - Vinyl subscription services (VMP, Sounds Delicious)
 - Music documentary and music-tourism brands
 
-**Outreach voice:** Warm, conversational, leads with audience alignment ("Your audience and ours both index high on indie-music discovery"). Soft CTA to a 15-minute intro call. Sender signature: Kyle Mitchell, Sales Lead — TrueFans SIGNAL Fan Edition.
+**Outreach voice:** Warm, conversational, leads with audience alignment ("Your audience and ours both index high on indie-music discovery"). Soft CTA to a 15-minute intro call. Sender signature: Kyle Mitchell, Sales Lead — TrueFans DISPATCH Fan Edition.
 
 **Pipeline cadence:** Weekly identify (Mon), daily outreach drafts (Mon-Fri), pipeline snapshot to admin Friday afternoon as part of the weekly report.
 
@@ -79,7 +79,7 @@ Each Sales lead operates on the same task types (`identify_prospects`, `draft_ou
 - Music software and plugins (Native Instruments, iZotope, FabFilter)
 - Tour-support services (Soundcheck, Bandzoogle, BandLab, ToneDen)
 
-**Outreach voice:** Data-driven, leads with engagement metrics, references the artist-development stage of the audience. "Our artist subscribers are at the buying stage for [category]." Sender signature: Dana Preston, Sales Lead — TrueFans SIGNAL Artist Edition.
+**Outreach voice:** Data-driven, leads with engagement metrics, references the artist-development stage of the audience. "Our artist subscribers are at the buying stage for [category]." Sender signature: Dana Preston, Sales Lead — TrueFans DISPATCH Artist Edition.
 
 **Pipeline cadence:** Same as Fan, scoped to artist-friendly categories.
 
@@ -95,7 +95,7 @@ Each Sales lead operates on the same task types (`identify_prospects`, `draft_ou
 - Industry publications and trade press (Hits Daily Double, MusicBusinessWorldwide partnership inventory)
 - Distribution and label services (UnitedMasters, Vydia, Stem, Symphonic)
 
-**Outreach voice:** Executive register, leads with reach into decision-makers and concrete CPM/CTR projections. Heavier on data than the other two editions. Sender signature: Talia Brooks, Sales Lead — TrueFans SIGNAL Industry Edition.
+**Outreach voice:** Executive register, leads with reach into decision-makers and concrete CPM/CTR projections. Heavier on data than the other two editions. Sender signature: Talia Brooks, Sales Lead — TrueFans DISPATCH Industry Edition.
 
 **Pipeline cadence:** Same. Industry deals tend to be larger and longer cycles, so the prospects-per-week target is lower (3 instead of 5) and the proposal stage takes longer.
 

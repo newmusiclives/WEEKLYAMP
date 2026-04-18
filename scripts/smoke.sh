@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Post-deploy smoke test for TrueFans SIGNAL.
+# Post-deploy smoke test for TrueFans DISPATCH.
 #
 # Usage:
 #   bash scripts/smoke.sh [URL]

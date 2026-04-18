@@ -238,7 +238,7 @@ async def resubscribe(request: Request):
     except Exception:
         return HTMLResponse(
             "<h1>You're back in!</h1><p>We re-activated your subscription. "
-            "Welcome back to TrueFans SIGNAL.</p>"
+            "Welcome back to TrueFans DISPATCH.</p>"
         )
 
 

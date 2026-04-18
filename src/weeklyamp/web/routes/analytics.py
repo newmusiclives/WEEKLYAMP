@@ -179,7 +179,7 @@ async def media_kit_download(request: Request):
     summary = repo.get_revenue_summary()
 
     html = f"""<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>TrueFans SIGNAL — Media Kit</title>
+<html><head><meta charset="UTF-8"><title>TrueFans DISPATCH — Media Kit</title>
 <style>
 body {{ font-family: 'Inter', -apple-system, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 24px; color: #1a1a2e; line-height: 1.7; }}
 h1 {{ color: #e8645a; font-size: 28px; border-bottom: 3px solid #e8645a; padding-bottom: 12px; }}
@@ -193,7 +193,7 @@ th, td {{ padding: 10px 12px; text-align: left; border-bottom: 1px solid #e5e7eb
 th {{ background: #f8f9fa; font-weight: 600; }}
 .footer {{ margin-top: 40px; padding-top: 20px; border-top: 2px solid #e5e7eb; font-size: 13px; color: #6b7280; }}
 </style></head><body>
-<h1>TrueFans SIGNAL — Media Kit</h1>
+<h1>TrueFans DISPATCH — Media Kit</h1>
 <p><strong>{config.newsletter.name}</strong> — {config.newsletter.tagline}</p>
 
 <div class="stat-grid">

@@ -44,7 +44,7 @@ def _pending_secret_key(request: Request) -> str:
     return f"admin_totp_pending:{suffix}"
 
 
-def _otpauth_uri(secret: str, label: str = "TrueFans SIGNAL") -> str:
+def _otpauth_uri(secret: str, label: str = "TrueFans DISPATCH") -> str:
     import pyotp
     return pyotp.TOTP(secret).provisioning_uri(
         name="admin", issuer_name=label

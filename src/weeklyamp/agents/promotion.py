@@ -29,7 +29,7 @@ class PromotionAgent(AgentBase):
     default_name = "Promotion Lead"
     default_persona = "Creative growth marketer specializing in newsletter subscriber acquisition and community building."
     default_system_prompt = (
-        "You are a Promotion lead for TrueFans SIGNAL. "
+        "You are a Promotion lead for TrueFans DISPATCH. "
         "You design subscriber growth campaigns, craft referral programs, "
         "run cross-promotions, and build partnerships that drive sign-ups."
     )
@@ -78,7 +78,7 @@ class PromotionAgent(AgentBase):
         prompt = (
             f"Suggest {count} newsletters, podcasts, or communities that would "
             f"be ideal cross-promotion partners for the {edition_label} edition "
-            f"of TrueFans SIGNAL ({subscriber_count} subscribers).\n\n"
+            f"of TrueFans DISPATCH ({subscriber_count} subscribers).\n\n"
             f"Respond with ONLY a JSON array. No prose, no markdown fences. "
             f"Each element must be an object with these exact keys:\n"
             f'  "partner_name" (string)\n'
@@ -133,7 +133,7 @@ class PromotionAgent(AgentBase):
 
         prompt = (
             f"Design a {campaign_type} campaign for the {edition_label} edition "
-            f"of TrueFans SIGNAL ({subscriber_count} subscribers).\n\n"
+            f"of TrueFans DISPATCH ({subscriber_count} subscribers).\n\n"
             f"Include:\n"
             f"1. Campaign concept and hook\n"
             f"2. Target audience and channels\n"
@@ -169,7 +169,7 @@ class PromotionAgent(AgentBase):
         prompt = (
             f"Write a cross-promotion outreach email to {partner['partner_name']} "
             f"({partner.get('partner_type', 'newsletter')}) on behalf of "
-            f"the {edition_label} edition of TrueFans SIGNAL "
+            f"the {edition_label} edition of TrueFans DISPATCH "
             f"({subscriber_count} subscribers).\n\n"
             f"Audience overlap angle: {partner.get('audience_overlap', '')}\n"
             f"Specific cross-promo idea: {partner.get('pitch_idea', '')}\n\n"
@@ -190,7 +190,7 @@ class PromotionAgent(AgentBase):
 
         prompt = (
             f"Analyze the growth situation for the {edition or 'all'} edition "
-            f"of TrueFans SIGNAL ({subscriber_count} subscribers) and suggest "
+            f"of TrueFans DISPATCH ({subscriber_count} subscribers) and suggest "
             f"3 immediate actions to accelerate subscriber acquisition this week. "
             f"Free or low-cost tactics that leverage existing content. "
             f"Be specific and actionable."

@@ -14,7 +14,7 @@ class GrowthAgent(AgentBase):
     default_name = "Growth Manager"
     default_persona = "Data-driven growth strategist specializing in newsletter and community growth."
     default_system_prompt = (
-        "You are the Growth Manager for TrueFans SIGNAL. "
+        "You are the Growth Manager for TrueFans DISPATCH. "
         "You analyze subscriber metrics, suggest growth tactics, "
         "create social media content, and plan referral campaigns."
     )
@@ -73,7 +73,7 @@ class GrowthAgent(AgentBase):
             )
 
         prompt = (
-            f"Suggest 5 growth tactics for TrueFans SIGNAL, "
+            f"Suggest 5 growth tactics for TrueFans DISPATCH, "
             f"a newsletter for independent artists with {subscriber_count} subscribers.\n\n"
             f"Recent trends:\n{trend_text or 'No data yet'}\n\n"
             f"Focus on: subscriber acquisition, retention, engagement, "
@@ -99,7 +99,7 @@ class GrowthAgent(AgentBase):
 
         prompt = (
             f"Create social media posts promoting Issue #{issue['issue_number']} "
-            f"of TrueFans SIGNAL.\n\n"
+            f"of TrueFans DISPATCH.\n\n"
             f"Issue title: {issue.get('title', 'Latest Issue')}\n"
             f"Sections: {sections_text}\n\n"
             f"Write one post each for: Twitter (280 chars), Instagram (caption), "
@@ -174,7 +174,7 @@ class GrowthAgent(AgentBase):
         subscriber_count = self.repo.get_subscriber_count()
 
         prompt = (
-            f"Design a referral campaign for TrueFans SIGNAL "
+            f"Design a referral campaign for TrueFans DISPATCH "
             f"({subscriber_count} current subscribers). "
             f"Our audience: independent artists, songwriters, music creators.\n\n"
             f"Include: campaign concept, reward tiers, messaging, "

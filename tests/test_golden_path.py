@@ -139,7 +139,7 @@ def test_golden_path_assemble_preflight_send_invoice(repo, licensee_id, monkeypa
             smtp_user="u",
             smtp_password="p",
             from_address="signal@example.test",
-            from_name="TrueFans SIGNAL",
+            from_name="TrueFans DISPATCH",
         )
     )
 

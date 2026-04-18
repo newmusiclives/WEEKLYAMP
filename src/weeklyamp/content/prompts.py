@@ -12,7 +12,7 @@ def build_prompt(
     topic: str = "",
     notes: str = "",
     reference_content: str = "",
-    newsletter_name: str = "TrueFans SIGNAL",
+    newsletter_name: str = "TrueFans DISPATCH",
     target_word_count: Optional[int] = None,
     word_count_label: Optional[str] = None,
 ) -> str:

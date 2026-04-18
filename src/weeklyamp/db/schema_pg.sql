@@ -1,4 +1,4 @@
--- TrueFans SIGNAL Database Schema (PostgreSQL, v14)
+-- TrueFans DISPATCH Database Schema (PostgreSQL, v14)
 
 CREATE TABLE IF NOT EXISTS schema_version (
     version INTEGER PRIMARY KEY,

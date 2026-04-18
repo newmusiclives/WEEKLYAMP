@@ -60,7 +60,7 @@ def test_health(client):
 def test_login_page_renders(client):
     r = client.get("/login")
     assert r.status_code == 200
-    assert "TrueFans SIGNAL" in r.text
+    assert "TrueFans DISPATCH" in r.text
     assert "password" in r.text.lower()
 
 

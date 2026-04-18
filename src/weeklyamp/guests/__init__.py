@@ -1,1 +1,1 @@
-"""Guest article system for TrueFans SIGNAL."""
+"""Guest article system for TrueFans DISPATCH."""

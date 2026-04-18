@@ -31,7 +31,7 @@ class SalesAgent(AgentBase):
     default_name = "Sales Director"
     default_persona = "Strategic sales professional with deep understanding of the music industry advertising landscape."
     default_system_prompt = (
-        "You are a Sales lead for TrueFans SIGNAL. "
+        "You are a Sales lead for TrueFans DISPATCH. "
         "You identify potential sponsors, draft outreach emails, "
         "and manage the sponsorship pipeline."
     )
@@ -93,7 +93,7 @@ class SalesAgent(AgentBase):
 
         prompt = (
             f"Identify {count} companies that would be ideal sponsors for "
-            f"the {edition_label} edition of TrueFans SIGNAL "
+            f"the {edition_label} edition of TrueFans DISPATCH "
             f"({subscriber_count} subscribers across Fan/Artist/Industry).\n\n"
             f"Respond with ONLY a JSON array. No prose, no markdown fences. "
             f"Each element must be an object with these exact keys:\n"
@@ -148,7 +148,7 @@ class SalesAgent(AgentBase):
         edition_label = primary or "all editions"
 
         prompt = (
-            f"Write a personalized sponsorship outreach email for TrueFans SIGNAL "
+            f"Write a personalized sponsorship outreach email for TrueFans DISPATCH "
             f"({edition_label} edition).\n\n"
             f"Prospect: {prospect['company_name']}\n"
             f"Category: {prospect.get('category', 'general')}\n"

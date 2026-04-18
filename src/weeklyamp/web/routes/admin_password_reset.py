@@ -67,7 +67,7 @@ def _send_reset_email(to_email: str, reset_url: str) -> bool:
         sender = SMTPSender(config.email)
         result = sender.send_single(
             to_email=to_email,
-            subject="Reset your TrueFans SIGNAL admin password",
+            subject="Reset your TrueFans DISPATCH admin password",
             html_body=(
                 f"<p>Someone (hopefully you) requested a password reset.</p>"
                 f"<p><a href=\"{reset_url}\">Reset your password</a></p>"

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ display_name }} — Issue #{{ issue.issue_number }} — TrueFans SIGNAL</title>
+    <title>{{ display_name }} — Issue #{{ issue.issue_number }} — TrueFans DISPATCH</title>
     {% if description %}
     <meta name="description" content="{{ description }}">
     <meta property="og:title" content="{{ display_name }} — Issue #{{ issue.issue_number }}">
@@ -14,7 +14,7 @@
     <meta name="twitter:title" content="{{ display_name }} — Issue #{{ issue.issue_number }}">
     <meta name="twitter:description" content="{{ description }}">
     <script type="application/ld+json">
-    {"@context":"https://schema.org","@type":"Article","headline":"{{ display_name }} — Issue #{{ issue.issue_number }}","datePublished":"{{ issue.publish_date or '' }}","publisher":{"@type":"Organization","name":"TrueFans SIGNAL"}}
+    {"@context":"https://schema.org","@type":"Article","headline":"{{ display_name }} — Issue #{{ issue.issue_number }}","datePublished":"{{ issue.publish_date or '' }}","publisher":{"@type":"Organization","name":"TrueFans DISPATCH"}}
     </script>
     {% endif %}
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -66,9 +66,9 @@
             {{ content_html | safe }}
         </div>
         <div class="share-bar">
-            <a class="share-btn twitter" href="https://twitter.com/intent/tweet?url={{ site_domain }}/articles/{{ edition_slug }}/{{ section_slug }}/{{ issue.issue_number }}&text={{ display_name }}%20%E2%80%94%20TrueFans%20SIGNAL" target="_blank" rel="noopener">Share on Twitter</a>
+            <a class="share-btn twitter" href="https://twitter.com/intent/tweet?url={{ site_domain }}/articles/{{ edition_slug }}/{{ section_slug }}/{{ issue.issue_number }}&text={{ display_name }}%20%E2%80%94%20TrueFans%20DISPATCH" target="_blank" rel="noopener">Share on Twitter</a>
             <a class="share-btn linkedin" href="https://www.linkedin.com/sharing/share-offsite/?url={{ site_domain }}/articles/{{ edition_slug }}/{{ section_slug }}/{{ issue.issue_number }}" target="_blank" rel="noopener">Share on LinkedIn</a>
-            <a class="share-btn email" href="mailto:?subject={{ display_name }}%20%E2%80%94%20TrueFans%20SIGNAL&body=Check%20out%20this%20article%3A%20{{ site_domain }}/articles/{{ edition_slug }}/{{ section_slug }}/{{ issue.issue_number }}">Share via Email</a>
+            <a class="share-btn email" href="mailto:?subject={{ display_name }}%20%E2%80%94%20TrueFans%20DISPATCH&body=Check%20out%20this%20article%3A%20{{ site_domain }}/articles/{{ edition_slug }}/{{ section_slug }}/{{ issue.issue_number }}">Share via Email</a>
         </div>
     </div>
     {% include "partials/public_footer.html" %}
