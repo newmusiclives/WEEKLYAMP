@@ -7,28 +7,51 @@ import hmac
 import json
 import logging
 
-from fastapi import APIRouter, Form, Request
+from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 
 from weeklyamp.web.deps import get_config, get_repo, render
+from weeklyamp.web.security import rate_limit
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+# Defense-in-depth on bearer-token routes: the unsubscribe_token is
+# 256-bit random so brute force is infeasible mathematically, but
+# rate-limiting still pays off — it bounds the cost of a stolen token
+# being used in an automated scrape and surfaces probing attempts in
+# the rate_limits table for monitoring. 30/min comfortably covers a
+# legitimate subscriber clicking through the preference center.
+_TOKEN_RATE_LIMIT = Depends(rate_limit("subscriber_token", max_per_minute=30))
+
 
 def _validate_token(token: str):
-    """Look up subscriber by preference token. Returns subscriber dict or None."""
+    """Look up subscriber by their bearer token. Returns subscriber dict or None.
+
+    The lookup key is ``unsubscribe_token`` — a 256-bit url-safe random
+    string set at signup (`subscribe.py:144`). It serves as a unified
+    bearer secret across `/unsubscribe`, `/my-dashboard/{token}`,
+    `/preferences/{token}`, and `/refer/dashboard/{token}` — they all
+    have the same threat model (token leak = full account access)
+    so sharing one secret per subscriber keeps emails simple and
+    avoids a separate per-feature token table.
+
+    Previously this queried a `preference_token` column that does not
+    exist in the schema, so every preference link 500'd in production.
+    """
+    if not token:
+        return None
     repo = get_repo()
     conn = repo._conn()
     row = conn.execute(
-        "SELECT * FROM subscribers WHERE preference_token = ? AND status = 'active'",
+        "SELECT * FROM subscribers WHERE unsubscribe_token = ? AND status = 'active'",
         (token,),
     ).fetchone()
     conn.close()
     return dict(row) if row else None
 
 
-@router.get("/preferences/{token}", response_class=HTMLResponse)
+@router.get("/preferences/{token}", response_class=HTMLResponse, dependencies=[_TOKEN_RATE_LIMIT])
 async def preferences_page(token: str):
     """Show preference form for a subscriber."""
     subscriber = _validate_token(token)
@@ -49,7 +72,7 @@ async def preferences_page(token: str):
     )
 
 
-@router.post("/preferences/{token}", response_class=HTMLResponse)
+@router.post("/preferences/{token}", response_class=HTMLResponse, dependencies=[_TOKEN_RATE_LIMIT])
 async def update_preferences(
     token: str,
     editions: list[str] = Form(default=[]),
@@ -71,27 +94,22 @@ async def update_preferences(
 
     try:
         repo = get_repo()
-        conn = repo._conn()
-        conn.execute(
-            """UPDATE subscribers SET
-               editions = ?,
-               send_days = ?,
-               content_frequency = ?,
-               timezone = ?,
-               interests = ?,
-               updated_at = datetime('now')
-               WHERE preference_token = ?""",
-            (
-                ",".join(editions),
-                ",".join(send_days),
-                content_frequency,
-                timezone,
-                interests.strip(),
-                token,
-            ),
+        # Preferences (frequency / timezone / interests) live in the
+        # `subscriber_preferences` table, edition subscriptions in
+        # `subscriber_editions`. The previous implementation tried to
+        # update flat columns on `subscribers` that do not exist,
+        # which 500'd in production. Use the proper normalised
+        # repo helpers instead.
+        repo.upsert_subscriber_preferences(
+            subscriber_id=subscriber["id"],
+            content_frequency=content_frequency,
+            timezone=timezone,
+            interests=interests.strip(),
         )
-        conn.commit()
-        conn.close()
+        send_days_csv = ",".join(send_days) if send_days else "monday,wednesday,saturday"
+        repo.set_subscriber_editions(
+            subscriber["id"], editions, send_days_csv=send_days_csv,
+        )
 
         # Re-fetch updated subscriber
         subscriber = _validate_token(token)
@@ -115,7 +133,7 @@ async def update_preferences(
         )
 
 
-@router.get("/my-dashboard/{token}", response_class=HTMLResponse)
+@router.get("/my-dashboard/{token}", response_class=HTMLResponse, dependencies=[_TOKEN_RATE_LIMIT])
 async def subscriber_dashboard(token: str, request: Request):
     repo = get_repo()
     config = get_config()
@@ -152,7 +170,7 @@ async def subscriber_dashboard(token: str, request: Request):
         referral=referral_code, config=config, token=token))
 
 
-@router.get("/my-dashboard/{token}/export")
+@router.get("/my-dashboard/{token}/export", dependencies=[_TOKEN_RATE_LIMIT])
 async def subscriber_data_export(token: str, request: Request):
     """GDPR Article 20 — Right to data portability.
 
@@ -214,14 +232,14 @@ async def subscriber_data_export(token: str, request: Request):
         "audit_note": (
             "This export was generated under GDPR Article 20 (right to data "
             "portability) and CCPA right-to-know. To request deletion, "
-            "use the unsubscribe link or contact privacy@truefansignal.com."
+            "use the unsubscribe link or contact privacy@truefansnewsletters.com."
         ),
     }
     conn.close()
 
     headers = {
         "Content-Disposition": (
-            f'attachment; filename="truefansignal-data-{sub_id}.json"'
+            f'attachment; filename="truefansdispatch-data-{sub_id}.json"'
         ),
     }
     return JSONResponse(bundle, headers=headers)

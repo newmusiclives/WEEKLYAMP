@@ -1579,6 +1579,58 @@ class Repository:
         conn.close()
         return dict(row) if row else None
 
+    def get_contributor_stats(self, *, min_submissions: int = 1) -> list[dict]:
+        """Aggregate per-contributor submission stats for the editorial
+        leaderboard. Groups by ``artist_email`` (rows without an email
+        are excluded — anonymous web-form submitters can't accrue
+        reputation).
+
+        Returns rows shaped as
+        ``{email, name, total, approved, published, rejected,
+        latest_at, trusted, approval_rate}``. Ordered by published
+        count desc, then approved, then total — so the most-published
+        contributors surface first.
+
+        ``trusted`` is a derived flag: 3+ approved submissions with no
+        rejections. The threshold is conservative on purpose; it's a
+        hint to editors, not an automatic publish-bypass."""
+        # The CASE-SUM idiom is used instead of FILTER (WHERE ...)
+        # because Postgres supports both but SQLite only added FILTER
+        # support in 3.30. CASE-SUM works in every backend we target.
+        conn = self._conn()
+        rows = conn.execute(
+            """
+            SELECT
+                artist_email AS email,
+                MAX(artist_name) AS name,
+                COUNT(*) AS total,
+                SUM(CASE WHEN review_state IN ('approved', 'scheduled', 'published') THEN 1 ELSE 0 END) AS approved,
+                SUM(CASE WHEN review_state = 'published' THEN 1 ELSE 0 END) AS published,
+                SUM(CASE WHEN review_state = 'rejected' THEN 1 ELSE 0 END) AS rejected,
+                MAX(created_at) AS latest_at
+            FROM artist_submissions
+            WHERE artist_email != ''
+            GROUP BY artist_email
+            HAVING COUNT(*) >= ?
+            ORDER BY SUM(CASE WHEN review_state = 'published' THEN 1 ELSE 0 END) DESC,
+                     SUM(CASE WHEN review_state IN ('approved', 'scheduled', 'published') THEN 1 ELSE 0 END) DESC,
+                     COUNT(*) DESC
+            """,
+            (min_submissions,),
+        ).fetchall()
+        conn.close()
+
+        result: list[dict] = []
+        for r in rows:
+            d = dict(r)
+            approved = int(d.get("approved") or 0)
+            rejected = int(d.get("rejected") or 0)
+            total = int(d.get("total") or 0)
+            d["trusted"] = approved >= 3 and rejected == 0
+            d["approval_rate"] = (approved / total) if total else 0.0
+            result.append(d)
+        return result
+
     def update_submission_state(self, submission_id: int, review_state: str) -> None:
         conn = self._conn()
         conn.execute(
@@ -2328,6 +2380,48 @@ class Repository:
                    updated_at = CURRENT_TIMESTAMP""",
             (subscriber_id, content_frequency, preferred_send_hour, timezone, interests),
         )
+        conn.commit()
+        conn.close()
+
+    def set_subscriber_editions(
+        self, subscriber_id: int, edition_slugs: list[str],
+        send_days_csv: str = "monday,wednesday,saturday",
+    ) -> None:
+        """Replace a subscriber's edition subscriptions with the given
+        slug list, applying the same ``send_days_csv`` to each.
+
+        Used by the preference center where the user picks which
+        editions they want and one set of send-days that applies to
+        all of them. Removes editions not in the new list — the
+        unsubscribed editions stop sending immediately.
+
+        Slugs that don't resolve to a row in ``newsletter_editions``
+        are silently skipped (rather than 500'ing) — defensive against
+        a stale form post-edition-rename.
+        """
+        conn = self._conn()
+        # Resolve slugs → ids up front so we can delete cleanly even
+        # if every slug is unknown.
+        resolved_ids: list[int] = []
+        for slug in edition_slugs:
+            row = conn.execute(
+                "SELECT id FROM newsletter_editions WHERE slug = ?", (slug,),
+            ).fetchone()
+            if row:
+                resolved_ids.append(row["id"])
+        # Drop existing subscriptions for this subscriber, then re-insert.
+        # A diff-based approach would touch fewer rows but the table is
+        # tiny per subscriber (a few rows max) so simplicity wins.
+        conn.execute(
+            "DELETE FROM subscriber_editions WHERE subscriber_id = ?",
+            (subscriber_id,),
+        )
+        for edition_id in resolved_ids:
+            conn.execute(
+                "INSERT INTO subscriber_editions (subscriber_id, edition_id, send_days) "
+                "VALUES (?, ?, ?)",
+                (subscriber_id, edition_id, send_days_csv),
+            )
         conn.commit()
         conn.close()
 
@@ -3721,6 +3815,15 @@ class Repository:
         row = conn.execute(
             "SELECT aa.*, s.name as sponsor_name FROM advertiser_accounts aa LEFT JOIN sponsors s ON s.id = aa.sponsor_id WHERE aa.email = ?",
             (email,),
+        ).fetchone()
+        conn.close()
+        return dict(row) if row else None
+
+    def get_advertiser_by_id(self, advertiser_id: int):
+        conn = self._conn()
+        row = conn.execute(
+            "SELECT aa.*, s.name as sponsor_name FROM advertiser_accounts aa LEFT JOIN sponsors s ON s.id = aa.sponsor_id WHERE aa.id = ?",
+            (advertiser_id,),
         ).fetchone()
         conn.close()
         return dict(row) if row else None

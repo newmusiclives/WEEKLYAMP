@@ -30,7 +30,7 @@ from typing import Optional
 from weeklyamp.agents.base import AgentBase
 from weeklyamp.agents.promotion import PromotionAgent
 from weeklyamp.agents.sales import SalesAgent
-from weeklyamp.content.generator import generate_draft
+from weeklyamp.content.generator import generate_draft_with_usage
 
 logger = logging.getLogger(__name__)
 
@@ -140,8 +140,10 @@ class MarketingAgent(AgentBase):
             f"For each tactic: name, channel, expected impact, steps to execute."
         )
 
-        tactics, model = generate_draft(prompt, self.config, max_tokens_override=800)
-        self.log_output(task_id, "growth_tactics", tactics)
+        tactics, model, tokens_used = generate_draft_with_usage(
+            prompt, self.config, max_tokens_override=800
+        )
+        self.log_output(task_id, "growth_tactics", tactics, tokens_used=tokens_used)
         return {"tactics": tactics}
 
     def draft_social_batch(self, task_id: int) -> dict:
@@ -151,6 +153,7 @@ class MarketingAgent(AgentBase):
             return {"drafted": 0, "message": "No published issues to promote"}
 
         posts_created = 0
+        total_tokens = 0
         for issue in issues:
             prompt = (
                 f"Write 3 social media posts promoting Issue #{issue['issue_number']} "
@@ -161,7 +164,10 @@ class MarketingAgent(AgentBase):
                 f"Include a call-to-action to subscribe."
             )
 
-            content, model = generate_draft(prompt, self.config, max_tokens_override=600)
+            content, model, tokens_used = generate_draft_with_usage(
+                prompt, self.config, max_tokens_override=600
+            )
+            total_tokens += tokens_used
             if content:
                 self.repo.create_social_post(
                     platform="twitter", content=content[:500],
@@ -170,7 +176,11 @@ class MarketingAgent(AgentBase):
                 )
                 posts_created += 1
 
-        self.log_output(task_id, "social_batch", f"Created {posts_created} social post drafts")
+        self.log_output(
+            task_id, "social_batch",
+            f"Created {posts_created} social post drafts",
+            tokens_used=total_tokens,
+        )
         return {"drafted": posts_created}
 
     def identify_at_risk(self, task_id: int) -> dict:
@@ -197,8 +207,10 @@ class MarketingAgent(AgentBase):
             f"Keep it under 150 words."
         )
 
-        email, model = generate_draft(prompt, self.config, max_tokens_override=400)
-        self.log_output(task_id, "winback_email", email)
+        email, model, tokens_used = generate_draft_with_usage(
+            prompt, self.config, max_tokens_override=400
+        )
+        self.log_output(task_id, "winback_email", email, tokens_used=tokens_used)
 
         # Log outreach for each at-risk subscriber
         for sub in at_risk:
@@ -231,8 +243,10 @@ class MarketingAgent(AgentBase):
             f"Keep it under 300 words. Professional but actionable tone."
         )
 
-        report, model = generate_draft(prompt, self.config, max_tokens_override=600)
-        self.log_output(task_id, "weekly_report", report)
+        report, model, tokens_used = generate_draft_with_usage(
+            prompt, self.config, max_tokens_override=600
+        )
+        self.log_output(task_id, "weekly_report", report, tokens_used=tokens_used)
         return {"report": report}
 
 

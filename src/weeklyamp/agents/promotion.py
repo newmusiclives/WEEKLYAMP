@@ -19,7 +19,7 @@ from typing import Optional
 
 from weeklyamp.agents.base import AgentBase
 from weeklyamp.agents.sales import _parse_json_array
-from weeklyamp.content.generator import generate_draft
+from weeklyamp.content.generator import generate_draft_with_usage
 
 logger = logging.getLogger(__name__)
 
@@ -89,8 +89,10 @@ class PromotionAgent(AgentBase):
             f'  "contact_url" (string, may be empty)\n'
         )
 
-        raw, _model = generate_draft(prompt, self.config, max_tokens_override=900)
-        self.log_output(task_id, "partner_list_raw", raw)
+        raw, _model, tokens_used = generate_draft_with_usage(
+            prompt, self.config, max_tokens_override=900
+        )
+        self.log_output(task_id, "partner_list_raw", raw, tokens_used=tokens_used)
 
         partners = _parse_json_array(raw)
         created_ids: list[int] = []
@@ -143,8 +145,10 @@ class PromotionAgent(AgentBase):
             f"6. Sample copy for the main CTA"
         )
 
-        campaign, _model = generate_draft(prompt, self.config, max_tokens_override=1000)
-        self.log_output(task_id, "campaign_plan", campaign)
+        campaign, _model, tokens_used = generate_draft_with_usage(
+            prompt, self.config, max_tokens_override=1000
+        )
+        self.log_output(task_id, "campaign_plan", campaign, tokens_used=tokens_used)
         return {"campaign_type": campaign_type, "edition": edition, "campaign": campaign}
 
     def draft_cross_promo(self, task_id: int, partner_id: Optional[int] = None) -> dict:
@@ -177,8 +181,10 @@ class PromotionAgent(AgentBase):
             f"we ask. Casual, collaborative, not salesy. Under 150 words."
         )
 
-        email, _model = generate_draft(prompt, self.config, max_tokens_override=600)
-        self.log_output(task_id, "cross_promo_email", email)
+        email, _model, tokens_used = generate_draft_with_usage(
+            prompt, self.config, max_tokens_override=600
+        )
+        self.log_output(task_id, "cross_promo_email", email, tokens_used=tokens_used)
         if email:
             self.repo.update_cross_promo_partner_status(partner_id, "contacted")
         return {"partner_id": partner_id, "edition": edition, "email": email}
@@ -196,6 +202,8 @@ class PromotionAgent(AgentBase):
             f"Be specific and actionable."
         )
 
-        analysis, _model = generate_draft(prompt, self.config, max_tokens_override=700)
-        self.log_output(task_id, "growth_analysis", analysis)
+        analysis, _model, tokens_used = generate_draft_with_usage(
+            prompt, self.config, max_tokens_override=700
+        )
+        self.log_output(task_id, "growth_analysis", analysis, tokens_used=tokens_used)
         return {"subscriber_count": subscriber_count, "edition": edition, "analysis": analysis}

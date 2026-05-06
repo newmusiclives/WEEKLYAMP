@@ -6,7 +6,7 @@ import json
 from typing import Optional
 
 from weeklyamp.agents.base import AgentBase
-from weeklyamp.content.generator import generate_draft
+from weeklyamp.content.generator import generate_draft_with_usage
 from weeklyamp.content.rotation import select_rotating_sections
 
 
@@ -105,6 +105,7 @@ class EditorInChiefAgent(AgentBase):
 
         drafts = self.repo.get_drafts_for_issue(issue_id)
         reviews = []
+        total_tokens = 0
 
         for draft in drafts:
             if draft["status"] not in ("pending", "revised"):
@@ -118,7 +119,10 @@ class EditorInChiefAgent(AgentBase):
             )
 
             try:
-                review_text, model = generate_draft(prompt, self.config, max_tokens_override=500)
+                review_text, model, tokens_used = generate_draft_with_usage(
+                    prompt, self.config, max_tokens_override=500
+                )
+                total_tokens += tokens_used
                 reviews.append({
                     "draft_id": draft["id"],
                     "section": draft["section_slug"],
@@ -131,7 +135,7 @@ class EditorInChiefAgent(AgentBase):
                     "error": str(e),
                 })
 
-        self.log_output(task_id, "reviews", json.dumps(reviews))
+        self.log_output(task_id, "reviews", json.dumps(reviews), tokens_used=total_tokens)
         return {"reviewed": len(reviews), "reviews": reviews}
 
     def approve_issue(self, task_id: int, issue_id: Optional[int] = None) -> dict:

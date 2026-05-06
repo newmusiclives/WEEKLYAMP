@@ -21,7 +21,7 @@ import re
 from typing import Optional
 
 from weeklyamp.agents.base import AgentBase
-from weeklyamp.content.generator import generate_draft
+from weeklyamp.content.generator import generate_draft_with_usage
 
 logger = logging.getLogger(__name__)
 
@@ -105,8 +105,10 @@ class SalesAgent(AgentBase):
             f"Focus on companies that actively advertise to music audiences."
         )
 
-        raw, _model = generate_draft(prompt, self.config, max_tokens_override=900)
-        self.log_output(task_id, "prospect_list_raw", raw)
+        raw, _model, tokens_used = generate_draft_with_usage(
+            prompt, self.config, max_tokens_override=900
+        )
+        self.log_output(task_id, "prospect_list_raw", raw, tokens_used=tokens_used)
 
         prospects = _parse_json_array(raw)
         created_ids: list[int] = []
@@ -158,8 +160,10 @@ class SalesAgent(AgentBase):
             f"call-to-action to schedule a 15-minute intro call."
         )
 
-        email, _model = generate_draft(prompt, self.config, max_tokens_override=600)
-        self.log_output(task_id, "outreach_email", email)
+        email, _model, tokens_used = generate_draft_with_usage(
+            prompt, self.config, max_tokens_override=600
+        )
+        self.log_output(task_id, "outreach_email", email, tokens_used=tokens_used)
         if email:
             self.repo.update_prospect_status(prospect_id, "contacted")
             self.repo.log_outreach(

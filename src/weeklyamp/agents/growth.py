@@ -6,7 +6,7 @@ import json
 from typing import Optional
 
 from weeklyamp.agents.base import AgentBase
-from weeklyamp.content.generator import generate_draft
+from weeklyamp.content.generator import generate_draft_with_usage
 
 
 class GrowthAgent(AgentBase):
@@ -80,8 +80,10 @@ class GrowthAgent(AgentBase):
             f"and referral strategies specific to the music creator audience."
         )
 
-        tactics, model = generate_draft(prompt, self.config, max_tokens_override=800)
-        self.log_output(task_id, "growth_tactics", tactics)
+        tactics, model, tokens_used = generate_draft_with_usage(
+            prompt, self.config, max_tokens_override=800
+        )
+        self.log_output(task_id, "growth_tactics", tactics, tokens_used=tokens_used)
 
         return {"tactics": tactics}
 
@@ -107,7 +109,9 @@ class GrowthAgent(AgentBase):
             f"Include relevant hashtags."
         )
 
-        posts_text, model = generate_draft(prompt, self.config, max_tokens_override=1000)
+        posts_text, model, tokens_used = generate_draft_with_usage(
+            prompt, self.config, max_tokens_override=1000
+        )
 
         # Parse AI response into per-platform sections
         parsed = self._parse_platform_posts(posts_text)
@@ -122,7 +126,7 @@ class GrowthAgent(AgentBase):
             )
             created_ids.append(post_id)
 
-        self.log_output(task_id, "social_posts", posts_text)
+        self.log_output(task_id, "social_posts", posts_text, tokens_used=tokens_used)
         return {"posts_created": len(created_ids), "content": posts_text}
 
     @staticmethod
@@ -181,7 +185,9 @@ class GrowthAgent(AgentBase):
             f"and implementation steps. Keep it practical for a small team."
         )
 
-        plan, model = generate_draft(prompt, self.config, max_tokens_override=800)
-        self.log_output(task_id, "referral_plan", plan)
+        plan, model, tokens_used = generate_draft_with_usage(
+            prompt, self.config, max_tokens_override=800
+        )
+        self.log_output(task_id, "referral_plan", plan, tokens_used=tokens_used)
 
         return {"plan": plan}

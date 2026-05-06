@@ -4,15 +4,21 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 
 from weeklyamp.core.models import ReferralConfig
 from weeklyamp.content.referrals import ReferralManager
 from weeklyamp.web.deps import get_config, get_repo, render
+from weeklyamp.web.security import rate_limit
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+# Same defense-in-depth as the preference center: bound the cost of a
+# stolen unsubscribe_token being scraped, and log probes via the
+# rate_limits table. 30/min is generous for a real subscriber.
+_TOKEN_RATE_LIMIT = Depends(rate_limit("subscriber_token", max_per_minute=30))
 
 
 def _get_referral_manager() -> ReferralManager:
@@ -79,12 +85,19 @@ def _get_referrer_info(code: str) -> dict | None:
 
 
 def _get_subscriber_by_token(token: str) -> dict | None:
-    """Look up subscriber by preference token (same pattern as preferences.py)."""
+    """Look up subscriber by their bearer token (`unsubscribe_token`).
+
+    See ``preferences._validate_token`` for the rationale on using the
+    unsubscribe token as the unified bearer for subscriber-facing public
+    routes. Previously this queried a non-existent `preference_token`
+    column; the try/except masked it as "every link is invalid"."""
+    if not token:
+        return None
     repo = get_repo()
     conn = repo._conn()
     try:
         row = conn.execute(
-            "SELECT * FROM subscribers WHERE preference_token = ? AND status = 'active'",
+            "SELECT * FROM subscribers WHERE unsubscribe_token = ? AND status = 'active'",
             (token,),
         ).fetchone()
         conn.close()
@@ -175,7 +188,7 @@ async def refer_landing(request: Request):
     )
 
 
-@router.get("/refer/dashboard/{token}", response_class=HTMLResponse)
+@router.get("/refer/dashboard/{token}", response_class=HTMLResponse, dependencies=[_TOKEN_RATE_LIMIT])
 async def refer_dashboard(token: str):
     """Subscriber's referral dashboard (token-based auth)."""
     subscriber = _get_subscriber_by_token(token)

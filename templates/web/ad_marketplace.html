@@ -53,10 +53,6 @@
                     <input type="number" name="campaign_id" required style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);">
                 </div>
                 <div style="margin-bottom:12px;">
-                    <label style="display:block;font-size:13px;font-weight:600;margin-bottom:4px;">Advertiser ID</label>
-                    <input type="number" name="advertiser_id" required style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);">
-                </div>
-                <div style="margin-bottom:12px;">
                     <label style="display:block;font-size:13px;font-weight:600;margin-bottom:4px;">Edition</label>
                     <select name="edition_slug" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);">
                         {% for e in editions %}<option value="{{ e.slug }}">{{ e.name }}</option>{% endfor %}

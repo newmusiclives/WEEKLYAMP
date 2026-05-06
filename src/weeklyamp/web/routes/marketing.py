@@ -74,14 +74,16 @@ async def create_campaign(
         name, campaign_type, channel, target_audience,
         goal_description, goal_target, template_content, notes,
     )
-    return HTMLResponse(f'<div class="alert alert-success">Campaign "{name}" created (ID: {campaign_id}).</div>')
+    from html import escape as _esc
+    return HTMLResponse(f'<div class="alert alert-success">Campaign "{_esc(name)}" created (ID: {campaign_id}).</div>')
 
 
 @router.post("/campaigns/{campaign_id}/status", response_class=HTMLResponse)
 async def update_campaign_status(campaign_id: int, request: Request, status: str = Form(...)):
+    from html import escape as _esc
     repo = get_repo()
     repo.update_campaign_status(campaign_id, status)
-    return HTMLResponse(f'<span class="badge badge-info">{status}</span>')
+    return HTMLResponse(f'<span class="badge badge-info">{_esc(status)}</span>')
 
 
 @router.get("/prospects", response_class=HTMLResponse)
@@ -110,14 +112,16 @@ async def create_prospect(
         company_name, contact_name, contact_email, contact_phone,
         website, category, target_editions, estimated_budget, notes=notes,
     )
-    return HTMLResponse(f'<div class="alert alert-success">Prospect "{company_name}" added to pipeline.</div>')
+    from html import escape as _esc
+    return HTMLResponse(f'<div class="alert alert-success">Prospect "{_esc(company_name)}" added to pipeline.</div>')
 
 
 @router.post("/prospects/{prospect_id}/status", response_class=HTMLResponse)
 async def update_prospect_status(prospect_id: int, request: Request, status: str = Form(...)):
+    from html import escape as _esc
     repo = get_repo()
     repo.update_prospect_status(prospect_id, status)
-    return HTMLResponse(f'<span class="badge badge-info">{status}</span>')
+    return HTMLResponse(f'<span class="badge badge-info">{_esc(status)}</span>')
 
 
 @router.get("/templates", response_class=HTMLResponse)
@@ -199,8 +203,9 @@ async def trigger_growth_tactics(request: Request):
     err, output = _run_marketing_task("generate_growth_tactics")
     if err:
         return HTMLResponse(err)
+    from html import escape as _esc
     tactics = output.get("tactics", "No tactics generated")
-    return HTMLResponse(f'<div class="card" style="margin-top:12px"><h4>Growth Tactics</h4><div style="white-space:pre-wrap;font-size:14px;line-height:1.7">{tactics}</div></div>')
+    return HTMLResponse(f'<div class="card" style="margin-top:12px"><h4>Growth Tactics</h4><div style="white-space:pre-wrap;font-size:14px;line-height:1.7">{_esc(tactics)}</div></div>')
 
 
 @router.post("/automation/social-batch", response_class=HTMLResponse)
@@ -226,5 +231,6 @@ async def trigger_weekly_report(request: Request):
     err, output = _run_marketing_task("weekly_marketing_report")
     if err:
         return HTMLResponse(err)
+    from html import escape as _esc
     report = output.get("report", "No report generated")
-    return HTMLResponse(f'<div class="card" style="margin-top:12px"><h4>Marketing Report</h4><div style="white-space:pre-wrap;font-size:14px;line-height:1.7">{report}</div></div>')
+    return HTMLResponse(f'<div class="card" style="margin-top:12px"><h4>Marketing Report</h4><div style="white-space:pre-wrap;font-size:14px;line-height:1.7">{_esc(report)}</div></div>')

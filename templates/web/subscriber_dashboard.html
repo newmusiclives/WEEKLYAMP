@@ -176,8 +176,13 @@
         <div class="section">
             <h2>Quick Links</h2>
             <div class="link-row">
-                {% if subscriber.get('preference_token') %}
-                <a href="/preferences/{{ subscriber.get('preference_token', '') }}" class="link-btn">Manage Preferences</a>
+                {# `token` is the unsubscribe_token used to render this dashboard
+                    (passed from preferences.subscriber_dashboard) — same bearer
+                    auths the preferences page, so we reuse it here instead of
+                    the previously-referenced `preference_token` column that
+                    was never actually populated. #}
+                {% if token %}
+                <a href="/preferences/{{ token }}" class="link-btn">Manage Preferences</a>
                 {% endif %}
                 <a href="/newsletters/archive" class="link-btn">Browse Archive</a>
                 <a href="/newsletters" class="link-btn">All Editions</a>

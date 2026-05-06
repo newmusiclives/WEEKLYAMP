@@ -125,6 +125,25 @@ async def push():
             "; ".join(preflight["warnings"]),
         )
 
+    # Per-subscriber section ranking is opt-in via the genre engine
+    # config flag. When on, build a personalizer that re-assembles each
+    # recipient's HTML with their preferred section order. When off,
+    # send_bulk uses the static assembled HTML and skips the per-call
+    # work entirely.
+    personalizer = None
+    if getattr(cfg, "genre_preferences", None) and cfg.genre_preferences.weight_sections_by_genre:
+        def _personalize(recipient: dict) -> tuple[str, str]:
+            sub_id = recipient.get("id")
+            if not sub_id:
+                return "", ""
+            try:
+                return assemble_newsletter(repo, issue["id"], cfg, subscriber_id=sub_id)
+            except Exception:
+                # Personalizer never raises out of send_bulk — return
+                # empty so the bulk fallback HTML is used.
+                return "", ""
+        personalizer = _personalize
+
     sender = SMTPSender(cfg.email)
     try:
         result = sender.send_bulk(
@@ -133,6 +152,7 @@ async def push():
             html_body=assembled["html_content"],
             plain_text=assembled.get("plain_text", ""),
             site_domain=cfg.site_domain,
+            personalize=personalizer,
         )
         repo.update_assembled_ghl(assembled["id"], f"smtp-{issue['id']}")
         if result["sent"] > 0:

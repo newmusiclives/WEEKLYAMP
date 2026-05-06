@@ -2,6 +2,12 @@
     <div class="ff-meta">
         <div class="ff-label">{{ flag.label }}</div>
         <div class="ff-desc">{{ flag.description }}</div>
+        {% if flag.missing_deps %}
+        <div class="ff-deps">
+            Requires:
+            {% for dep in flag.missing_deps %}<span class="ff-dep-pill">{{ dep.label }}</span>{% if not loop.last %} {% endif %}{% endfor %}
+        </div>
+        {% endif %}
     </div>
     <form hx-post="/admin/feature-flags/toggle"
           hx-target="#ff-row-{{ flag.key }}"

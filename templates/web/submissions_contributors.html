@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Contributors — TrueFans DISPATCH{% endblock %}
+{% block nav_submissions %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Contributors</h2>
+    <p>Per-artist submission history. The "trusted" badge marks contributors with 3+ approved submissions and zero rejections — a safer-to-fast-track signal, not an automatic publish bypass.</p>
+</div>
+
+<div class="actions" style="margin-bottom: 24px;">
+    <a href="/submissions" class="btn btn-ghost btn-sm">← Submissions queue</a>
+</div>
+
+<style>
+.contrib-trusted-pill { display: inline-block; padding: 2px 8px; background: #e6f5e6; color: #1d6f1d; border: 1px solid #b8dfb8; border-radius: 10px; font-size: 11px; font-weight: 600; margin-left: 8px; }
+.contrib-rate { font-variant-numeric: tabular-nums; }
+.contrib-rate.low { color: #b06000; }
+.contrib-rate.high { color: #1d6f1d; }
+</style>
+
+<div class="card">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Contributor</th>
+                    <th>Total</th>
+                    <th>Approved</th>
+                    <th>Published</th>
+                    <th>Rejected</th>
+                    <th>Approval rate</th>
+                    <th>Latest</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for c in contributors %}
+                <tr>
+                    <td>
+                        <strong>{{ c.name or c.email }}</strong>
+                        {% if c.trusted %}<span class="contrib-trusted-pill">trusted</span>{% endif %}
+                        <div style="font-size:12px;color:#666;">{{ c.email }}</div>
+                    </td>
+                    <td>{{ c.total }}</td>
+                    <td>{{ c.approved }}</td>
+                    <td>{{ c.published }}</td>
+                    <td>{{ c.rejected }}</td>
+                    <td class="contrib-rate {% if c.approval_rate < 0.4 %}low{% elif c.approval_rate >= 0.7 %}high{% endif %}">
+                        {{ "%.0f"|format(c.approval_rate * 100) }}%
+                    </td>
+                    <td>{{ c.latest_at[:10] if c.latest_at else "" }}</td>
+                </tr>
+            {% else %}
+                <tr><td colspan="7" style="text-align:center;padding:32px;color:#666;">No contributors yet — submissions need an artist_email to accrue stats.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

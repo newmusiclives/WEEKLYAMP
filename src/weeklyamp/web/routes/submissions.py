@@ -23,6 +23,17 @@ async def submissions_page(state: str = ""):
     )
 
 
+# Note: declared BEFORE the /{submission_id} detail route so the literal
+# path matches first. FastAPI dispatches in declaration order — if this
+# came after the int-typed param route, "/contributors" would fail to
+# coerce to int and 422 instead of hitting this handler.
+@router.get("/contributors", response_class=HTMLResponse)
+async def contributors_leaderboard():
+    repo = get_repo()
+    contributors = repo.get_contributor_stats()
+    return render("submissions_contributors.html", contributors=contributors)
+
+
 @router.get("/{submission_id}", response_class=HTMLResponse)
 async def submission_detail(submission_id: int):
     repo = get_repo()

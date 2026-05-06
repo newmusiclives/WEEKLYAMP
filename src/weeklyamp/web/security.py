@@ -152,6 +152,10 @@ _PUBLIC_PREFIXES = (
     "/artist-newsletters", "/mobile-app", "/articles", "/docs", "/redoc",
     "/n/", "/for-artists", "/for-fans", "/for-industry", "/license",
     "/licensee", "/onboarding", "/preview", "/my-dashboard",
+    # Advertiser self-serve portal: routes do their own session gating
+    # via security.create_advertiser_session. The global auth middleware
+    # skips this prefix so anonymous users can reach the login page.
+    "/advertiser",
     "/events/public", "/events/register", "/marketplace",
     # Billing — public pricing page, webhook must accept unauthenticated
     # POSTs from Manifest Financial (signature verified inside the handler),
@@ -520,11 +524,73 @@ def clear_licensee_session(response: Response) -> Response:
     return response
 
 
+# ---- Advertiser session helpers ----
+
+_ADVERTISER_SESSION_COOKIE = "_advertiser_session"
+
+
+def create_advertiser_session(response: Response, advertiser_id: int, request: Request | None = None) -> Response:
+    """Sign and set an advertiser session cookie identifying which
+    advertiser account is logged into the self-serve portal."""
+    signer = _get_signer()
+    signed = signer.sign(f"advertiser:{int(advertiser_id)}".encode()).decode()
+    secure = _is_secure(request) if request else False
+    response.set_cookie(
+        _ADVERTISER_SESSION_COOKIE,
+        signed,
+        max_age=_get_session_max_age(),
+        httponly=True,
+        samesite="lax",
+        secure=secure,
+    )
+    return response
+
+
+def get_advertiser_id_from_session(request: Request) -> int | None:
+    """Return the authenticated advertiser_id from the session cookie, or None."""
+    cookie = request.cookies.get(_ADVERTISER_SESSION_COOKIE)
+    if not cookie:
+        return None
+    signer = _get_signer()
+    try:
+        raw = signer.unsign(cookie, max_age=_get_session_max_age()).decode()
+    except (BadSignature, SignatureExpired):
+        return None
+    if not raw.startswith("advertiser:"):
+        return None
+    try:
+        return int(raw.split(":", 1)[1])
+    except (ValueError, IndexError):
+        return None
+
+
+def clear_advertiser_session(response: Response) -> Response:
+    """Remove the advertiser session cookie."""
+    response.delete_cookie(_ADVERTISER_SESSION_COOKIE)
+    return response
+
+
 def _is_public(path: str) -> bool:
-    """Check if a path is publicly accessible without auth."""
+    """Check if a path is publicly accessible without auth.
+
+    Match is exact or path-segment-bounded. A bare ``startswith`` match
+    is unsafe because public prefixes can be string-prefixes of admin
+    paths — e.g. ``/subscribe`` (public signup) and ``/subscribers``
+    (admin list) — and the loose match used to leak the admin route to
+    anonymous visitors. Requiring ``path == prefix`` or
+    ``path.startswith(prefix + "/")`` enforces a proper segment boundary.
+
+    Trailing slashes in declared prefixes (``/api/``, ``/n/``, etc.) are
+    stripped before comparison so the boundary check behaves the same
+    regardless of whether the author included the slash.
+    """
     if path in _PUBLIC_EXACT:
         return True
-    return any(path.startswith(p) for p in _PUBLIC_PREFIXES)
+    for prefix in _PUBLIC_PREFIXES:
+        normalized = prefix.rstrip("/") or "/"
+        if path == normalized or path.startswith(normalized + "/"):
+            return True
+    return False
 
 
 # ---- Audit logging helper ----

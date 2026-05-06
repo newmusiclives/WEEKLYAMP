@@ -15,6 +15,7 @@ from weeklyamp.core.feature_flags import (
     LAUNCH_SET,
     enabled,
     invalidate_cache,
+    missing_dependencies,
 )
 from weeklyamp.web.deps import get_repo, render
 from weeklyamp.web.security import is_authenticated
@@ -41,11 +42,20 @@ def _grouped_flags() -> dict[str, list[dict]]:
     """
     def _entry(key: str) -> dict:
         label, _category, description = FLAG_METADATA[key]
+        flag_enabled = enabled(key)
+        # Only surface unmet deps when the flag is on — a disabled flag
+        # with unmet deps is the expected default state and the warning
+        # would just be noise.
+        unmet = missing_dependencies(key) if flag_enabled else []
         return {
             "key": key,
             "label": label,
             "description": description,
-            "enabled": enabled(key),
+            "enabled": flag_enabled,
+            "missing_deps": [
+                {"key": d, "label": FLAG_METADATA.get(d, (d, "", ""))[0]}
+                for d in unmet
+            ],
         }
 
     groups: dict[str, list[dict]] = {
@@ -93,6 +103,9 @@ async def feature_flags_toggle(
     repo.set_feature_flag(key, new_value, description=description, category=category)
     invalidate_cache(key)
 
+    # Re-resolve deps after the toggle so the row reflects the new state.
+    unmet = missing_dependencies(key) if new_value else []
+
     # Return a fragment the htmx swap can drop back into the row so the
     # toggle visibly reflects the new state without a page reload.
     return HTMLResponse(
@@ -103,6 +116,10 @@ async def feature_flags_toggle(
                 "label": label,
                 "description": description,
                 "enabled": new_value,
+                "missing_deps": [
+                    {"key": d, "label": FLAG_METADATA.get(d, (d, "", ""))[0]}
+                    for d in unmet
+                ],
             },
         )
     )

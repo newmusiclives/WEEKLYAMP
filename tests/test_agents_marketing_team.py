@@ -115,8 +115,8 @@ def test_sales_identify_prospects_persists_rows(repo, fan_sales_agent_id):
     task_id = agent.assign_task("identify_prospects", input_data={"count": 2})
 
     with patch(
-        "weeklyamp.agents.sales.generate_draft",
-        return_value=(fake_llm_output, "test-model"),
+        "weeklyamp.agents.sales.generate_draft_with_usage",
+        return_value=(fake_llm_output, "test-model", 100),
     ):
         result = agent.execute(task_id)
 
@@ -141,8 +141,8 @@ def test_sales_identify_prospects_handles_garbage_llm_output(repo, fan_sales_age
     task_id = agent.assign_task("identify_prospects")
 
     with patch(
-        "weeklyamp.agents.sales.generate_draft",
-        return_value=("I cannot help with that request.", "test-model"),
+        "weeklyamp.agents.sales.generate_draft_with_usage",
+        return_value=("I cannot help with that request.", "test-model", 50),
     ):
         result = agent.execute(task_id)
 
@@ -162,8 +162,8 @@ def test_sales_draft_outreach_marks_prospect_contacted(repo, fan_sales_agent_id)
     task_id = agent.assign_task("draft_outreach", input_data={"prospect_id": prospect_id})
 
     with patch(
-        "weeklyamp.agents.sales.generate_draft",
-        return_value=("Hi Test Co, here's why we'd love to partner...", "test-model"),
+        "weeklyamp.agents.sales.generate_draft_with_usage",
+        return_value=("Hi Test Co, here's why we'd love to partner...", "test-model", 75),
     ):
         agent.execute(task_id)
 
@@ -184,8 +184,8 @@ def test_sales_draft_outreach_batch_only_picks_up_own_edition(
     task_id = agent.assign_task("draft_outreach_batch")
 
     with patch(
-        "weeklyamp.agents.sales.generate_draft",
-        return_value=("Draft email body", "test-model"),
+        "weeklyamp.agents.sales.generate_draft_with_usage",
+        return_value=("Draft email body", "test-model", 60),
     ):
         result = agent.execute(task_id)
 
@@ -240,8 +240,8 @@ def test_promotion_identify_partners_persists_rows(repo, fan_promo_agent_id):
     task_id = agent.assign_task("identify_partners", input_data={"count": 2})
 
     with patch(
-        "weeklyamp.agents.promotion.generate_draft",
-        return_value=(fake_llm_output, "test-model"),
+        "weeklyamp.agents.promotion.generate_draft_with_usage",
+        return_value=(fake_llm_output, "test-model", 120),
     ):
         result = agent.execute(task_id)
 
@@ -265,8 +265,8 @@ def test_promotion_identify_partners_normalises_invalid_type(repo, fan_promo_age
     task_id = agent.assign_task("identify_partners")
 
     with patch(
-        "weeklyamp.agents.promotion.generate_draft",
-        return_value=(fake_llm_output, "test-model"),
+        "weeklyamp.agents.promotion.generate_draft_with_usage",
+        return_value=(fake_llm_output, "test-model", 80),
     ):
         agent.execute(task_id)
 
@@ -287,8 +287,8 @@ def test_promotion_draft_cross_promo_marks_partner_contacted(repo, fan_promo_age
     task_id = agent.assign_task("draft_cross_promo", input_data={"partner_id": pid})
 
     with patch(
-        "weeklyamp.agents.promotion.generate_draft",
-        return_value=("Hey IAW, want to swap features?", "test-model"),
+        "weeklyamp.agents.promotion.generate_draft_with_usage",
+        return_value=("Hey IAW, want to swap features?", "test-model", 40),
     ):
         agent.execute(task_id)
 
@@ -312,15 +312,15 @@ def test_marketing_identify_prospects_fans_out_to_every_sales_agent(
     def _fake_generate(prompt, *args, **kwargs):
         # Look at the prompt to decide which canned response to return.
         if "fan edition" in prompt.lower():
-            return by_edition["fan"], "test"
+            return by_edition["fan"], "test", 100
         if "artist edition" in prompt.lower():
-            return by_edition["artist"], "test"
-        return "[]", "test"
+            return by_edition["artist"], "test", 100
+        return "[]", "test", 10
 
     marketing = MarketingAgent(repo)
     task_id = marketing.assign_task("identify_prospects")
 
-    with patch("weeklyamp.agents.sales.generate_draft", side_effect=_fake_generate):
+    with patch("weeklyamp.agents.sales.generate_draft_with_usage", side_effect=_fake_generate):
         result = marketing.execute(task_id)
 
     assert result["fanned_out_to"] == 2
@@ -343,12 +343,12 @@ def test_marketing_fanout_continues_after_specialist_failure(
         call_count["n"] += 1
         if call_count["n"] == 1:
             raise RuntimeError("LLM blew up")
-        return json.dumps([{"company_name": "Survivor Co"}]), "test"
+        return json.dumps([{"company_name": "Survivor Co"}]), "test", 50
 
     marketing = MarketingAgent(repo)
     task_id = marketing.assign_task("identify_prospects")
 
-    with patch("weeklyamp.agents.sales.generate_draft", side_effect=_flaky_generate):
+    with patch("weeklyamp.agents.sales.generate_draft_with_usage", side_effect=_flaky_generate):
         result = marketing.execute(task_id)
 
     assert result["fanned_out_to"] == 2
@@ -369,8 +369,8 @@ def test_marketing_identify_partners_fans_out_to_promotion_agents(repo, fan_prom
     task_id = marketing.assign_task("identify_partners")
 
     with patch(
-        "weeklyamp.agents.promotion.generate_draft",
-        return_value=(fake, "test"),
+        "weeklyamp.agents.promotion.generate_draft_with_usage",
+        return_value=(fake, "test", 30),
     ):
         result = marketing.execute(task_id)
 

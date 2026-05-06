@@ -7,10 +7,15 @@ import smtplib
 import time
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from typing import Callable, Optional, Tuple
 
 from weeklyamp.core.models import EmailConfig
 
 logger = logging.getLogger(__name__)
+
+# Per-recipient HTML/plain producer. Returns (html, plain). Either field
+# may be empty to fall back to the bulk-send defaults.
+Personalizer = Callable[[dict], Tuple[str, str]]
 
 # Send in batches to avoid SMTP connection limits
 _BATCH_SIZE = 50
@@ -103,15 +108,26 @@ class SMTPSender:
         html_body: str,
         plain_text: str = "",
         site_domain: str = "",
+        *,
+        personalize: "Personalizer | None" = None,
     ) -> dict:
         """Send newsletter to a list of recipients via SMTP.
 
         Args:
-            recipients: list of {"email": str, "unsubscribe_token": str, ...}
+            recipients: list of {"id": int, "email": str, "unsubscribe_token": str, ...}
             subject: Email subject line
-            html_body: Full newsletter HTML
-            plain_text: Plain text version
-            site_domain: Base URL for unsubscribe links
+            html_body: Full newsletter HTML — used when ``personalize``
+                is None or returns falsy for a recipient.
+            plain_text: Plain text version (same fallback semantics).
+            site_domain: Base URL for unsubscribe links.
+            personalize: Optional callable taking a recipient dict and
+                returning ``(html, plain)`` for that recipient. Used by
+                callers that want per-subscriber section ranking — see
+                :func:`weeklyamp.content.assembly.assemble_newsletter`'s
+                ``subscriber_id`` param. Falling back to the static
+                ``html_body`` on a None/empty return keeps the loop
+                resilient: a single subscriber's personalization
+                failure does not abort the batch.
 
         Returns: {"sent": N, "failed": N, "errors": [...]}
         """
@@ -155,8 +171,27 @@ class SMTPSender:
                         if unsub_token and site_domain:
                             unsub_url = f"{site_domain.rstrip('/')}/unsubscribe?token={unsub_token}"
 
+                        # Resolve the per-recipient HTML. If a personalizer
+                        # is supplied (per-subscriber section ranking),
+                        # call it; on any failure or empty return, fall
+                        # back to the bulk html_body so one bad subscriber
+                        # doesn't break the batch.
+                        recipient_html = html_body
+                        recipient_plain = plain_text
+                        if personalize is not None:
+                            try:
+                                p_html, p_plain = personalize(recipient)
+                                if p_html:
+                                    recipient_html = p_html
+                                if p_plain:
+                                    recipient_plain = p_plain
+                            except Exception:
+                                logger.exception(
+                                    "Personalizer raised for %s — using bulk HTML", email,
+                                )
+
                         # Personalize HTML with unsubscribe link
-                        personalized_html = html_body.replace(
+                        personalized_html = recipient_html.replace(
                             "{{ unsubscribe_url }}", unsub_url or "#"
                         )
 
@@ -164,7 +199,7 @@ class SMTPSender:
                             to_email=email,
                             subject=subject,
                             html_body=personalized_html,
-                            plain_text=plain_text,
+                            plain_text=recipient_plain,
                             unsubscribe_url=unsub_url,
                         )
 

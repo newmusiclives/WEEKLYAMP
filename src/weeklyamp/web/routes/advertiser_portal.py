@@ -1,13 +1,36 @@
-"""Advertiser self-serve portal — login, dashboard, campaign management."""
+"""Advertiser self-serve portal — login, dashboard, campaign management.
+
+Authentication uses the signed `_advertiser_session` cookie set on
+successful login (see ``security.create_advertiser_session``). Routes
+that mutate or display advertiser-scoped data resolve the advertiser_id
+from the session, NOT from query/form parameters — so a logged-in
+advertiser cannot see another advertiser's campaigns by tampering with
+the URL.
+"""
 
 from __future__ import annotations
 
 from fastapi import APIRouter, Form, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
 from weeklyamp.web.deps import get_config, get_repo, render
+from weeklyamp.web.security import (
+    clear_advertiser_session,
+    create_advertiser_session,
+    get_advertiser_id_from_session,
+)
 
 router = APIRouter()
+
+
+def _require_advertiser(request: Request) -> int | Response:
+    """Resolve the advertiser_id from the session cookie or return a
+    redirect to the login page. Use as the first line of every protected
+    handler."""
+    advertiser_id = get_advertiser_id_from_session(request)
+    if not advertiser_id:
+        return RedirectResponse("/advertiser/login", status_code=302)
+    return advertiser_id
 
 
 @router.get("/advertiser/login", response_class=HTMLResponse)
@@ -16,7 +39,7 @@ async def advertiser_login_page(request: Request):
     return HTMLResponse(render("advertiser_login.html", config=config))
 
 
-@router.post("/advertiser/login", response_class=HTMLResponse)
+@router.post("/advertiser/login")
 async def advertiser_login(request: Request, email: str = Form(...), password: str = Form(...)):
     repo = get_repo()
     account = repo.get_advertiser_by_email(email)
@@ -25,24 +48,34 @@ async def advertiser_login(request: Request, email: str = Form(...), password: s
     from weeklyamp.web.security import verify_password
     if not verify_password(password, account.get("password_hash", "")):
         return HTMLResponse(render("advertiser_login.html", error="Invalid credentials", config=get_config()))
-    # For demo: pass advertiser_id via query param (production would use session)
-    campaigns = repo.get_advertiser_campaigns(account["id"])
-    config = get_config()
-    return HTMLResponse(render("advertiser_dashboard.html", account=account, campaigns=campaigns, config=config))
+
+    response = RedirectResponse("/advertiser/dashboard", status_code=302)
+    create_advertiser_session(response, account["id"], request=request)
+    return response
+
+
+@router.post("/advertiser/logout")
+async def advertiser_logout():
+    response = RedirectResponse("/advertiser/login", status_code=302)
+    clear_advertiser_session(response)
+    return response
 
 
 @router.get("/advertiser/dashboard", response_class=HTMLResponse)
-async def advertiser_dashboard(request: Request, advertiser_id: int = 0):
+async def advertiser_dashboard(request: Request):
+    advertiser_id = _require_advertiser(request)
+    if isinstance(advertiser_id, Response):
+        return advertiser_id
     repo = get_repo()
     config = get_config()
-    campaigns = repo.get_advertiser_campaigns(advertiser_id) if advertiser_id else []
-    return HTMLResponse(render("advertiser_dashboard.html", account={}, campaigns=campaigns, config=config))
+    account = repo.get_advertiser_by_id(advertiser_id) or {}
+    campaigns = repo.get_advertiser_campaigns(advertiser_id)
+    return HTMLResponse(render("advertiser_dashboard.html", account=account, campaigns=campaigns, config=config))
 
 
 @router.post("/advertiser/campaign/create", response_class=HTMLResponse)
 async def create_campaign(
     request: Request,
-    advertiser_id: int = Form(...),
     name: str = Form(...),
     edition_slug: str = Form(""),
     position: str = Form("mid"),
@@ -52,6 +85,9 @@ async def create_campaign(
     cta_text: str = Form("Learn More"),
     budget_cents: int = Form(0),
 ):
+    advertiser_id = _require_advertiser(request)
+    if isinstance(advertiser_id, Response):
+        return advertiser_id
     repo = get_repo()
     campaign_id = repo.create_advertiser_campaign(
         advertiser_id=advertiser_id, name=name, edition_slug=edition_slug,
@@ -63,7 +99,17 @@ async def create_campaign(
 
 @router.post("/advertiser/campaign/{campaign_id}/submit", response_class=HTMLResponse)
 async def submit_campaign(campaign_id: int, request: Request):
+    advertiser_id = _require_advertiser(request)
+    if isinstance(advertiser_id, Response):
+        return advertiser_id
     repo = get_repo()
+    # Confirm the campaign actually belongs to this advertiser before
+    # letting them transition its status. Without this check, knowing
+    # any campaign_id would let any logged-in advertiser submit
+    # someone else's draft.
+    campaign = repo.get_advertiser_campaign(campaign_id) if hasattr(repo, "get_advertiser_campaign") else None
+    if campaign and campaign.get("advertiser_id") != advertiser_id:
+        return HTMLResponse('<div class="alert alert-danger">Not your campaign.</div>', status_code=403)
     repo.update_campaign_status(campaign_id, "submitted")
     return HTMLResponse('<div class="alert alert-success">Campaign submitted for review!</div>')
 
@@ -79,13 +125,14 @@ async def rate_card(request: Request):
 @router.get("/advertiser/marketplace", response_class=HTMLResponse)
 async def ad_marketplace_page(request: Request):
     """View available ad slots and place bids."""
+    advertiser_id = _require_advertiser(request)
+    if isinstance(advertiser_id, Response):
+        return advertiser_id
     repo = get_repo()
     config = get_config()
     editions = repo.get_editions()
-    # Get upcoming available dates (next 7 days)
     from datetime import datetime, timedelta
     dates = [(datetime.utcnow() + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(1, 8)]
-    # Get existing bids for these dates
     conn = repo._conn()
     bids = conn.execute(
         "SELECT * FROM ad_bids WHERE target_date >= ? ORDER BY target_date, bid_cents DESC",
@@ -100,13 +147,15 @@ async def ad_marketplace_page(request: Request):
 async def place_bid(
     request: Request,
     campaign_id: int = Form(...),
-    advertiser_id: int = Form(...),
     edition_slug: str = Form(...),
     position: str = Form("mid"),
     bid_cents: int = Form(...),
     target_date: str = Form(...),
 ):
     """Place a bid on a sponsor slot."""
+    advertiser_id = _require_advertiser(request)
+    if isinstance(advertiser_id, Response):
+        return advertiser_id
     from weeklyamp.billing.ad_marketplace import AdMarketplace
     repo = get_repo()
     config = get_config()

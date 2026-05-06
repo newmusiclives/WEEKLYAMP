@@ -121,6 +121,80 @@ class GenreEngine:
         return result
 
     # ------------------------------------------------------------------
+    # Combined ranker: genre affinity + click history
+    # ------------------------------------------------------------------
+
+    def get_subscriber_engagement_scores(self, subscriber_id: int) -> dict[str, float]:
+        """Return ``{section_slug: normalised_engagement_score}`` from
+        ``subscriber_interest_profiles``. Scores are normalised to [0, 1]
+        by dividing by the max score across the subscriber's profile so
+        a subscriber with universally low engagement still gets ordering
+        signal from their relative click history."""
+        conn = self.repo._conn()
+        rows = conn.execute(
+            "SELECT section_slug, engagement_score FROM subscriber_interest_profiles "
+            "WHERE subscriber_id = ?",
+            (subscriber_id,),
+        ).fetchall()
+        conn.close()
+        if not rows:
+            return {}
+        scores = {r["section_slug"]: float(r["engagement_score"] or 0.0) for r in rows}
+        max_score = max(scores.values()) if scores else 0.0
+        if max_score <= 0.0:
+            return {}
+        return {slug: score / max_score for slug, score in scores.items()}
+
+    def rank_sections_for_subscriber(
+        self, sections: list[dict], subscriber_id: int,
+        *, genre_weight: float = 0.6,
+    ) -> list[dict]:
+        """Reorder *sections* by a combined score of genre affinity and
+        click engagement.
+
+        ``genre_weight`` controls the blend: 1.0 = pure genre affinity
+        (cold-start friendly, no history needed); 0.0 = pure engagement
+        history (only useful once a subscriber has clicked things).
+        Default 0.6 favours stated preferences over inferred behaviour
+        because genre prefs are explicit and engagement scores are noisy
+        for low-volume subscribers.
+
+        Returns sections with non-zero combined scores first (descending),
+        followed by unscored sections in their original order. The base
+        order falls through unchanged when the engine is disabled or the
+        subscriber has neither prefs nor history — keeping per-subscriber
+        ranking purely additive over the static ``sort_order`` layout.
+        """
+        if not self.config.enabled:
+            return sections
+
+        affinity = self.get_subscriber_genre_affinity(subscriber_id)
+        engagement = self.get_subscriber_engagement_scores(subscriber_id)
+        if not affinity and not engagement:
+            return sections
+
+        # Clamp the blend factor to [0, 1] in case a caller misconfigures.
+        gw = max(0.0, min(1.0, genre_weight))
+
+        scored: list[tuple[float, int, dict]] = []
+        unscored: list[tuple[int, dict]] = []
+        for idx, sec in enumerate(sections):
+            slug = sec.get("slug", sec.get("section_slug", ""))
+            genre_match = self.get_section_genre_match(slug, affinity) if affinity else 0.0
+            eng_score = engagement.get(slug, 0.0)
+            combined = gw * genre_match + (1.0 - gw) * eng_score
+            if combined > 0.0:
+                scored.append((combined, idx, sec))
+            else:
+                unscored.append((idx, sec))
+
+        # Sort descending by combined score, with original index as a
+        # stable tiebreaker so two equally-scored sections preserve their
+        # editorial order.
+        scored.sort(key=lambda t: (-t[0], t[1]))
+        return [s for _, _, s in scored] + [s for _, s in unscored]
+
+    # ------------------------------------------------------------------
     # Analytics
     # ------------------------------------------------------------------
 

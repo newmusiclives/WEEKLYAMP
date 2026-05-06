@@ -6,7 +6,7 @@ import json
 from typing import Optional
 
 from weeklyamp.agents.base import AgentBase
-from weeklyamp.content.generator import generate_draft, generate_draft_with_usage
+from weeklyamp.content.generator import generate_draft_with_usage
 from weeklyamp.content.images import ensure_images
 from weeklyamp.core.config import get_prompt_template
 from weeklyamp.core.models import WORD_COUNT_MAX_TOKENS
@@ -141,9 +141,9 @@ class WriterAgent(AgentBase):
             f"Original content:\n{draft['content']}"
         )
 
-        content, model = generate_draft(prompt, self.config)
+        content, model, tokens_used = generate_draft_with_usage(prompt, self.config)
         self.repo.update_draft_content(draft_id, content)
-        self.log_output(task_id, "rewrite", content)
+        self.log_output(task_id, "rewrite", content, tokens_used=tokens_used)
 
         return {"draft_id": draft_id, "rewritten": True}
 
@@ -165,8 +165,10 @@ class WriterAgent(AgentBase):
             f"Content:\n{draft['content']}"
         )
 
-        content, model = generate_draft(prompt, self.config, max_tokens_override=1500)
+        content, model, tokens_used = generate_draft_with_usage(
+            prompt, self.config, max_tokens_override=1500
+        )
         self.repo.update_draft_content(draft_id, content)
-        self.log_output(task_id, "tone_adapt", content)
+        self.log_output(task_id, "tone_adapt", content, tokens_used=tokens_used)
 
         return {"draft_id": draft_id, "tone_adapted": True}

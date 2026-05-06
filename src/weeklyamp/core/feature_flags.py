@@ -93,6 +93,35 @@ FLAG_METADATA: dict[str, tuple[str, str, str]] = {
 }
 
 
+# Flag dependency graph — declares which flags require other flags to be
+# on before they can do anything useful. Surfaced in the admin UI as a
+# "Requires X" badge and as a warning when a flag is toggled on while
+# its prerequisites are still off. NOT enforced as a hard block — the
+# operator can still flip a flag with unmet deps if they want to stage
+# the rollout (e.g. enable PODCAST first, AUDIO seconds later in the
+# same toggle session).
+#
+# Keep this list minimal: only declare a dep when the dependent feature
+# genuinely cannot function without the prerequisite. Soft synergies
+# (REFERRALS pairs nicely with REENGAGEMENT) do NOT belong here.
+FLAG_DEPENDENCIES: dict[str, tuple[str, ...]] = {
+    FeatureFlag.MARKETPLACE: (FeatureFlag.ADVERTISERS,),
+    FeatureFlag.PODCAST: (FeatureFlag.AUDIO,),
+    FeatureFlag.FRANCHISE: (FeatureFlag.WHITE_LABEL,),
+}
+
+
+def missing_dependencies(flag_name: str, *, repo=None) -> list[str]:
+    """Return the list of prerequisite flags that are NOT enabled for the
+    given flag. Empty list means all deps are satisfied (or the flag has
+    no declared deps).
+
+    Used by the admin UI to render warnings and by code paths that want
+    to gate functionality more strictly than the flag itself."""
+    deps = FLAG_DEPENDENCIES.get(flag_name, ())
+    return [d for d in deps if not enabled(d, repo=repo)]
+
+
 # Launch Set — the ten flags recommended ON for the minimum-viable public
 # launch. Rendered as a pinned group at the top of /admin/feature-flags so
 # operators can confirm/toggle them without scrolling past the full list.

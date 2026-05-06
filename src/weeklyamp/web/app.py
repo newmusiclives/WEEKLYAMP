@@ -298,7 +298,7 @@ def create_app() -> FastAPI:
     # CORS — lock cross-origin requests to an explicit allowlist.
     # Default: no origins allowed (same-origin only, no CORS headers).
     # Configure via WEEKLYAMP_CORS_ORIGINS as a comma-separated list of
-    # full origin URLs (e.g. "https://truefanssignal.com,https://admin.truefanssignal.com").
+    # full origin URLs (e.g. "https://web-production-2684b.up.railway.app").
     # Use "*" only for local dev — it's incompatible with
     # allow_credentials=True so session cookies won't work cross-origin anyway.
     cors_env = os.environ.get("WEEKLYAMP_CORS_ORIGINS", "").strip()

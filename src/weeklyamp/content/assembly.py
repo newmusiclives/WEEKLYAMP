@@ -169,8 +169,21 @@ Requirements:
         return f"PS — Thanks for reading Issue #{issue['issue_number']}{edition_context}. See you next time."
 
 
-def assemble_newsletter(repo: Repository, issue_id: int, config: AppConfig) -> tuple[str, str]:
+def assemble_newsletter(
+    repo: Repository, issue_id: int, config: AppConfig,
+    subscriber_id: int | None = None,
+) -> tuple[str, str]:
     """Assemble approved drafts into final HTML.
+
+    When ``subscriber_id`` is provided AND
+    ``config.genre_preferences.weight_sections_by_genre`` is on, sections
+    are reordered by the subscriber's combined genre + click affinity
+    via :class:`GenreEngine.rank_sections_for_subscriber`. Otherwise the
+    static editorial ``sort_order`` is used. Per-subscriber assembly is
+    cheap (~one GenreEngine call) but only worth doing in delivery code
+    paths that already loop per-subscriber (e.g. SMTP single-send) —
+    bulk-sender APIs that fan out one HTML to many recipients can stick
+    with the unpersonalized form.
 
     Returns (html_content, plain_text).
     """
@@ -195,6 +208,21 @@ def assemble_newsletter(repo: Repository, issue_id: int, config: AppConfig) -> t
         return sec.get("sort_order", 99)
 
     drafts.sort(key=sort_key)
+
+    # Per-subscriber reranking layered on top of the editorial sort.
+    # The genre engine is a no-op when its config flag is off, so this
+    # branch is safe to keep enabled even before the feature is rolled
+    # out.
+    if subscriber_id and getattr(config, "genre_preferences", None) and config.genre_preferences.weight_sections_by_genre:
+        from weeklyamp.content.genre_engine import GenreEngine
+        engine = GenreEngine(repo, config.genre_preferences)
+        # Wrap drafts in dicts the ranker can read by slug, preserving the
+        # full draft objects through the reorder.
+        ranked = engine.rank_sections_for_subscriber(
+            [{"slug": d["section_slug"], "_draft": d} for d in drafts],
+            subscriber_id,
+        )
+        drafts = [item["_draft"] for item in ranked]
 
     # Render each section and collect summaries for intro/PS generation
     sections_html: list[dict] = []
