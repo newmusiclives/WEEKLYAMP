@@ -162,7 +162,17 @@ _PUBLIC_PREFIXES = (
     # and the checkout / success pages are hit by anonymous prospects.
     "/pricing", "/billing/webhook", "/billing/success", "/billing/checkout",
 )
-_PUBLIC_EXACT = frozenset({"/"})
+_PUBLIC_EXACT = frozenset({
+    "/",
+    # SEO / browser-conventional files. These are app-level handlers
+    # at exact paths (not prefixes); putting them here keeps the
+    # PUBLIC_PREFIXES list focused on actual route prefixes and
+    # avoids accidentally allowing `/robots.txt-admin` etc. via a
+    # loose prefix match.
+    "/robots.txt",
+    "/sitemap.xml",
+    "/favicon.ico",
+})
 
 _TEMPLATES_DIR = Path(__file__).parent.parent.parent.parent / "templates" / "web"
 _login_env = Environment(loader=FileSystemLoader(str(_TEMPLATES_DIR)), autoescape=True)

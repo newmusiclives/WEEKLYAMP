@@ -50,6 +50,40 @@ def test_public_route_returns_2xx(client, path):
     assert r.status_code != 401, f"{path} unexpectedly required auth"
 
 
+def test_robots_and_sitemap_reachable_anonymously(auth_enforced_client):
+    """SEO files must be reachable without auth even when an admin
+    password is configured. They're added to _PUBLIC_EXACT (not
+    _PUBLIC_PREFIXES) because they're literal exact paths — putting
+    them in the prefix list would be unsafe (would also allow e.g.
+    `/robots.txt-admin`).
+
+    `/favicon.ico` redirects to `/static/favicon.svg` (301), so we
+    accept either 200 or 3xx — what we're guarding against is the
+    auth middleware sending the request to /login."""
+    for path in ("/robots.txt", "/sitemap.xml"):
+        r = auth_enforced_client.get(path, follow_redirects=False)
+        assert r.status_code == 200, (
+            f"{path} returned {r.status_code} (expected 200) — Google "
+            f"can't crawl auth-gated SEO files"
+        )
+    r = auth_enforced_client.get("/favicon.ico", follow_redirects=False)
+    # Accept the 301 redirect to /static/favicon.svg, just verify it's
+    # not bouncing to /login.
+    assert r.status_code in (200, 301, 302), f"/favicon.ico → {r.status_code}"
+    assert "/login" not in r.headers.get("location", "")
+
+
+def test_robots_txt_actually_lists_disallows(auth_enforced_client):
+    """Beyond just being reachable, /robots.txt must contain the
+    Disallow directives (this is what makes it useful — an empty
+    200 is the same to a crawler as a 404)."""
+    r = auth_enforced_client.get("/robots.txt", follow_redirects=False)
+    assert r.status_code == 200
+    assert "User-agent: *" in r.text
+    assert "Disallow:" in r.text
+    assert "Sitemap:" in r.text
+
+
 def test_landing_page_renders_brand(client):
     r = client.get("/")
     assert r.status_code == 200
