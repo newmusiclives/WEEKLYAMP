@@ -1,0 +1,180 @@
+locale:
+  name: Corrales
+  state: NM
+  metro: Albuquerque
+  last_full_review: 2026-05-07
+
+venues:
+  - name: Casa Vieja
+    type: brewery
+    address: 4541 Corrales Rd, Corrales, NM 87048
+    city: Corrales
+    drive_minutes_from_locale: 0
+    capacity: null
+    books_original_music: yes
+    booking_contact: null
+    notes: Historic 1770 adobe building. Books local musicians nearly daily, plus food trucks. Public calendar.
+    source_url: https://oldcasanm.com/calendar/
+    verified_on: 2026-05-07
+
+  - name: Indigo Crow Cafe
+    type: bar
+    address: 4515 Corrales Rd, Corrales, NM 87048
+    city: Corrales
+    drive_minutes_from_locale: 0
+    capacity: null
+    books_original_music: sometimes
+    booking_contact: null
+    notes: Contemporary American restaurant, 25+ years in Corrales. Live music on the patio, mostly summer evenings. Closed Mondays. Phone (505) 898-7000.
+    source_url: https://www.indigocrowcafe.net/
+    verified_on: 2026-05-07
+
+  - name: Historic Old San Ysidro Church
+    type: concert_hall
+    address: 966 Old Church Rd, Corrales, NM 87048
+    city: Corrales
+    drive_minutes_from_locale: 0
+    capacity: 150
+    books_original_music: yes
+    booking_contact: null
+    notes: Home of the Music in Corrales concert series (39th season in 2026), curated by the Corrales Historical Society. Listening-room atmosphere, open seating. Books singer-songwriters, classical, and roots acts.
+    source_url: https://www.corraleshistory.org/mic.html
+    verified_on: 2026-05-07
+
+  - name: Outpost Performance Space
+    type: listening_room
+    address: 210 Yale Blvd SE, Albuquerque, NM 87106
+    city: Albuquerque
+    drive_minutes_from_locale: 25
+    capacity: 160
+    books_original_music: yes
+    booking_contact: null
+    notes: Non-profit, member-supported, smoke and alcohol free listening room. Most shows Thursday-Sunday. As of January 3, 2026, merged with the New Mexico Jazz Workshop. Strong jazz/world/contemporary-classical/songwriter focus.
+    source_url: https://outpostspace.org/
+    verified_on: 2026-05-07
+
+  - name: Sister Bar
+    type: bar
+    address: 407 Central Ave NW, Albuquerque, NM 87102
+    city: Albuquerque
+    drive_minutes_from_locale: 25
+    capacity: 360
+    books_original_music: yes
+    booking_contact: events@sisterthebar.com
+    notes: Downtown ABQ. Diverse curated calendar — national touring acts, local bands, dance nights. 37 beers on draught. Live music + bar + restaurant + pinball.
+    source_url: https://sisterthebar.com/
+    verified_on: 2026-05-07
+
+  - name: Launchpad
+    type: concert_hall
+    address: 618 Central Ave SW, Albuquerque, NM 87102
+    city: Albuquerque
+    drive_minutes_from_locale: 25
+    capacity: 300
+    books_original_music: yes
+    booking_contact: null
+    notes: Music hall on Central Ave, downtown ABQ. Mon-Fri 5pm-2am, Sat 7pm-2am, closed Sundays. National acts and locals.
+    source_url: https://www.ticketmaster.com/launchpad-tickets-albuquerque/venue/246020
+    verified_on: 2026-05-07
+
+  - name: Tractor Brewing Wells Park
+    type: brewery
+    address: 1800 4th St NW, Albuquerque, NM 87102
+    city: Albuquerque
+    drive_minutes_from_locale: 22
+    capacity: null
+    books_original_music: yes
+    booking_contact: null
+    notes: Original Tractor taproom. Hosts live music, karaoke, art shows, community events. Phone (505) 243-6752. Patio.
+    source_url: https://getplowed.com/wells-park/
+    verified_on: 2026-05-07
+
+  - name: Tumbleroot Pottery Pub
+    type: bar
+    address: 135 W Palace Ave, Santa Fe, NM 87501
+    city: Santa Fe
+    drive_minutes_from_locale: 60
+    capacity: null
+    books_original_music: yes
+    booking_contact: null
+    notes: Off the Plaza in Santa Fe. Open Mic every Wednesday 7-10pm. Free patio music every night through summer. Sister venue to Tumbleroot Brewery & Distillery.
+    source_url: https://www.tumblerootpotterypub.com/
+    verified_on: 2026-05-07
+
+studios:
+  - name: Frogville Studios
+    address: Santa Fe, NM
+    city: Santa Fe
+    drive_minutes_from_locale: 60
+    focus: music
+    notable_clients: []   # founder name and detailed credit list not yet re-verified — leave empty rather than guess
+    rate_range: null
+    source_url: https://frogvilleplanet.com/recording-studio/
+    verified_on: 2026-05-07
+
+  - name: The Kitchen Sink
+    address: 528 Jose St, Santa Fe, NM
+    city: Santa Fe
+    drive_minutes_from_locale: 60
+    focus: music
+    notable_clients:
+      - John Popper (Blues Traveler)
+      - Crystal Bowersox
+    rate_range: null
+    source_url: https://www.thekitchensinkstudio.com/
+    verified_on: 2026-05-07
+
+  - name: Stepbridge Studios
+    address: 528 Jose St, Santa Fe, NM
+    city: Santa Fe
+    drive_minutes_from_locale: 60
+    focus: post_production
+    notable_clients: []
+    rate_range: null
+    source_url: https://stepbridge.com/
+    verified_on: 2026-05-07
+    # NOTE: Stepbridge is post-production / ADR / VO / audiobook — not for tracking bands. Writer must not pitch this as a music studio.
+
+festivals:
+  - name: Globalquerque!
+    when: September (annual)
+    location: Albuquerque, NM
+    paid_slots: unknown
+    source_url: https://www.globalquerque.org/
+    verified_on: 2026-05-07
+    # Specific 2026 dates and host venue not confirmed — re-verify before any
+    # issue that names a date or address.
+
+scene_facts:
+  - claim: Music in Corrales is in its 39th season in 2026, hosted at the Historic Old San Ysidro Church (966 Old Church Rd) under the Corrales Historical Society.
+    source_url: https://www.corraleshistory.org/mic.html
+    verified_on: 2026-05-07
+
+  - claim: Outpost Performance Space and the New Mexico Jazz Workshop (founded 1976) merged on January 3, 2026, with both operating under the Outpost banner.
+    source_url: https://outpostspace.org/
+    verified_on: 2026-05-07
+
+  - claim: Casa Vieja occupies an adobe building constructed in 1770 in the village of Corrales.
+    source_url: https://oldcasanm.com/
+    verified_on: 2026-05-07
+
+  - claim: Frogville Studios in Santa Fe was officially established in 2003.
+    source_url: https://frogvilleplanet.com/recording-studio/
+    verified_on: 2026-05-07
+
+do_not_mention:
+  - name: Corrales Bistro Brewery
+    reason: Closed. Building at 4908 Corrales Rd is no longer operating as the Bistro Brewery; new operators have signaled a relaunch under a different name. Do not pitch as an active venue.
+    verified_on: 2026-05-07
+
+  - name: Empire Recording
+    reason: Fabricated in earlier draft. No verified studio by this name in the North Valley.
+    verified_on: 2026-05-07
+
+  - name: Corrales Society of the Arts
+    reason: Unverified. May exist under a different name (Corrales Cultural Arts Council is the body that founded Music in Corrales in 1986); do not assert until re-verified.
+    verified_on: 2026-05-07
+
+  - name: New Mexico Songwriters Association
+    reason: Unverified. Do not assert as an active group until a current source is found.
+    verified_on: 2026-05-07

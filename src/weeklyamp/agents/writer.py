@@ -10,6 +10,11 @@ from weeklyamp.content.generator import generate_draft_with_usage
 from weeklyamp.content.images import ensure_images
 from weeklyamp.core.config import get_prompt_template
 from weeklyamp.core.models import WORD_COUNT_MAX_TOKENS
+from weeklyamp.research.locale_facts import (
+    audit_draft,
+    build_writer_context,
+    format_findings,
+)
 
 
 class WriterAgent(AgentBase):
@@ -35,6 +40,7 @@ class WriterAgent(AgentBase):
                 task_id,
                 task.get("issue_id"),
                 task.get("section_slug", ""),
+                locale_slug=input_data.get("locale_slug", ""),
             )
         elif task_type == "rewrite":
             return self.rewrite(
@@ -51,8 +57,20 @@ class WriterAgent(AgentBase):
         else:
             return {"error": f"Unknown task type: {task_type}"}
 
-    def write_section(self, task_id: int, issue_id: Optional[int] = None, section_slug: str = "") -> dict:
-        """Write a section draft using prompt template and generate_draft."""
+    def write_section(
+        self,
+        task_id: int,
+        issue_id: Optional[int] = None,
+        section_slug: str = "",
+        locale_slug: str = "",
+    ) -> dict:
+        """Write a section draft using prompt template and generate_draft.
+
+        If `locale_slug` is set, the writer is constrained to a verified facts
+        sheet (data/locales/<slug>.yaml) and the resulting draft is audited
+        against that sheet. Audit findings are logged and returned but do not
+        block the draft — a human reviews them.
+        """
         if not issue_id or not section_slug:
             return {"error": "issue_id and section_slug required"}
 
@@ -91,6 +109,20 @@ class WriterAgent(AgentBase):
         agent_row = self._ensure_agent()
         agent_system_prompt = agent_row.get("system_prompt", "") if agent_row else ""
 
+        # Hyperlocal editions: prepend the verified facts sheet for the locale
+        # so the writer can ONLY reference real, sourced entities. Without this
+        # constraint the model invents venues, studios, and people from
+        # training-era memory — see data/locales/README.md for context.
+        locale_load_error = ""
+        if locale_slug:
+            try:
+                locale_context = build_writer_context(locale_slug)
+                agent_system_prompt = (
+                    f"{locale_context}\n\n{agent_system_prompt}".strip()
+                )
+            except FileNotFoundError as exc:
+                locale_load_error = str(exc)
+
         # Generate with persona — capture actual token usage (not max)
         # so per-edition cost telemetry reflects real spend, not the
         # upper bound we'd pay if every generation hit the cap.
@@ -120,7 +152,44 @@ class WriterAgent(AgentBase):
 
         self.log_output(task_id, "draft", content, tokens_used=tokens_used)
 
-        return {"draft_id": draft_id, "section": section_slug, "word_count": len(content.split())}
+        result: dict = {
+            "draft_id": draft_id,
+            "section": section_slug,
+            "word_count": len(content.split()),
+        }
+
+        if locale_slug and not locale_load_error:
+            findings = audit_draft(content, locale_slug)
+            errors = [f for f in findings if f.severity == "error"]
+            warns = [f for f in findings if f.severity == "warn"]
+            self.log_output(
+                task_id,
+                "audit",
+                format_findings(findings),
+                metadata={
+                    "locale_slug": locale_slug,
+                    "error_count": len(errors),
+                    "warn_count": len(warns),
+                    "errors": [
+                        {"kind": f.kind, "name": f.name, "detail": f.detail}
+                        for f in errors
+                    ],
+                    "warnings": [
+                        {"kind": f.kind, "name": f.name, "detail": f.detail}
+                        for f in warns
+                    ],
+                },
+            )
+            result["audit"] = {
+                "locale_slug": locale_slug,
+                "error_count": len(errors),
+                "warn_count": len(warns),
+                "errors": [{"name": f.name, "detail": f.detail} for f in errors],
+            }
+        elif locale_load_error:
+            result["audit_skipped"] = locale_load_error
+
+        return result
 
     def rewrite(self, task_id: int, draft_id: Optional[int] = None, feedback: str = "") -> dict:
         """Incorporate feedback and regenerate a draft."""

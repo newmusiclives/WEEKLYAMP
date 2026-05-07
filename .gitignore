@@ -8,7 +8,9 @@ build/
 *.egg
 
 .env
-data/
+data/*
+!data/locales/
+!data/artists/
 *.db
 
 .venv/

@@ -361,20 +361,59 @@ def create_app() -> FastAPI:
     # the repo root. Whitelist of slugs to prevent path traversal; any
     # other slug 404s.
     _SAMPLE_FILES = {
-        "fan": "demo_fan_monday.html",
-        "artist": "demo_artist_monday.html",
-        "industry": "demo_industry_monday.html",
+        "fan": ("demo_fan_monday.html", "Fan Edition", "Music for fans"),
+        "artist": ("demo_artist_monday.html", "Artist Edition", "Working musicians"),
+        "industry": ("demo_industry_monday.html", "Industry Edition", "Music business"),
+        "tucson": ("demo_tucson_artist.html", "Tucson Artist Edition", "Local edition — Tucson, AZ"),
+        "corrales": ("demo_corrales_artist.html", "Corrales Artist Edition", "Local edition — Corrales, NM"),
+        "sugar-lime-blue": ("demo_sugar_lime_blue.html", "Sugar Lime Blue Edition", "Artist-specific edition"),
     }
 
     @app.get("/sample/{edition}")
     def sample_issue(edition: str):
-        fname = _SAMPLE_FILES.get(edition.lower())
-        if not fname:
+        entry = _SAMPLE_FILES.get(edition.lower())
+        if not entry:
             return HTMLResponse(_error_404, status_code=404)
+        fname = entry[0]
         sample_path = _TEMPLATES_DIR.parent / fname
         if not sample_path.exists():
             return HTMLResponse(_error_404, status_code=404)
         return HTMLResponse(sample_path.read_text())
+
+    @app.get("/samples", response_class=HTMLResponse)
+    def samples_index():
+        """Index page listing all sample editions — share this URL."""
+        cards = []
+        for slug, (fname, title, blurb) in _SAMPLE_FILES.items():
+            if not (_TEMPLATES_DIR.parent / fname).exists():
+                continue
+            cards.append(
+                f'<a href="/sample/{slug}" style="display:block;padding:20px;border:1px solid #e5e7eb;'
+                f'border-radius:8px;text-decoration:none;color:#1a1a1a;background:#fff;'
+                f'transition:border-color 0.15s;" '
+                f"onmouseover=\"this.style.borderColor='#b09a3a'\" "
+                f"onmouseout=\"this.style.borderColor='#e5e7eb'\">"
+                f'<div style="font-size:18px;font-weight:700;margin-bottom:6px;">{title}</div>'
+                f'<div style="font-size:14px;color:#6b7280;">{blurb}</div>'
+                f'</a>'
+            )
+        body = (
+            '<!DOCTYPE html><html lang="en"><head>'
+            '<meta charset="UTF-8">'
+            '<meta name="viewport" content="width=device-width, initial-scale=1.0">'
+            '<title>TrueFans DISPATCH &mdash; Sample Editions</title></head>'
+            '<body style="font-family:Georgia,serif;background:#f9f9f9;margin:0;padding:40px 20px;">'
+            '<div style="max-width:640px;margin:0 auto;">'
+            '<h1 style="font-size:28px;margin:0 0 8px;color:#1a1a1a;">TrueFans DISPATCH &mdash; Sample Editions</h1>'
+            '<p style="color:#6b7280;font-size:15px;margin:0 0 28px;">'
+            'Six sample issues. Three top-line editions plus two local editions and one artist-specific edition. '
+            'Every fact is sourced &mdash; click through to read.</p>'
+            f'<div style="display:flex;flex-direction:column;gap:12px;">{"".join(cards)}</div>'
+            '<p style="color:#9ca3af;font-size:12px;margin:32px 0 0;text-align:center;">'
+            '&copy; 2026 TrueFans DISPATCH</p>'
+            '</div></body></html>'
+        )
+        return HTMLResponse(body)
 
     # Health checks
     @app.get("/health")

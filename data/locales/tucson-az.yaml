@@ -1,0 +1,132 @@
+locale:
+  name: Tucson
+  state: AZ
+  metro: Tucson
+  last_full_review: 2026-05-07
+
+venues:
+  - name: Club Congress
+    type: concert_hall
+    address: 311 E Congress St, Tucson, AZ 85701
+    city: Tucson
+    drive_minutes_from_locale: 0
+    capacity: null
+    books_original_music: yes
+    booking_contact: null
+    notes: At Hotel Congress in downtown Tucson since 1985. Multi-stage live music venue and cultural hub. Books national and local original acts almost every night. Calendar at hotelcongress.com/calendar.
+    source_url: https://hotelcongress.com/venues/club-congress/
+    verified_on: 2026-05-07
+
+  - name: 191 Toole
+    type: concert_hall
+    address: 191 E Toole Ave, Tucson, AZ 85701
+    city: Tucson
+    drive_minutes_from_locale: 0
+    capacity: 500
+    books_original_music: yes
+    booking_contact: null
+    notes: Sister venue to the Rialto Theatre. Capacity 500. Phone (520) 740-1000. Tickets at the Rialto box office (Mon-Sat 12-6pm) and at 191 Toole when doors open.
+    source_url: https://www.rialtotheatre.com/tm-venue/191-toole/
+    verified_on: 2026-05-07
+
+  - name: Solar Culture Gallery
+    type: event_space
+    address: 31 E Toole Ave, Tucson, AZ 85701
+    city: Tucson
+    drive_minutes_from_locale: 0
+    capacity: null
+    books_original_music: yes
+    booking_contact: null
+    notes: Art gallery and performance space in a historic art-deco building in downtown Tucson, running since 1987. Wooden dance floor, full stage, lights, sound system. Hosts concerts, DJ events, and rentals.
+    source_url: https://solarculture.org/
+    verified_on: 2026-05-07
+
+  - name: Rialto Theatre
+    type: concert_hall
+    address: 318 E Congress St, Tucson, AZ 85701
+    city: Tucson
+    drive_minutes_from_locale: 0
+    capacity: null
+    books_original_music: yes
+    booking_contact: null
+    notes: Historic downtown Tucson concert hall. Books national touring acts and local openers. Manages 191 Toole bookings.
+    source_url: https://www.rialtotheatre.com/
+    verified_on: 2026-05-07
+
+  - name: The Hut
+    type: bar
+    address: 305 N 4th Ave, Tucson, AZ 85705
+    city: Tucson
+    drive_minutes_from_locale: 0
+    capacity: null
+    books_original_music: yes
+    booking_contact: null
+    notes: 4th Avenue tiki bar with a 45-foot Easter Island Tiki Head out front. Original live music in the Arts District between University and downtown. Closed Mon-Tue. Wed-Fri 5pm-2am, Sat 2pm-2am, Sun 2pm-1am. (520) 623-3200.
+    source_url: https://fourthavenue.org/listings/the-hut/
+    verified_on: 2026-05-07
+
+  - name: Exo Roast Co.
+    type: bar
+    address: 403 N 6th Ave, Tucson, AZ 85705
+    city: Tucson
+    drive_minutes_from_locale: 0
+    capacity: null
+    books_original_music: sometimes
+    booking_contact: null
+    notes: Craft coffee roaster in a historic 6th Ave warehouse, plus a second location at 196 W Simpson St (1895 adobe house) with an agave-focused evening bar. Live music in the evenings. (520) 777-4709.
+    source_url: https://exocoffee.com/
+    verified_on: 2026-05-07
+
+festivals:
+  - name: Tucson Folk Festival
+    when: April (annual)
+    location: J&aacute;come Plaza, downtown Tucson
+    paid_slots: yes
+    source_url: https://www.tucsonfolkfest.org/
+    verified_on: 2026-05-07
+    # 41st year in 2026, April 10-12. Free, open to the public, presented by
+    # the Tucson Kitchen Musicians Association (TKMA) and Art State Arizona.
+    # Six stages, 150+ performances, includes a young artist showcase and a
+    # songwriting competition.
+
+scene_facts:
+  - claim: Craig Schumacher is a Tucson-based producer and audio engineer who has recorded and mixed albums by Calexico, Devotchka, Neko Case, Giant Sand, The Jayhawks, Friends of Dean Martinez, and Amos Lee.
+    source_url: https://en.wikipedia.org/wiki/Craig_Schumacher
+    verified_on: 2026-05-07
+
+  - claim: The Tucson Folk Festival is in its 41st year in 2026, taking place April 10-12 at J&aacute;come Plaza in downtown Tucson, presented by the Tucson Kitchen Musicians Association.
+    source_url: https://www.tucsonfolkfest.org/
+    verified_on: 2026-05-07
+
+  - claim: Solar Culture Gallery has operated as an art and performance space in a historic art-deco building in downtown Tucson since 1987.
+    source_url: https://solarculture.org/
+    verified_on: 2026-05-07
+
+  - claim: Club Congress at Hotel Congress has been a downtown Tucson live music venue since 1985.
+    source_url: https://hotelcongress.com/venues/club-congress/
+    verified_on: 2026-05-07
+
+do_not_mention:
+  - name: WaveLab Recording Studio
+    reason: Closed. The WaveLab website displays the message &ldquo;It was real. It was fun. And it was really fun. Cya!&rdquo; as of 2026, indicating the studio is no longer in active operation. Craig Schumacher's career and credit list remain valid history but pitching WaveLab as an active room is wrong.
+    verified_on: 2026-05-07
+
+  - name: Dust and Stone
+    reason: Unverified Tucson studio claim from earlier draft. No current source confirms a downtown Tucson studio by this name. Do not assert until verified.
+    verified_on: 2026-05-07
+
+  - name: Loveland Studios
+    reason: Unverified as a Tucson studio. Do not assert until a current source is found.
+    verified_on: 2026-05-07
+
+  - name: WaterWorks Recording
+    reason: Unverified. Do not assert as an active Tucson studio until a current source is found.
+    verified_on: 2026-05-07
+
+  - name: Monterey Court
+    reason: Unverified for 2026. Was historically an outdoor patio venue. Do not assert as an active live music room until re-verified.
+    verified_on: 2026-05-07
+
+studios: []   # Tucson studio scene needs re-verification — WaveLab's apparent
+              # closure invalidated our old shortlist. Add entries only as we
+              # confirm them, with source URLs.

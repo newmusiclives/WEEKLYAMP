@@ -1,0 +1,196 @@
+artist:
+  name: Sugar Lime Blue
+  hometown: Nashville, TN
+  formation_year: 1999   # When Dave and Ashley Beth first met in Texas; the
+                         # band's first official shows were in 2007.
+  genre: Americana / blues / folk / country / jam (self-described as "Cosmic Cowgirl")
+  current_status: active
+  current_label: independent
+  last_full_review: 2026-05-07
+
+members:
+  - name: Ashley Beth
+    role: lead vocals
+    era: current (founding)
+    notes: Co-founder. Met Dave in Texas; the band emerged from her singing background vocals on his earlier project.
+  - name: Dave Beth
+    role: lead guitar
+    era: current (founding)
+    notes: Co-founder. Coined the band name "Sugar Lime Blue" at home with Ashley.
+  - name: Matt Fox
+    role: bass
+    era: current
+    notes: Listed as the current bassist on Bandsintown.
+  - name: Ikaika Pekelo
+    role: drums and percussion
+    era: current
+    notes: Listed as the current drummer on Bandsintown.
+  - name: Russ Dean
+    role: bass
+    era: 2010-2020 (passed away 2020)
+    notes: Founding-era bassist. Joined ~2010 after relocating from California to Nashville. Bonded with the Beths over a shared love of jam-band music, particularly the Grateful Dead.
+  - name: Joe Bass
+    role: bass
+    era: interim (post-2020)
+    notes: Played bass on tour for a period after Russ Dean's passing. Also performs as Brian Howe.
+
+albums:
+  - title: Far From The Tree
+    year: 2011
+    studio: null
+    label: independent
+    source_url: https://sugarlimeblue.com/music
+    verified_on: 2026-05-07
+    notes: Debut album.
+
+  - title: Move That Earth
+    year: null   # Sophomore album; specific release year not yet re-verified.
+    studio: null
+    label: independent
+    source_url: https://sugarlimeblue.com/bio
+    verified_on: 2026-05-07
+    notes: Sophomore release.
+
+  - title: Narcoluptuous
+    year: null   # Year not yet re-verified.
+    studio: Bluebird (the band's home studio just outside Nashville)
+    label: independent
+    source_url: https://indiebandguru.com/sugar-lime-blue-narcoluptuous/
+    verified_on: 2026-05-07
+    notes: Third studio album. 12 tracks. Recorded at the band's home studio "Bluebird" outside Nashville.
+
+  - title: The Blackbird Sessions
+    year: 2022
+    studio: Blackbird Studio (Nashville, TN)
+    label: independent
+    source_url: https://sugarlimeblue.com/album/2238676/the-blackbird-sessions
+    verified_on: 2026-05-07
+    notes: Latest release. 9 tracks. Recorded at the iconic Blackbird Studio in Nashville. Picked up by 100+ FM radio stations. Standout tracks include "Burn It" and "Didn't Mean To Kill You" per Indie Band Guru.
+
+# Notable venues the band is known to play. Used to keep the writer from
+# inventing made-up tour stops.
+venues:
+  - name: 3rd and Lindsley
+    type: concert_hall
+    address: 818 3rd Ave S, Nashville, TN 37210
+    city: Nashville
+    drive_minutes_from_locale: 0
+    capacity: null
+    books_original_music: yes
+    booking_contact: null
+    notes: Nashville Americana / blues / soul listening room. Sugar Lime Blue is a recurring booking.
+    source_url: https://www.3rdandlindsley.com/tm-attraction/sugar-lime-blue/
+    verified_on: 2026-05-07
+
+  - name: Wildwood Resort and Marina
+    type: bar
+    address: Granville, TN
+    city: Granville
+    drive_minutes_from_locale: 90
+    capacity: null
+    books_original_music: yes
+    booking_contact: null
+    notes: Sugar Lime Blue performed here April 3, 2026 at 6:30pm.
+    source_url: https://www.bandsintown.com/a/1156877-sugar-lime-blue
+    verified_on: 2026-05-07
+
+  - name: The White Squirrel Brewery
+    type: brewery
+    address: Bowling Green, KY
+    city: Bowling Green
+    drive_minutes_from_locale: 60
+    capacity: null
+    books_original_music: yes
+    booking_contact: null
+    notes: Sugar Lime Blue performed here April 4, 2026 at 7:00pm.
+    source_url: https://www.bandsintown.com/a/1156877-sugar-lime-blue
+    verified_on: 2026-05-07
+
+  - name: The Italian Bistro
+    type: bar
+    address: Burkesville, KY
+    city: Burkesville
+    drive_minutes_from_locale: 90
+    capacity: null
+    books_original_music: yes
+    booking_contact: null
+    notes: Sugar Lime Blue performed here April 11, 2026 at 6:00pm.
+    source_url: https://www.bandsintown.com/c/burkesville-ky
+    verified_on: 2026-05-07
+
+  - name: Bryan Symphony Orchestra fundraiser (Cookeville, TN)
+    type: event_space
+    address: Cookeville, TN
+    city: Cookeville
+    drive_minutes_from_locale: 80
+    capacity: null
+    books_original_music: yes
+    booking_contact: null
+    notes: Sugar Lime Blue played a fundraiser for the Bryan Symphony Orchestra on May 6, 2026 at 6:00pm. (Yesterday relative to last_full_review.)
+    source_url: https://www.bandsintown.com/a/1156877-sugar-lime-blue
+    verified_on: 2026-05-07
+
+  - name: Little Toad Creek Brewery & Distillery
+    type: brewery
+    address: Silver City, NM
+    city: Silver City
+    drive_minutes_from_locale: null
+    capacity: null
+    books_original_music: yes
+    booking_contact: null
+    notes: Next confirmed upcoming Sugar Lime Blue show as of 2026-05-07 &mdash; June 21, 2026 in Silver City, NM. Free admission per the Bandsintown listing.
+    source_url: https://www.bandsintown.com/e/108048127-sugar-lime-blue-at-little-toad-creek-brewery-and-distillery
+    verified_on: 2026-05-07
+
+studios:
+  - name: Blackbird Studio
+    address: Nashville, TN
+    city: Nashville
+    drive_minutes_from_locale: 0
+    focus: music
+    notable_clients:
+      - Sugar Lime Blue (The Blackbird Sessions, 2022)
+    rate_range: null
+    source_url: https://en.wikipedia.org/wiki/Blackbird_Studio
+    verified_on: 2026-05-07
+
+  - name: Bluebird
+    address: outside Nashville, TN
+    city: Nashville (greater)
+    drive_minutes_from_locale: 0
+    focus: music
+    notable_clients:
+      - Sugar Lime Blue (Narcoluptuous)
+    rate_range: null
+    source_url: https://indiebandguru.com/sugar-lime-blue-narcoluptuous/
+    verified_on: 2026-05-07
+    # NOTE: This is the band's own home studio, not a public commercial room.
+    # Do not pitch it as bookable.
+
+festivals: []
+
+scene_facts:
+  - claim: Sugar Lime Blue's founding bassist Russ Dean passed away in 2020. Joe Bass (also performing as Brian Howe) played bass during the band's interim period before the current rhythm section settled.
+    source_url: https://www.bandsintown.com/a/1156877-sugar-lime-blue
+    verified_on: 2026-05-07
+
+  - claim: Sugar Lime Blue self-describes their style as &ldquo;Cosmic Cowgirl&rdquo; &mdash; a fusion of Americana, blues, folk, country, and jam-band grooves.
+    source_url: https://indiebandguru.com/the-blackbird-sessions-sugar-lime-blue/
+    verified_on: 2026-05-07
+
+  - claim: The Blackbird Sessions (2022) was recorded at Blackbird Studio in Nashville and was picked up by more than 100 FM radio stations.
+    source_url: https://sugarlimeblue.com/album/2238676/the-blackbird-sessions
+    verified_on: 2026-05-07
+
+  - claim: The band's name was first uttered by Dave Beth at home; Ashley Beth describes it as &ldquo;Sugar, the sweet stuff; Lime, the citrus fruit; Blue, the color.&rdquo;
+    source_url: https://blues.gr/profiles/blogs/q-a-with-sugar-lime-blue-ashley-dave-beth-a-premiere-americana-so
+    verified_on: 2026-05-07
+
+  - claim: Sugar Lime Blue (and a Sugar Lime Blue Acoustic Duo configuration) is on a Summer '26 Tour as of May 2026, with confirmed shows announced through Bandsintown.
+    source_url: https://www.bandsintown.com/a/1156877-sugar-lime-blue
+    verified_on: 2026-05-07
+
+do_not_mention:
+  - name: Cyndi Robbins
+    reason: No verified connection to Sugar Lime Blue. Do not assert as a band member or collaborator.
+    verified_on: 2026-05-07
