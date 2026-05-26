@@ -93,7 +93,11 @@ CREATE TABLE IF NOT EXISTS assembled_issues (
     issue_id INTEGER NOT NULL REFERENCES issues(id),
     html_content TEXT DEFAULT '',
     plain_text TEXT DEFAULT '',
+    preheader_text TEXT DEFAULT '',
     ghl_campaign_id TEXT DEFAULT '',
+    web_html TEXT NOT NULL DEFAULT '',
+    last_web_update TEXT,
+    web_updates_count INTEGER NOT NULL DEFAULT 0,
     assembled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     published_at TIMESTAMP
 );
@@ -1570,3 +1574,177 @@ CREATE TABLE IF NOT EXISTS artist_newsletter_revenue (
 CREATE INDEX IF NOT EXISTS idx_artist_nl_revenue ON artist_newsletter_revenue(newsletter_id);
 
 INSERT OR IGNORE INTO schema_version (version) VALUES (37);
+
+-- v38: Send-time optimization — computed preferred hours per subscriber
+CREATE TABLE IF NOT EXISTS subscriber_send_times (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    subscriber_id INTEGER NOT NULL REFERENCES subscribers(id),
+    preferred_hour INTEGER NOT NULL DEFAULT 9,
+    preferred_day TEXT NOT NULL DEFAULT '',
+    confidence REAL NOT NULL DEFAULT 0.0,
+    sample_count INTEGER NOT NULL DEFAULT 0,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(subscriber_id)
+);
+CREATE INDEX IF NOT EXISTS idx_send_times_subscriber ON subscriber_send_times(subscriber_id);
+CREATE INDEX IF NOT EXISTS idx_send_times_hour ON subscriber_send_times(preferred_hour);
+
+INSERT OR IGNORE INTO schema_version (version) VALUES (38);
+INSERT OR IGNORE INTO schema_version (version) VALUES (48);
+
+-- v51: Resend-to-non-openers campaign management
+CREATE TABLE IF NOT EXISTS resend_campaigns (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    issue_id INTEGER NOT NULL REFERENCES issues(id),
+    original_subject TEXT NOT NULL DEFAULT '',
+    resend_subject TEXT NOT NULL DEFAULT '',
+    delay_hours INTEGER NOT NULL DEFAULT 48,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','sent','cancelled')),
+    target_count INTEGER NOT NULL DEFAULT 0,
+    sent_count INTEGER NOT NULL DEFAULT 0,
+    scheduled_at TEXT,
+    sent_at TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_resend_campaigns_issue ON resend_campaigns(issue_id);
+CREATE INDEX IF NOT EXISTS idx_resend_campaigns_status ON resend_campaigns(status);
+
+INSERT OR IGNORE INTO schema_version (version) VALUES (51);
+
+-- ======================================================================
+-- v52: Scene Graph — music industry knowledge base
+-- ======================================================================
+
+CREATE TABLE IF NOT EXISTS scene_entities (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    entity_type TEXT NOT NULL DEFAULT 'artist',
+    slug TEXT NOT NULL DEFAULT '',
+    bio TEXT NOT NULL DEFAULT '',
+    metadata_json TEXT NOT NULL DEFAULT '{}',
+    mention_count INTEGER NOT NULL DEFAULT 0,
+    first_seen_issue_id INTEGER,
+    last_seen_issue_id INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(slug, entity_type)
+);
+CREATE INDEX IF NOT EXISTS idx_scene_entities_type ON scene_entities(entity_type);
+CREATE INDEX IF NOT EXISTS idx_scene_entities_slug ON scene_entities(slug);
+CREATE INDEX IF NOT EXISTS idx_scene_entities_mentions ON scene_entities(mention_count DESC);
+
+CREATE TABLE IF NOT EXISTS scene_connections (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    source_entity_id INTEGER NOT NULL,
+    target_entity_id INTEGER NOT NULL,
+    relationship TEXT NOT NULL DEFAULT 'mentioned_with',
+    strength INTEGER NOT NULL DEFAULT 1,
+    first_seen_issue_id INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(source_entity_id, target_entity_id, relationship)
+);
+CREATE INDEX IF NOT EXISTS idx_scene_conn_source ON scene_connections(source_entity_id);
+CREATE INDEX IF NOT EXISTS idx_scene_conn_target ON scene_connections(target_entity_id);
+
+CREATE TABLE IF NOT EXISTS scene_entity_mentions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entity_id INTEGER NOT NULL,
+    issue_id INTEGER NOT NULL,
+    section_slug TEXT NOT NULL DEFAULT '',
+    context_snippet TEXT NOT NULL DEFAULT '',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_scene_mentions_entity ON scene_entity_mentions(entity_id);
+CREATE INDEX IF NOT EXISTS idx_scene_mentions_issue ON scene_entity_mentions(issue_id);
+
+CREATE TABLE IF NOT EXISTS admin_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL DEFAULT '',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS invoices (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    invoice_number TEXT UNIQUE NOT NULL,
+    entity_type TEXT NOT NULL CHECK (entity_type IN ('subscriber', 'licensee', 'artist_newsletter')),
+    entity_id INTEGER NOT NULL,
+    amount_cents INTEGER NOT NULL DEFAULT 0,
+    currency TEXT DEFAULT 'usd',
+    status TEXT DEFAULT 'draft' CHECK (status IN ('draft', 'sent', 'paid', 'overdue', 'void')),
+    payment_provider TEXT DEFAULT 'manifest',
+    payment_transaction_id TEXT DEFAULT '',
+    due_date TEXT DEFAULT '',
+    paid_at TIMESTAMP,
+    line_items_json TEXT DEFAULT '[]',
+    notes TEXT DEFAULT '',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_invoices_entity ON invoices(entity_type, entity_id);
+CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(status);
+
+CREATE TABLE IF NOT EXISTS coupons (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    code TEXT UNIQUE NOT NULL,
+    description TEXT DEFAULT '',
+    discount_type TEXT DEFAULT 'percentage' CHECK (discount_type IN ('percentage', 'fixed_cents')),
+    discount_value INTEGER NOT NULL DEFAULT 0,
+    applies_to TEXT DEFAULT 'subscription' CHECK (applies_to IN ('subscription', 'license', 'event', 'all')),
+    max_uses INTEGER DEFAULT 0,
+    current_uses INTEGER DEFAULT 0,
+    valid_from TEXT DEFAULT '',
+    valid_until TEXT DEFAULT '',
+    is_active INTEGER DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS coupon_redemptions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    coupon_id INTEGER NOT NULL REFERENCES coupons(id),
+    subscriber_id INTEGER REFERENCES subscribers(id),
+    licensee_id INTEGER REFERENCES licensees(id),
+    discount_applied_cents INTEGER DEFAULT 0,
+    redeemed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_coupon_redemptions ON coupon_redemptions(coupon_id);
+
+CREATE TABLE IF NOT EXISTS subscriber_segments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    description TEXT DEFAULT '',
+    segment_type TEXT DEFAULT 'auto' CHECK (segment_type IN ('auto', 'manual', 'ai')),
+    criteria_json TEXT DEFAULT '{}',
+    subscriber_count INTEGER DEFAULT 0,
+    last_computed_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS subscriber_segment_members (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    segment_id INTEGER NOT NULL REFERENCES subscriber_segments(id),
+    subscriber_id INTEGER NOT NULL REFERENCES subscribers(id),
+    score FLOAT DEFAULT 0.0,
+    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(segment_id, subscriber_id)
+);
+CREATE INDEX IF NOT EXISTS idx_segment_members ON subscriber_segment_members(segment_id);
+
+CREATE TABLE IF NOT EXISTS cross_promo_partners (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    partner_name TEXT NOT NULL,
+    partner_type TEXT DEFAULT 'newsletter' CHECK (partner_type IN ('newsletter','podcast','community','social','other')),
+    audience_size TEXT DEFAULT '',
+    audience_overlap TEXT DEFAULT '',
+    pitch_idea TEXT DEFAULT '',
+    contact_url TEXT DEFAULT '',
+    edition_slug TEXT DEFAULT '',
+    status TEXT DEFAULT 'identified' CHECK (status IN ('identified','contacted','negotiating','live','declined','expired')),
+    source TEXT DEFAULT 'manual',
+    last_contacted_at TIMESTAMP,
+    notes TEXT DEFAULT '',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_cross_promo_status ON cross_promo_partners(status);
+CREATE INDEX IF NOT EXISTS idx_cross_promo_edition ON cross_promo_partners(edition_slug);
+
+INSERT OR IGNORE INTO schema_version (version) VALUES (52);

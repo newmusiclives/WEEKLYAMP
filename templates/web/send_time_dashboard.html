@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block title %}Send-Time Optimization — TrueFans DISPATCH{% endblock %}
+{% block nav_send_times %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Send-Time Optimization</h2>
+    <p>Predicted optimal send hours based on subscriber open behaviour (90-day recency-weighted).</p>
+</div>
+
+{% if refresh_message is defined and refresh_message %}
+<div class="alert alert-success">{{ refresh_message }}</div>
+{% endif %}
+
+<div style="display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap;">
+    <div class="card" style="flex:1;min-width:180px;">
+        <div class="card-header"><span class="card-title">Profiled Subscribers</span></div>
+        <div style="padding:16px;font-size:28px;font-weight:700;text-align:center;">{{ total_profiled }}</div>
+    </div>
+    <div class="card" style="flex:1;min-width:180px;">
+        <div class="card-header"><span class="card-title">Peak Hour</span></div>
+        <div style="padding:16px;font-size:28px;font-weight:700;text-align:center;">
+            {% set peak = distribution | sort(attribute='subscriber_count', reverse=True) | first %}
+            {% if peak and peak.subscriber_count > 0 %}
+                {{ '%02d' | format(peak.preferred_hour) }}:00
+            {% else %}
+                --
+            {% endif %}
+        </div>
+    </div>
+    <div class="card" style="flex:1;min-width:180px;">
+        <div class="card-header"><span class="card-title">Avg Confidence</span></div>
+        <div style="padding:16px;font-size:28px;font-weight:700;text-align:center;">
+            {% if stats %}
+                {% set total_subs = stats | sum(attribute='subscriber_count') %}
+                {% set weighted_conf = stats | sum(attribute='avg_confidence') %}
+                {% if stats | length > 0 %}
+                    {{ '%.0f' | format((weighted_conf / stats | length) * 100) }}%
+                {% else %}
+                    --
+                {% endif %}
+            {% else %}
+                --
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="card" style="margin-bottom:24px;">
+    <div class="card-header">
+        <span class="card-title">Open-Hour Distribution (24h)</span>
+        <form method="post" action="/admin/send-times/refresh" style="display:inline;">
+            <button type="submit" class="btn btn-sm btn-primary">Refresh All Send Times</button>
+        </form>
+    </div>
+    <div style="padding:16px 16px 8px;">
+        <div style="display:flex;align-items:flex-end;gap:4px;height:160px;">
+            {% for hour in distribution %}
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;">
+                <div style="
+                    width:100%;
+                    max-width:28px;
+                    margin:0 auto;
+                    background:{% if hour.subscriber_count == max_count %}#b09a3a{% else %}#e8645a{% endif %};
+                    border-radius:3px 3px 0 0;
+                    height:{{ ((hour.subscriber_count / max_count) * 140) | int if max_count > 0 else 0 }}px;
+                    min-height:{% if hour.subscriber_count > 0 %}4{% else %}0{% endif %}px;
+                    transition:height 0.3s;
+                " title="{{ hour.subscriber_count }} subscribers prefer {{ '%02d' | format(hour.preferred_hour) }}:00"></div>
+            </div>
+            {% endfor %}
+        </div>
+        <div style="display:flex;gap:4px;margin-top:4px;">
+            {% for hour in distribution %}
+            <div style="flex:1;text-align:center;font-size:10px;color:#9ca3af;">
+                {% if hour.preferred_hour % 3 == 0 %}{{ hour.preferred_hour }}{% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        <div style="text-align:center;font-size:11px;color:#9ca3af;margin-top:4px;">Hour of Day (UTC)</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <span class="card-title">Top Subscribers by Confidence</span>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Subscriber</th>
+                    <th>Preferred Hour</th>
+                    <th>Confidence</th>
+                    <th>Samples</th>
+                    <th>Updated</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sub in subscribers %}
+                <tr>
+                    <td>
+                        <strong>{{ sub.first_name or '(no name)' }}</strong>
+                        <div style="font-size:12px;color:#9ca3af;">{{ sub.email }}</div>
+                    </td>
+                    <td>
+                        <span style="font-weight:600;">{{ '%02d' | format(sub.preferred_hour) }}:00</span>
+                    </td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <div style="width:60px;height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden;">
+                                <div style="width:{{ (sub.confidence * 100) | int }}%;height:100%;background:{% if sub.confidence >= 0.5 %}#22c55e{% elif sub.confidence >= 0.2 %}#f59e0b{% else %}#ef4444{% endif %};border-radius:3px;"></div>
+                            </div>
+                            <span style="font-size:12px;color:#6b7280;">{{ '%.0f' | format(sub.confidence * 100) }}%</span>
+                        </div>
+                    </td>
+                    <td>{{ sub.sample_count }}</td>
+                    <td style="font-size:12px;color:#9ca3af;">{{ sub.updated_at[:16] if sub.updated_at else '--' }}</td>
+                </tr>
+                {% endfor %}
+                {% if not subscribers %}
+                <tr>
+                    <td colspan="5" style="text-align:center;color:#9ca3af;padding:24px;">
+                        No send-time data yet. Click "Refresh All Send Times" to compute from open events.
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card" style="margin-top:24px;">
+    <div class="card-header"><span class="card-title">Hourly Breakdown</span></div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Hour (UTC)</th>
+                    <th>Subscribers</th>
+                    <th>Avg Confidence</th>
+                    <th>Share</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for hour in distribution %}
+                {% if hour.subscriber_count > 0 %}
+                <tr>
+                    <td><strong>{{ '%02d' | format(hour.preferred_hour) }}:00</strong></td>
+                    <td>{{ hour.subscriber_count }}</td>
+                    <td>{{ '%.0f' | format(hour.avg_confidence * 100) }}%</td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <div style="width:80px;height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden;">
+                                <div style="width:{{ ((hour.subscriber_count / total_profiled) * 100) | int if total_profiled > 0 else 0 }}%;height:100%;background:#e8645a;border-radius:3px;"></div>
+                            </div>
+                            <span style="font-size:12px;color:#6b7280;">{{ '%.1f' | format((hour.subscriber_count / total_profiled) * 100 if total_profiled > 0 else 0) }}%</span>
+                        </div>
+                    </td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+                {% if total_profiled == 0 %}
+                <tr>
+                    <td colspan="4" style="text-align:center;color:#9ca3af;padding:16px;">No data available.</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

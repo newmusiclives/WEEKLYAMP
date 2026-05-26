@@ -547,6 +547,8 @@ def create_app() -> FastAPI:
             "Disallow: /editor-articles\n"
             "Disallow: /spotify\n"
             "Disallow: /admin/artists\n"
+            "Disallow: /admin/resend\n"
+            "Disallow: /admin/editions\n"
             "Disallow: /sections/analytics\n"
             "\n"
             f"Sitemap: {site_domain}/sitemap.xml\n"
@@ -569,6 +571,14 @@ def create_app() -> FastAPI:
             f"{site_domain}/contribute",
             f"{site_domain}/refer/stats",
         ]
+        # Include published living editions in sitemap
+        try:
+            from weeklyamp.web.deps import get_repo as _sitemap_repo
+            _repo = _sitemap_repo()
+            for ed in _repo.get_published_editions():
+                urls.append(f"{site_domain}/edition/{ed['id']}")
+        except Exception:
+            pass
         xml_urls = "\n".join(
             f"  <url><loc>{u}</loc></url>" for u in urls
         )
@@ -648,6 +658,7 @@ def create_app() -> FastAPI:
     from weeklyamp.web.routes import pricing_calc as pricing_calc_routes
     from weeklyamp.web.routes import marketing as marketing_routes
     from weeklyamp.web.routes import edition_pages as edition_pages_routes
+    from weeklyamp.web.routes import live_editions as live_editions_routes
     from weeklyamp.web.routes import notifications as notifications_routes
     from weeklyamp.web.routes import licensee_portal as licensee_portal_routes
     from weeklyamp.web.routes import admin_2fa as admin_2fa_routes
@@ -656,12 +667,15 @@ def create_app() -> FastAPI:
     from weeklyamp.web.routes import admin_feature_flags as admin_feature_flags_routes
     from weeklyamp.web.routes import admin_password_reset as admin_password_reset_routes
     from weeklyamp.web.routes import analytics as analytics_hub_routes
+    from weeklyamp.web.routes import send_time as send_time_routes
     # v36+ future vision features
     from weeklyamp.web.routes import events as events_routes
     from weeklyamp.web.routes import marketplace as marketplace_routes
     from weeklyamp.web.routes import developer_api as developer_api_routes
     # v38+ Developer API v2
     from weeklyamp.web.routes import api_v2 as api_v2_routes
+    # v51+ Resend to non-openers
+    from weeklyamp.web.routes import resend as resend_routes
 
     # Feature-flag-gated routers. Each gated router 404s when its flag
     # is off; flip at /admin/feature-flags to turn on.
@@ -789,6 +803,8 @@ def create_app() -> FastAPI:
     app.include_router(marketing_routes.router, prefix="/admin/marketing")
     # Edition-specific landing pages
     app.include_router(edition_pages_routes.router)
+    # Living Editions — web-hosted versions of published issues
+    app.include_router(live_editions_routes.router)
     # Notification center
     app.include_router(notifications_routes.router, prefix="/notifications")
     # White-label licensee portal
@@ -807,6 +823,10 @@ def create_app() -> FastAPI:
     app.include_router(admin_password_reset_routes.router, prefix="/login")
     # Analytics hub (NPS, content reports, forecasting, media kit)
     app.include_router(analytics_hub_routes.router, prefix="/admin/analytics")
+    # Send-Time Optimization dashboard
+    app.include_router(send_time_routes.router, prefix="/admin/send-times")
+    # v51+ Resend to non-openers
+    app.include_router(resend_routes.router, prefix="/admin/resend")
     # v36+ future vision features
     app.include_router(
         events_routes.router, prefix="/events",

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Living Editions{% endblock %}
+{% block nav_publish %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Living Editions</h2>
+    <p class="text-muted" style="margin-top:4px;">
+        Published issues with web-hosted versions. The emailed newsletter is a snapshot; the web version can be updated anytime.
+    </p>
+</div>
+
+{% if editions %}
+<div class="card">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Issue</th>
+                <th>Edition</th>
+                <th>Published</th>
+                <th>Web Updates</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ed in editions %}
+            <tr>
+                <td>
+                    <strong>#{{ ed.issue_number }}</strong>
+                    {% if ed.title %}<br><span style="font-size:12px;color:var(--text-dim);">{{ ed.title }}</span>{% endif %}
+                </td>
+                <td>
+                    {% if ed.edition_slug %}
+                    <span style="font-size:12px;padding:2px 8px;border-radius:4px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);">{{ ed.edition_slug }}</span>
+                    {% else %}
+                    <span style="color:var(--text-dim);font-size:12px;">-</span>
+                    {% endif %}
+                </td>
+                <td style="font-size:13px;color:var(--text-dim);">{{ ed.published_at[:10] if ed.published_at else '-' }}</td>
+                <td>
+                    {% if ed.web_updates_count and ed.web_updates_count > 0 %}
+                    <span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:2px 8px;border-radius:4px;background:rgba(176,154,58,0.15);border:1px solid rgba(176,154,58,0.3);color:#b09a3a;">
+                        {{ ed.web_updates_count }} update{{ 's' if ed.web_updates_count != 1 else '' }}
+                    </span>
+                    {% else %}
+                    <span style="font-size:12px;color:var(--text-dim);">0</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div style="display:flex;gap:8px;">
+                        <a href="/edition/{{ ed.id }}" target="_blank" style="font-size:12px;color:var(--accent);text-decoration:none;">View</a>
+                        <a href="/admin/editions/{{ ed.id }}/live" style="font-size:12px;color:var(--accent);text-decoration:none;">Edit</a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card" style="text-align:center;padding:40px;">
+    <p style="color:var(--text-dim);">No published editions yet. Assemble and publish an issue to create a living edition.</p>
+    <a href="/publish/" class="btn btn-primary" style="margin-top:16px;">Go to Publish</a>
+</div>
+{% endif %}
+{% endblock %}

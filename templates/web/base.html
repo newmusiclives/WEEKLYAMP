@@ -46,6 +46,9 @@
                 <a href="/publish/" class="{% block nav_publish %}{% endblock %}">
                     <span class="icon">&#9993;</span> Publish
                 </a>
+                <a href="/admin/editions" class="{% block nav_live_editions %}{% endblock %}">
+                    <span class="icon">&#127760;</span> Living Editions
+                </a>
                 <a href="/guests/" class="{% block nav_guests %}{% endblock %}">
                     <span class="icon">&#128221;</span> Guest Articles
                 </a>
@@ -132,6 +135,9 @@
                     <span class="icon">&#128260;</span> Re-engagement
                 </a>
                 {% endif %}
+                <a href="/admin/resend/" class="{% block nav_resend %}{% endblock %}">
+                    <span class="icon">&#128233;</span> Resend Non-Openers
+                </a>
                 <a href="/admin/artists/" class="{% block nav_admin_artists %}{% endblock %}">
                     <span class="icon">&#127908;</span> Artist Profiles
                 </a>
@@ -205,6 +211,9 @@
                     <span class="icon">&#128202;</span> Section Analytics
                 </a>
                 {% endif %}
+                <a href="/admin/send-times/" class="{% block nav_send_times %}{% endblock %}">
+                    <span class="icon">&#9202;</span> Send-Time Optimization
+                </a>
 
                 <div class="nav-section-label">Integrations</div>
                 {% if ff("webhooks_inbound") %}

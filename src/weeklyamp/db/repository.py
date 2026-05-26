@@ -138,6 +138,10 @@ class Repository:
         "scheduled_sends": {
             "status", "error_message", "sent_at",
         },
+        "resend_campaigns": {
+            "status", "target_count", "sent_count",
+            "scheduled_at", "sent_at",
+        },
     }
 
     @staticmethod
@@ -566,12 +570,12 @@ class Repository:
 
     # ---- Assembled Issues ----
 
-    def save_assembled(self, issue_id: int, html_content: str, plain_text: str = "") -> int:
+    def save_assembled(self, issue_id: int, html_content: str, plain_text: str = "", preheader_text: str = "") -> int:
         conn = self._conn()
         cur = conn.execute(
-            """INSERT INTO assembled_issues (issue_id, html_content, plain_text)
-               VALUES (?, ?, ?)""",
-            (issue_id, html_content, plain_text),
+            """INSERT INTO assembled_issues (issue_id, html_content, plain_text, preheader_text, web_html)
+               VALUES (?, ?, ?, ?, ?)""",
+            (issue_id, html_content, plain_text, preheader_text, html_content),
         )
         conn.commit()
         row_id = cur.lastrowid
@@ -586,6 +590,42 @@ class Repository:
         ).fetchone()
         conn.close()
         return dict(row) if row else None
+
+    def get_assembled_by_id(self, assembled_id: int) -> Optional[dict]:
+        conn = self._conn()
+        row = conn.execute(
+            "SELECT * FROM assembled_issues WHERE id = ?",
+            (assembled_id,),
+        ).fetchone()
+        conn.close()
+        return dict(row) if row else None
+
+    def get_published_editions(self) -> list[dict]:
+        """Return all assembled issues that have been published, ordered newest first."""
+        conn = self._conn()
+        rows = conn.execute(
+            """SELECT ai.*, i.issue_number, i.title, i.edition_slug
+               FROM assembled_issues ai
+               JOIN issues i ON i.id = ai.issue_id
+               WHERE ai.published_at IS NOT NULL
+               ORDER BY ai.published_at DESC"""
+        ).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    def update_web_html(self, assembled_id: int, web_html: str) -> None:
+        """Update the living web version of a published issue."""
+        conn = self._conn()
+        conn.execute(
+            """UPDATE assembled_issues
+               SET web_html = ?,
+                   last_web_update = CURRENT_TIMESTAMP,
+                   web_updates_count = web_updates_count + 1
+               WHERE id = ?""",
+            (web_html, assembled_id),
+        )
+        conn.commit()
+        conn.close()
 
     def update_assembled_ghl(self, assembled_id: int, campaign_id: str) -> None:
         conn = self._conn()
@@ -5066,3 +5106,516 @@ class Repository:
             conn.rollback()
         finally:
             conn.close()
+
+    # ---- Send-Time Optimization ----
+
+    def upsert_subscriber_send_time(
+        self, subscriber_id: int, preferred_hour: int,
+        confidence: float = 0.0, sample_count: int = 0,
+        preferred_day: str = "",
+    ) -> None:
+        """Insert or update the computed optimal send time for a subscriber."""
+        conn = self._conn()
+        conn.execute(
+            """INSERT INTO subscriber_send_times
+               (subscriber_id, preferred_hour, preferred_day, confidence, sample_count, updated_at)
+               VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+               ON CONFLICT(subscriber_id) DO UPDATE SET
+                   preferred_hour = excluded.preferred_hour,
+                   preferred_day = excluded.preferred_day,
+                   confidence = excluded.confidence,
+                   sample_count = excluded.sample_count,
+                   updated_at = CURRENT_TIMESTAMP""",
+            (subscriber_id, preferred_hour, preferred_day, confidence, sample_count),
+        )
+        conn.commit()
+        conn.close()
+
+    def get_subscriber_send_times(self, limit: int = 50) -> list[dict]:
+        """Return send-time records joined with subscriber email, ordered by confidence."""
+        conn = self._conn()
+        rows = conn.execute(
+            """SELECT sst.*, s.email, s.first_name
+               FROM subscriber_send_times sst
+               JOIN subscribers s ON s.id = sst.subscriber_id
+               ORDER BY sst.confidence DESC, sst.sample_count DESC
+               LIMIT ?""",
+            (limit,),
+        ).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    def get_send_time_stats(self) -> list[dict]:
+        """Aggregate send-time stats: subscriber count and avg confidence per hour."""
+        conn = self._conn()
+        rows = conn.execute(
+            """SELECT preferred_hour,
+                      COUNT(*) as subscriber_count,
+                      ROUND(AVG(confidence), 2) as avg_confidence
+               FROM subscriber_send_times
+               GROUP BY preferred_hour
+               ORDER BY preferred_hour"""
+        ).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    def get_open_events_for_subscriber(self, subscriber_id: int) -> list[dict]:
+        """Return all open events for a subscriber from email_tracking_events."""
+        conn = self._conn()
+        rows = conn.execute(
+            """SELECT * FROM email_tracking_events
+               WHERE subscriber_id = ? AND event_type = 'open'
+               ORDER BY created_at DESC""",
+            (subscriber_id,),
+        ).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    def get_all_subscribers_with_opens(self) -> list[dict]:
+        """Return distinct subscriber IDs that have at least one open event."""
+        conn = self._conn()
+        rows = conn.execute(
+            """SELECT DISTINCT subscriber_id
+               FROM email_tracking_events
+               WHERE event_type = 'open' AND subscriber_id IS NOT NULL"""
+        ).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    # ---- Resend Campaigns (non-opener retargeting) ----
+
+    def create_resend_campaign(
+        self,
+        issue_id: int,
+        original_subject: str,
+        resend_subject: str,
+        delay_hours: int = 48,
+    ) -> int:
+        """Create a resend campaign targeting non-openers of an issue."""
+        conn = self._conn()
+        cur = conn.execute(
+            """INSERT INTO resend_campaigns
+               (issue_id, original_subject, resend_subject, delay_hours)
+               VALUES (?, ?, ?, ?)""",
+            (issue_id, original_subject, resend_subject, delay_hours),
+        )
+        conn.commit()
+        row_id = cur.lastrowid
+        conn.close()
+        return row_id
+
+    def get_resend_campaigns(self, limit: int = 20) -> list[dict]:
+        """Return recent resend campaigns with issue details."""
+        conn = self._conn()
+        rows = conn.execute(
+            """SELECT rc.*, i.issue_number, i.title as issue_title,
+                      i.edition_slug
+               FROM resend_campaigns rc
+               JOIN issues i ON rc.issue_id = i.id
+               ORDER BY rc.created_at DESC LIMIT ?""",
+            (limit,),
+        ).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    def get_resend_campaign(self, campaign_id: int) -> Optional[dict]:
+        """Return a single resend campaign by id."""
+        conn = self._conn()
+        row = conn.execute(
+            "SELECT * FROM resend_campaigns WHERE id = ?", (campaign_id,)
+        ).fetchone()
+        conn.close()
+        return dict(row) if row else None
+
+    def get_non_openers(self, issue_id: int) -> list[dict]:
+        """Return active subscribers who were sent an issue but have no
+        'open' event in email_tracking_events.
+
+        This relies on engagement_metrics.sends being > 0 (i.e. the issue
+        was actually delivered) and cross-references email_tracking_events.
+        Subscribers who received the issue are approximated as all active
+        subscribers at the time — a future enhancement could track per-
+        subscriber sends explicitly.
+        """
+        conn = self._conn()
+        rows = conn.execute(
+            """SELECT s.id, s.email, s.first_name
+               FROM subscribers s
+               WHERE s.status = 'active'
+                 AND s.id NOT IN (
+                     SELECT DISTINCT ete.subscriber_id
+                     FROM email_tracking_events ete
+                     WHERE ete.issue_id = ?
+                       AND ete.event_type = 'open'
+                       AND ete.subscriber_id IS NOT NULL
+                 )
+               ORDER BY s.email""",
+            (issue_id,),
+        ).fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
+    def update_resend_campaign(self, campaign_id: int, **fields) -> None:
+        """Update fields on a resend campaign (whitelist-validated)."""
+        if not fields:
+            return
+        self._validate_columns("resend_campaigns", fields)
+        sets = ", ".join(f"{k} = ?" for k in fields)
+        vals = list(fields.values()) + [campaign_id]
+        conn = self._conn()
+        conn.execute(f"UPDATE resend_campaigns SET {sets} WHERE id = ?", vals)
+        conn.commit()
+        conn.close()
+
+    # ------------------------------------------------------------------
+    # Scene Graph — entity knowledge base
+    # ------------------------------------------------------------------
+
+    def upsert_scene_entity(
+        self,
+        name: str,
+        entity_type: str,
+        slug: str,
+        bio: str = "",
+        metadata_json: str = "{}",
+        issue_id: int | None = None,
+    ) -> int | None:
+        """Insert or update a scene entity. Returns the entity id."""
+        conn = self._conn()
+        try:
+            # Check if entity already exists
+            row = conn.execute(
+                "SELECT id, mention_count FROM scene_entities WHERE slug = ? AND entity_type = ?",
+                (slug, entity_type),
+            ).fetchone()
+            if row:
+                eid = row["id"] if isinstance(row, dict) else row[0]
+                mc = (row["mention_count"] if isinstance(row, dict) else row[1]) or 0
+                update_sql = (
+                    "UPDATE scene_entities SET mention_count = ?, "
+                    "last_seen_issue_id = COALESCE(?, last_seen_issue_id), "
+                    "updated_at = CURRENT_TIMESTAMP WHERE id = ?"
+                )
+                conn.execute(update_sql, (mc + 1, issue_id, eid))
+                conn.commit()
+                conn.close()
+                return eid
+            else:
+                cur = conn.execute(
+                    """INSERT INTO scene_entities
+                       (name, entity_type, slug, bio, metadata_json,
+                        mention_count, first_seen_issue_id, last_seen_issue_id)
+                       VALUES (?, ?, ?, ?, ?, 1, ?, ?)""",
+                    (name, entity_type, slug, bio, metadata_json, issue_id, issue_id),
+                )
+                conn.commit()
+                eid = cur.lastrowid
+                conn.close()
+                return eid
+        except Exception:
+            logger.exception("Failed to upsert scene entity %s", name)
+            conn.close()
+            return None
+
+    def upsert_scene_connection(
+        self,
+        source_id: int,
+        target_id: int,
+        relationship: str,
+        issue_id: int | None = None,
+    ) -> int | None:
+        """Insert or strengthen a scene connection. Returns connection id."""
+        conn = self._conn()
+        try:
+            row = conn.execute(
+                """SELECT id, strength FROM scene_connections
+                   WHERE source_entity_id = ? AND target_entity_id = ?
+                   AND relationship = ?""",
+                (source_id, target_id, relationship),
+            ).fetchone()
+            if row:
+                cid = row["id"] if isinstance(row, dict) else row[0]
+                strength = (row["strength"] if isinstance(row, dict) else row[1]) or 1
+                conn.execute(
+                    "UPDATE scene_connections SET strength = ? WHERE id = ?",
+                    (strength + 1, cid),
+                )
+                conn.commit()
+                conn.close()
+                return cid
+            else:
+                cur = conn.execute(
+                    """INSERT INTO scene_connections
+                       (source_entity_id, target_entity_id, relationship,
+                        strength, first_seen_issue_id)
+                       VALUES (?, ?, ?, 1, ?)""",
+                    (source_id, target_id, relationship, issue_id),
+                )
+                conn.commit()
+                cid = cur.lastrowid
+                conn.close()
+                return cid
+        except Exception:
+            logger.exception("Failed to upsert scene connection %d->%d", source_id, target_id)
+            conn.close()
+            return None
+
+    def add_entity_mention(
+        self,
+        entity_id: int,
+        issue_id: int,
+        section_slug: str = "",
+        context_snippet: str = "",
+    ) -> int | None:
+        """Record a mention of an entity in a specific issue/section."""
+        conn = self._conn()
+        try:
+            cur = conn.execute(
+                """INSERT INTO scene_entity_mentions
+                   (entity_id, issue_id, section_slug, context_snippet)
+                   VALUES (?, ?, ?, ?)""",
+                (entity_id, issue_id, section_slug, context_snippet),
+            )
+            conn.commit()
+            mid = cur.lastrowid
+            conn.close()
+            return mid
+        except Exception:
+            logger.exception("Failed to add entity mention")
+            conn.close()
+            return None
+
+    def search_scene_entities(
+        self, query: str, entity_type: str | None = None, limit: int = 20
+    ) -> list[dict]:
+        """Search scene entities by name (LIKE match)."""
+        conn = self._conn()
+        sql = "SELECT * FROM scene_entities WHERE name LIKE ?"
+        params: list = [f"%{query}%"]
+        if entity_type:
+            sql += " AND entity_type = ?"
+            params.append(entity_type)
+        sql += " ORDER BY mention_count DESC LIMIT ?"
+        params.append(limit)
+        try:
+            rows = conn.execute(sql, params).fetchall()
+            conn.close()
+            return [dict(r) for r in rows]
+        except Exception:
+            conn.close()
+            return []
+
+    def get_scene_entity(self, entity_id: int) -> dict | None:
+        """Get a scene entity with its connections and recent mentions."""
+        conn = self._conn()
+        try:
+            row = conn.execute(
+                "SELECT * FROM scene_entities WHERE id = ?", (entity_id,)
+            ).fetchone()
+            if not row:
+                conn.close()
+                return None
+            entity = dict(row)
+
+            # Get connections (both directions)
+            outbound = conn.execute(
+                """SELECT sc.*, se.name AS target_name, se.entity_type AS target_type,
+                          se.slug AS target_slug
+                   FROM scene_connections sc
+                   JOIN scene_entities se ON se.id = sc.target_entity_id
+                   WHERE sc.source_entity_id = ?
+                   ORDER BY sc.strength DESC""",
+                (entity_id,),
+            ).fetchall()
+            inbound = conn.execute(
+                """SELECT sc.*, se.name AS source_name, se.entity_type AS source_type,
+                          se.slug AS source_slug
+                   FROM scene_connections sc
+                   JOIN scene_entities se ON se.id = sc.source_entity_id
+                   WHERE sc.target_entity_id = ?
+                   ORDER BY sc.strength DESC""",
+                (entity_id,),
+            ).fetchall()
+            entity["connections_out"] = [dict(r) for r in outbound]
+            entity["connections_in"] = [dict(r) for r in inbound]
+
+            # Recent mentions
+            mentions = conn.execute(
+                """SELECT sem.*, i.issue_number, i.title AS issue_title
+                   FROM scene_entity_mentions sem
+                   LEFT JOIN issues i ON i.id = sem.issue_id
+                   WHERE sem.entity_id = ?
+                   ORDER BY sem.created_at DESC LIMIT 20""",
+                (entity_id,),
+            ).fetchall()
+            entity["mentions"] = [dict(r) for r in mentions]
+
+            conn.close()
+            return entity
+        except Exception:
+            logger.exception("Failed to get scene entity %d", entity_id)
+            conn.close()
+            return None
+
+    def get_scene_entity_by_slug(self, slug: str, entity_type: str) -> dict | None:
+        """Get a scene entity by its slug and type."""
+        conn = self._conn()
+        try:
+            row = conn.execute(
+                "SELECT * FROM scene_entities WHERE slug = ? AND entity_type = ?",
+                (slug, entity_type),
+            ).fetchone()
+            conn.close()
+            if not row:
+                return None
+            return dict(row)
+        except Exception:
+            conn.close()
+            return None
+
+    def get_scene_entity_by_slug_any(self, slug: str) -> dict | None:
+        """Get a scene entity by slug (any type, first match by mention_count)."""
+        conn = self._conn()
+        try:
+            row = conn.execute(
+                "SELECT * FROM scene_entities WHERE slug = ? ORDER BY mention_count DESC LIMIT 1",
+                (slug,),
+            ).fetchone()
+            conn.close()
+            if not row:
+                return None
+            return dict(row)
+        except Exception:
+            conn.close()
+            return None
+
+    def get_scene_graph_data(
+        self, entity_id: int | None = None, limit: int = 100
+    ) -> dict:
+        """Return graph data: {nodes: [...], edges: [...]}.
+
+        If entity_id is provided, returns the ego-network for that entity.
+        Otherwise returns the top entities by mention count.
+        """
+        conn = self._conn()
+        try:
+            if entity_id:
+                # Ego-network: entity + all connected entities
+                node_ids = {entity_id}
+                edges_raw = conn.execute(
+                    """SELECT sc.*, se1.name AS source_name, se1.entity_type AS source_type,
+                              se1.slug AS source_slug,
+                              se2.name AS target_name, se2.entity_type AS target_type,
+                              se2.slug AS target_slug
+                       FROM scene_connections sc
+                       JOIN scene_entities se1 ON se1.id = sc.source_entity_id
+                       JOIN scene_entities se2 ON se2.id = sc.target_entity_id
+                       WHERE sc.source_entity_id = ? OR sc.target_entity_id = ?
+                       ORDER BY sc.strength DESC LIMIT ?""",
+                    (entity_id, entity_id, limit),
+                ).fetchall()
+                edges = [dict(r) for r in edges_raw]
+                for e in edges:
+                    node_ids.add(e.get("source_entity_id", 0))
+                    node_ids.add(e.get("target_entity_id", 0))
+
+                # Fetch all those nodes
+                placeholders = ",".join("?" for _ in node_ids)
+                nodes_raw = conn.execute(
+                    f"SELECT * FROM scene_entities WHERE id IN ({placeholders})",
+                    list(node_ids),
+                ).fetchall()
+                nodes = [dict(r) for r in nodes_raw]
+            else:
+                # Top entities by mention count
+                nodes_raw = conn.execute(
+                    "SELECT * FROM scene_entities ORDER BY mention_count DESC LIMIT ?",
+                    (limit,),
+                ).fetchall()
+                nodes = [dict(r) for r in nodes_raw]
+                node_ids = {n["id"] for n in nodes}
+
+                if node_ids:
+                    placeholders = ",".join("?" for _ in node_ids)
+                    edges_raw = conn.execute(
+                        f"""SELECT sc.*, se1.name AS source_name, se1.entity_type AS source_type,
+                                  se1.slug AS source_slug,
+                                  se2.name AS target_name, se2.entity_type AS target_type,
+                                  se2.slug AS target_slug
+                           FROM scene_connections sc
+                           JOIN scene_entities se1 ON se1.id = sc.source_entity_id
+                           JOIN scene_entities se2 ON se2.id = sc.target_entity_id
+                           WHERE sc.source_entity_id IN ({placeholders})
+                           AND sc.target_entity_id IN ({placeholders})
+                           ORDER BY sc.strength DESC LIMIT ?""",
+                        list(node_ids) + list(node_ids) + [limit * 3],
+                    ).fetchall()
+                    edges = [dict(r) for r in edges_raw]
+                else:
+                    edges = []
+
+            conn.close()
+            return {"nodes": nodes, "edges": edges}
+        except Exception:
+            logger.exception("Failed to get scene graph data")
+            conn.close()
+            return {"nodes": [], "edges": []}
+
+    def get_scene_stats(self) -> dict:
+        """Return scene graph statistics."""
+        conn = self._conn()
+        try:
+            # Entities by type
+            rows = conn.execute(
+                "SELECT entity_type, COUNT(*) as cnt FROM scene_entities GROUP BY entity_type"
+            ).fetchall()
+            by_type = {r["entity_type"]: r["cnt"] for r in [dict(r) for r in rows]}
+
+            # Total connections
+            total_conns = conn.execute(
+                "SELECT COUNT(*) as cnt FROM scene_connections"
+            ).fetchone()
+            total_conns = (total_conns["cnt"] if isinstance(total_conns, dict) else total_conns[0]) if total_conns else 0
+
+            # Total entities
+            total_entities = sum(by_type.values())
+
+            # Most connected entities (by mention count)
+            top_raw = conn.execute(
+                """SELECT * FROM scene_entities
+                   ORDER BY mention_count DESC LIMIT 10"""
+            ).fetchall()
+            top_entities = [dict(r) for r in top_raw]
+
+            # Total mentions
+            total_mentions = conn.execute(
+                "SELECT COUNT(*) as cnt FROM scene_entity_mentions"
+            ).fetchone()
+            total_mentions = (total_mentions["cnt"] if isinstance(total_mentions, dict) else total_mentions[0]) if total_mentions else 0
+
+            # Issues indexed
+            issues_indexed = conn.execute(
+                "SELECT COUNT(DISTINCT issue_id) as cnt FROM scene_entity_mentions"
+            ).fetchone()
+            issues_indexed = (issues_indexed["cnt"] if isinstance(issues_indexed, dict) else issues_indexed[0]) if issues_indexed else 0
+
+            conn.close()
+            return {
+                "total_entities": total_entities,
+                "by_type": by_type,
+                "total_connections": total_conns,
+                "total_mentions": total_mentions,
+                "issues_indexed": issues_indexed,
+                "top_entities": top_entities,
+            }
+        except Exception:
+            logger.exception("Failed to get scene stats")
+            conn.close()
+            return {
+                "total_entities": 0,
+                "by_type": {},
+                "total_connections": 0,
+                "total_mentions": 0,
+                "issues_indexed": 0,
+                "top_entities": [],
+            }

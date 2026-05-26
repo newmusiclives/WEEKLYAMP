@@ -47,6 +47,30 @@
     </div>
 </div>
 
+<!-- Pre-header Text -->
+<div class="card">
+    <div class="card-header">
+        <span class="card-title">Pre-header Text</span>
+    </div>
+    <p style="font-size:13px;color:var(--text-muted);margin:0 0 8px">The snippet shown in email inbox previews (Gmail, Outlook, etc.) next to the subject line. Keep it under 100 characters for best results.</p>
+    <input type="text" id="preheader-input" name="preheader_text" maxlength="150"
+           placeholder="e.g. This week: 3 emerging artists you need to hear + industry shake-ups"
+           value="{{ assembled.preheader_text if assembled and assembled.preheader_text else '' }}"
+           style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px;background:var(--bg-card);color:var(--text)">
+    <div style="font-size:12px;color:var(--text-muted);margin-top:4px">
+        <span id="preheader-count">0</span>/150 characters
+    </div>
+    <script>
+        (function() {
+            var inp = document.getElementById('preheader-input');
+            var cnt = document.getElementById('preheader-count');
+            function update() { cnt.textContent = inp.value.length; }
+            inp.addEventListener('input', update);
+            update();
+        })();
+    </script>
+</div>
+
 <!-- Actions -->
 <div class="card">
     <div class="card-header">
@@ -57,6 +81,7 @@
         <button class="btn btn-primary"
                 hx-post="/publish/assemble"
                 hx-target="#publish-alerts"
+                hx-include="#preheader-input"
                 hx-indicator="#assemble-spinner">
             <span class="spinner htmx-indicator" id="assemble-spinner"></span>
             Assemble Newsletter

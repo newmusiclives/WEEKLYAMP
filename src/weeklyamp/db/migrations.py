@@ -1734,6 +1734,106 @@ CREATE TABLE IF NOT EXISTS feature_flags (
 
 INSERT OR IGNORE INTO schema_version (version) VALUES (45);
 """,
+    48: """
+-- v48: Add preheader_text to assembled_issues for email inbox preview snippets
+ALTER TABLE assembled_issues ADD COLUMN preheader_text TEXT DEFAULT '';
+
+INSERT OR IGNORE INTO schema_version (version) VALUES (48);
+""",
+    49: """
+-- v49: Send-time optimization — computed preferred hours per subscriber
+CREATE TABLE IF NOT EXISTS subscriber_send_times (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    subscriber_id INTEGER NOT NULL REFERENCES subscribers(id),
+    preferred_hour INTEGER NOT NULL DEFAULT 9,
+    preferred_day TEXT NOT NULL DEFAULT '',
+    confidence REAL NOT NULL DEFAULT 0.0,
+    sample_count INTEGER NOT NULL DEFAULT 0,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(subscriber_id)
+);
+CREATE INDEX IF NOT EXISTS idx_send_times_subscriber ON subscriber_send_times(subscriber_id);
+CREATE INDEX IF NOT EXISTS idx_send_times_hour ON subscriber_send_times(preferred_hour);
+
+INSERT OR IGNORE INTO schema_version (version) VALUES (49);
+""",
+    50: """
+-- v50: Living Editions — web-hosted versions of published issues that
+-- can be updated after sending. The emailed version is a snapshot;
+-- the web version stays current.
+ALTER TABLE assembled_issues ADD COLUMN web_html TEXT NOT NULL DEFAULT '';
+ALTER TABLE assembled_issues ADD COLUMN last_web_update TEXT;
+ALTER TABLE assembled_issues ADD COLUMN web_updates_count INTEGER NOT NULL DEFAULT 0;
+
+INSERT OR IGNORE INTO schema_version (version) VALUES (50);
+""",
+    51: """
+-- v51: Resend-to-non-openers campaign management
+CREATE TABLE IF NOT EXISTS resend_campaigns (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    issue_id INTEGER NOT NULL REFERENCES issues(id),
+    original_subject TEXT NOT NULL DEFAULT '',
+    resend_subject TEXT NOT NULL DEFAULT '',
+    delay_hours INTEGER NOT NULL DEFAULT 48,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','sent','cancelled')),
+    target_count INTEGER NOT NULL DEFAULT 0,
+    sent_count INTEGER NOT NULL DEFAULT 0,
+    scheduled_at TEXT,
+    sent_at TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_resend_campaigns_issue ON resend_campaigns(issue_id);
+CREATE INDEX IF NOT EXISTS idx_resend_campaigns_status ON resend_campaigns(status);
+
+INSERT OR IGNORE INTO schema_version (version) VALUES (51);
+""",
+
+    52: """
+-- v52: Scene Graph — music industry knowledge base
+CREATE TABLE IF NOT EXISTS scene_entities (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    entity_type TEXT NOT NULL DEFAULT 'artist',
+    slug TEXT NOT NULL DEFAULT '',
+    bio TEXT NOT NULL DEFAULT '',
+    metadata_json TEXT NOT NULL DEFAULT '{}',
+    mention_count INTEGER NOT NULL DEFAULT 0,
+    first_seen_issue_id INTEGER,
+    last_seen_issue_id INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(slug, entity_type)
+);
+CREATE INDEX IF NOT EXISTS idx_scene_entities_type ON scene_entities(entity_type);
+CREATE INDEX IF NOT EXISTS idx_scene_entities_slug ON scene_entities(slug);
+CREATE INDEX IF NOT EXISTS idx_scene_entities_mentions ON scene_entities(mention_count DESC);
+
+CREATE TABLE IF NOT EXISTS scene_connections (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    source_entity_id INTEGER NOT NULL,
+    target_entity_id INTEGER NOT NULL,
+    relationship TEXT NOT NULL DEFAULT 'mentioned_with',
+    strength INTEGER NOT NULL DEFAULT 1,
+    first_seen_issue_id INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(source_entity_id, target_entity_id, relationship)
+);
+CREATE INDEX IF NOT EXISTS idx_scene_conn_source ON scene_connections(source_entity_id);
+CREATE INDEX IF NOT EXISTS idx_scene_conn_target ON scene_connections(target_entity_id);
+
+CREATE TABLE IF NOT EXISTS scene_entity_mentions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entity_id INTEGER NOT NULL,
+    issue_id INTEGER NOT NULL,
+    section_slug TEXT NOT NULL DEFAULT '',
+    context_snippet TEXT NOT NULL DEFAULT '',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_scene_mentions_entity ON scene_entity_mentions(entity_id);
+CREATE INDEX IF NOT EXISTS idx_scene_mentions_issue ON scene_entity_mentions(issue_id);
+
+INSERT OR IGNORE INTO schema_version (version) VALUES (52);
+""",
 }
 
 
@@ -1892,6 +1992,40 @@ CREATE TABLE IF NOT EXISTS edition_sponsors (
 CREATE INDEX IF NOT EXISTS idx_edition_sponsors_slug ON edition_sponsors(edition_slug);
 
 INSERT INTO schema_version (version) VALUES (47) ON CONFLICT DO NOTHING;
+"""
+
+# v48 (PG-specific): Add preheader_text to assembled_issues for email
+# inbox preview snippets. Uses IF NOT EXISTS for idempotency.
+PG_MIGRATIONS[48] = """
+ALTER TABLE assembled_issues ADD COLUMN IF NOT EXISTS preheader_text TEXT DEFAULT '';
+INSERT INTO schema_version (version) VALUES (48) ON CONFLICT DO NOTHING;
+"""
+
+PG_MIGRATIONS[49] = """
+-- v49: Send-time optimization — computed preferred hours per subscriber
+CREATE TABLE IF NOT EXISTS subscriber_send_times (
+    id SERIAL PRIMARY KEY,
+    subscriber_id INTEGER NOT NULL REFERENCES subscribers(id),
+    preferred_hour INTEGER NOT NULL DEFAULT 9,
+    preferred_day TEXT NOT NULL DEFAULT '',
+    confidence REAL NOT NULL DEFAULT 0.0,
+    sample_count INTEGER NOT NULL DEFAULT 0,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(subscriber_id)
+);
+CREATE INDEX IF NOT EXISTS idx_send_times_subscriber ON subscriber_send_times(subscriber_id);
+CREATE INDEX IF NOT EXISTS idx_send_times_hour ON subscriber_send_times(preferred_hour);
+
+INSERT INTO schema_version (version) VALUES (49) ON CONFLICT DO NOTHING;
+"""
+
+PG_MIGRATIONS[50] = """
+-- v50: Living Editions — web-hosted versions of published issues
+ALTER TABLE assembled_issues ADD COLUMN IF NOT EXISTS web_html TEXT NOT NULL DEFAULT '';
+ALTER TABLE assembled_issues ADD COLUMN IF NOT EXISTS last_web_update TEXT;
+ALTER TABLE assembled_issues ADD COLUMN IF NOT EXISTS web_updates_count INTEGER NOT NULL DEFAULT 0;
+
+INSERT INTO schema_version (version) VALUES (50) ON CONFLICT DO NOTHING;
 """
 
 

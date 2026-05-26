@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+{% block title %}Resend to Non-Openers — TrueFans DISPATCH{% endblock %}
+{% block nav_resend %}active{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Resend to Non-Openers</h2>
+    <p class="subtitle">Boost open rates by resending issues with a different subject line to subscribers who didn't open the first send</p>
+</div>
+
+<!-- Summary cards -->
+<div style="display:flex;gap:1.5rem;margin-bottom:2rem;flex-wrap:wrap">
+    <div class="card" style="flex:1;min-width:200px;text-align:center">
+        <h3 style="margin:0;font-size:2rem">{{ campaigns | length }}</h3>
+        <p class="text-muted" style="margin:0.25rem 0 0">Total Campaigns</p>
+    </div>
+    <div class="card" style="flex:1;min-width:200px;text-align:center">
+        <h3 style="margin:0;font-size:2rem">{{ campaigns | selectattr('status', 'equalto', 'pending') | list | length }}</h3>
+        <p class="text-muted" style="margin:0.25rem 0 0">Pending</p>
+    </div>
+    <div class="card" style="flex:1;min-width:200px;text-align:center">
+        <h3 style="margin:0;font-size:2rem">{{ campaigns | selectattr('status', 'equalto', 'sent') | list | length }}</h3>
+        <p class="text-muted" style="margin:0.25rem 0 0">Sent</p>
+    </div>
+</div>
+
+<!-- Create new resend campaign -->
+<div class="card" style="margin-bottom:2rem">
+    <h3>Create Resend Campaign</h3>
+    <p class="text-muted" style="margin:0 0 1rem">Select a published issue and enter an alternate subject line. The resend will target subscribers who didn't open the original.</p>
+    <form hx-post="/admin/resend/create" hx-target="#create-result" hx-swap="innerHTML">
+        <div style="display:flex;flex-direction:column;gap:0.75rem;max-width:600px">
+            <div>
+                <label style="display:block;font-weight:600;margin-bottom:0.25rem">Published Issue</label>
+                <select name="issue_id" required style="width:100%;padding:0.5rem;border:1px solid #d1d5db;border-radius:6px;font-size:0.95rem" onchange="updateOriginalSubject(this)">
+                    <option value="">-- Select an issue --</option>
+                    {% for issue in issues %}
+                    <option value="{{ issue.id }}" data-title="{{ issue.title | e }}">
+                        #{{ issue.issue_number }} — {{ issue.title or 'Untitled' }}
+                        {% if issue.engagement %}
+                            ({{ issue.engagement.open_rate | round(1) }}% open rate)
+                        {% endif %}
+                        — {{ issue.non_opener_count }} non-openers
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label style="display:block;font-weight:600;margin-bottom:0.25rem">Original Subject</label>
+                <input type="text" name="original_subject" id="original-subject" placeholder="Auto-filled from issue title" style="width:100%;padding:0.5rem;border:1px solid #d1d5db;border-radius:6px;font-size:0.95rem">
+            </div>
+            <div>
+                <label style="display:block;font-weight:600;margin-bottom:0.25rem">New Subject Line</label>
+                <input type="text" name="resend_subject" required placeholder="Try a different angle, e.g. 'In case you missed it: ...'" style="width:100%;padding:0.5rem;border:1px solid #d1d5db;border-radius:6px;font-size:0.95rem">
+                <p class="text-muted" style="font-size:0.8rem;margin:0.25rem 0 0">Tip: try adding urgency, curiosity, or personalization</p>
+            </div>
+            <div>
+                <label style="display:block;font-weight:600;margin-bottom:0.25rem">Delay (hours after original send)</label>
+                <input type="number" name="delay_hours" value="48" min="1" max="168" style="width:120px;padding:0.5rem;border:1px solid #d1d5db;border-radius:6px;font-size:0.95rem">
+            </div>
+            <div>
+                <button type="submit" class="btn btn-primary">Create Resend Campaign</button>
+            </div>
+        </div>
+    </form>
+    <div id="create-result" style="margin-top:0.75rem"></div>
+</div>
+
+<!-- Existing campaigns -->
+<div class="card" style="margin-bottom:2rem">
+    <h3>Resend Campaigns</h3>
+    {% if campaigns %}
+    <div style="overflow-x:auto">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Issue</th>
+                    <th>Original Subject</th>
+                    <th>Resend Subject</th>
+                    <th>Delay</th>
+                    <th>Target</th>
+                    <th>Sent</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for c in campaigns %}
+                <tr>
+                    <td>#{{ c.issue_number }}</td>
+                    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ c.original_subject }}">{{ c.original_subject or '—' }}</td>
+                    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ c.resend_subject }}">{{ c.resend_subject }}</td>
+                    <td>{{ c.delay_hours }}h</td>
+                    <td>{{ c.target_count }}</td>
+                    <td>{{ c.sent_count }}</td>
+                    <td>
+                        {% if c.status == 'pending' %}
+                            <span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:4px;font-size:0.8rem;font-weight:600">Pending</span>
+                        {% elif c.status == 'sent' %}
+                            <span style="background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:4px;font-size:0.8rem;font-weight:600">Sent</span>
+                        {% elif c.status == 'cancelled' %}
+                            <span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:4px;font-size:0.8rem;font-weight:600">Cancelled</span>
+                        {% endif %}
+                    </td>
+                    <td style="white-space:nowrap">{{ c.created_at[:10] if c.created_at else '—' }}</td>
+                    <td>
+                        {% if c.status == 'pending' %}
+                            <form hx-post="/admin/resend/cancel/{{ c.id }}" hx-target="#campaign-action-{{ c.id }}" hx-swap="innerHTML" hx-confirm="Cancel this resend campaign?" style="display:inline">
+                                <button type="submit" class="btn btn-danger" style="font-size:0.8rem;padding:0.25rem 0.5rem">Cancel</button>
+                            </form>
+                            <span id="campaign-action-{{ c.id }}"></span>
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted">No resend campaigns yet. Create one above to boost your open rates.</p>
+    {% endif %}
+</div>
+
+<!-- Published issues with open rates -->
+<div class="card">
+    <h3>Published Issues &amp; Open Rates</h3>
+    {% if issues %}
+    <div style="overflow-x:auto">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Issue</th>
+                    <th>Title</th>
+                    <th>Edition</th>
+                    <th>Sends</th>
+                    <th>Opens</th>
+                    <th>Open Rate</th>
+                    <th>Non-Openers</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for issue in issues %}
+                <tr>
+                    <td>#{{ issue.issue_number }}</td>
+                    <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ issue.title or 'Untitled' }}</td>
+                    <td>{{ issue.edition_slug or '—' }}</td>
+                    {% if issue.engagement %}
+                        <td>{{ issue.engagement.sends }}</td>
+                        <td>{{ issue.engagement.opens }}</td>
+                        <td>{{ issue.engagement.open_rate | round(1) }}%</td>
+                    {% else %}
+                        <td colspan="3" class="text-muted">No tracking data</td>
+                    {% endif %}
+                    <td>
+                        <strong>{{ issue.non_opener_count }}</strong>
+                    </td>
+                    <td>
+                        <button class="btn" style="font-size:0.8rem;padding:0.25rem 0.5rem"
+                                hx-get="/admin/resend/non-openers/{{ issue.id }}"
+                                hx-target="#non-openers-{{ issue.id }}"
+                                hx-swap="innerHTML">
+                            View
+                        </button>
+                    </td>
+                </tr>
+                <tr id="non-openers-row-{{ issue.id }}" style="display:none">
+                    <td colspan="8" id="non-openers-{{ issue.id }}" style="padding:1rem;background:#f9fafb"></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted">No published issues found.</p>
+    {% endif %}
+</div>
+
+<script>
+function updateOriginalSubject(select) {
+    var opt = select.options[select.selectedIndex];
+    var title = opt.getAttribute('data-title') || '';
+    document.getElementById('original-subject').value = title;
+}
+
+// Show the non-openers detail row when htmx loads content
+document.body.addEventListener('htmx:afterSwap', function(evt) {
+    var target = evt.detail.target;
+    if (target && target.id && target.id.startsWith('non-openers-')) {
+        var issueId = target.id.replace('non-openers-', '');
+        var row = document.getElementById('non-openers-row-' + issueId);
+        if (row) row.style.display = '';
+    }
+});
+</script>
+{% endblock %}

@@ -61,12 +61,14 @@ def render_newsletter(
     ps_closing: str = "",
     edition_slug: str = "",
     issue_date: str = "",
+    preheader_text: str = "",
 ) -> str:
     """Render the full newsletter HTML.
 
     sections: list of {"html": str} dicts in order.
     edition_slug: if provided, uses edition-specific template (fan/artist/industry).
     issue_date: formatted date string for display in the header.
+    preheader_text: hidden snippet for email inbox previews (Gmail, Outlook, etc.).
     """
     env = get_env()
 
@@ -97,6 +99,7 @@ def render_newsletter(
         footer_html=footer_html,
         ps_closing=ps_closing,
         issue_date=issue_date,
+        preheader_text=preheader_text,
     )
 
 

@@ -10,6 +10,7 @@ from email.mime.text import MIMEText
 from typing import Callable, Optional, Tuple
 
 from weeklyamp.core.models import EmailConfig
+from weeklyamp.delivery.css_inliner import inline_css
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +86,9 @@ class SMTPSender:
             logger.warning("Email sending is disabled")
             return False
 
+        # Inline CSS for email client compatibility (Outlook, Gmail, Yahoo)
+        html_body = inline_css(html_body)
+
         msg = self._build_message(to_email, subject, html_body, plain_text, unsubscribe_url)
 
         def _do_send():
@@ -135,6 +139,10 @@ class SMTPSender:
             logger.warning("Email sending is disabled")
             return {"sent": 0, "failed": 0, "errors": ["Email sending is disabled"]}
 
+        # Inline CSS once for the bulk HTML template. Per-recipient
+        # personalized HTML is inlined separately below.
+        html_body = inline_css(html_body)
+
         # Domain warm-up: respect daily limit if enabled
         if self._warmup_config and getattr(self._warmup_config, 'warmup_enabled', False):
             from weeklyamp.delivery.warmup import WarmupManager
@@ -182,7 +190,10 @@ class SMTPSender:
                             try:
                                 p_html, p_plain = personalize(recipient)
                                 if p_html:
-                                    recipient_html = p_html
+                                    p_html = p_html.replace(
+                                        "{{ unsubscribe_url }}", unsub_url or "#"
+                                    )
+                                    recipient_html = inline_css(p_html)
                                 if p_plain:
                                     recipient_plain = p_plain
                             except Exception:

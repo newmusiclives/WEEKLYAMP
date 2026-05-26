@@ -48,7 +48,7 @@ async def publish_page():
 
 
 @router.post("/assemble", response_class=HTMLResponse)
-async def assemble():
+async def assemble(preheader_text: str = Form("")):
     cfg = get_config()
     repo = get_repo()
     issue = repo.get_current_issue()
@@ -56,8 +56,8 @@ async def assemble():
         return render("partials/alert.html", message="No current issue.", level="error")
 
     try:
-        html, plain = assemble_newsletter(repo, issue["id"], cfg)
-        repo.save_assembled(issue["id"], html, plain)
+        html, plain = assemble_newsletter(repo, issue["id"], cfg, preheader_text=preheader_text)
+        repo.save_assembled(issue["id"], html, plain, preheader_text=preheader_text)
         repo.update_issue_status(issue["id"], "assembled")
         return render("partials/assemble_result.html",
             success=True, html_len=len(html), plain_len=len(plain))
@@ -131,13 +131,14 @@ async def push():
     # send_bulk uses the static assembled HTML and skips the per-call
     # work entirely.
     personalizer = None
+    preheader = assembled.get("preheader_text", "") or ""
     if getattr(cfg, "genre_preferences", None) and cfg.genre_preferences.weight_sections_by_genre:
         def _personalize(recipient: dict) -> tuple[str, str]:
             sub_id = recipient.get("id")
             if not sub_id:
                 return "", ""
             try:
-                return assemble_newsletter(repo, issue["id"], cfg, subscriber_id=sub_id)
+                return assemble_newsletter(repo, issue["id"], cfg, subscriber_id=sub_id, preheader_text=preheader)
             except Exception:
                 # Personalizer never raises out of send_bulk — return
                 # empty so the bulk fallback HTML is used.

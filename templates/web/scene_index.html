@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scene Graph — TrueFans DISPATCH</title>
+    <meta name="description" content="Explore the interconnected music industry knowledge base. Search artists, venues, labels, producers, and cities mentioned across DISPATCH newsletter editions.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <style>
+        :root {
+            --bg: #0a0a12;
+            --bg-card: #13131f;
+            --bg-card-hover: #1a1a2a;
+            --border: rgba(255,255,255,0.08);
+            --border-bright: rgba(255,255,255,0.15);
+            --text: #f0f0f5;
+            --text-dim: #9ca3af;
+            --text-muted: #6b7280;
+            --accent: #e8645a;
+            --accent-hover: #f07a70;
+            --gold: #b09a3a;
+            --gold-dim: rgba(176,154,58,0.15);
+            --artist: #e8645a;
+            --venue: #3b82f6;
+            --label: #8b5cf6;
+            --producer: #f59e0b;
+            --city: #10b981;
+            --event: #ec4899;
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.6; }
+
+        nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            padding: 20px 40px;
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(10, 10, 18, 0.8); backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-brand { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; color: var(--text); text-decoration: none; }
+        .nav-brand span { color: var(--accent); }
+        .nav-link {
+            color: var(--text-dim); text-decoration: none; font-size: 14px; font-weight: 500;
+            padding: 8px 20px; border-radius: 8px; border: 1px solid var(--border); transition: all 0.2s;
+        }
+        .nav-link:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+        .nav-link-cta { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .nav-link-cta:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: #fff; }
+
+        .hero {
+            padding: 140px 24px 60px;
+            text-align: center;
+            background: radial-gradient(ellipse at 50% 0%, rgba(232,100,90,0.08) 0%, transparent 60%);
+        }
+        .hero h1 {
+            font-size: 48px; font-weight: 900; letter-spacing: -2px; margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--text), var(--gold));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .hero p { font-size: 18px; color: var(--text-dim); max-width: 600px; margin: 0 auto 32px; }
+
+        .search-box {
+            max-width: 640px; margin: 0 auto 20px; display: flex; gap: 8px;
+        }
+        .search-box input {
+            flex: 1; padding: 14px 20px; border-radius: 12px;
+            background: var(--bg-card); border: 1px solid var(--border);
+            color: var(--text); font-size: 16px; font-family: var(--font);
+            outline: none; transition: border-color 0.2s;
+        }
+        .search-box input:focus { border-color: var(--gold); }
+        .search-box input::placeholder { color: var(--text-muted); }
+        .search-box button {
+            padding: 14px 28px; border-radius: 12px; background: var(--accent);
+            color: #fff; font-size: 15px; font-weight: 700; border: none;
+            cursor: pointer; transition: all 0.2s; font-family: var(--font);
+        }
+        .search-box button:hover { background: var(--accent-hover); transform: translateY(-1px); }
+
+        .filter-row {
+            max-width: 640px; margin: 0 auto 40px;
+            display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+        }
+        .filter-pill {
+            padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600;
+            border: 1px solid var(--border); background: transparent;
+            color: var(--text-dim); text-decoration: none; transition: all 0.2s;
+        }
+        .filter-pill:hover, .filter-pill.active {
+            border-color: var(--gold); color: var(--gold); background: var(--gold-dim);
+        }
+
+        .content { max-width: 960px; margin: 0 auto; padding: 0 24px 80px; }
+
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px; margin-bottom: 48px;
+        }
+        .stat-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 20px; text-align: center;
+        }
+        .stat-number { font-size: 32px; font-weight: 800; letter-spacing: -1px; }
+        .stat-label { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
+        .stat-artist .stat-number { color: var(--artist); }
+        .stat-venue .stat-number { color: var(--venue); }
+        .stat-label-type .stat-number { color: var(--label); }
+        .stat-producer .stat-number { color: var(--producer); }
+        .stat-city .stat-number { color: var(--city); }
+        .stat-connections .stat-number { color: var(--gold); }
+
+        .section-label {
+            font-size: 13px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 1.5px; color: var(--text-dim); margin-bottom: 16px;
+        }
+
+        .entity-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px; margin-bottom: 48px;
+        }
+        .entity-card {
+            display: flex; align-items: center; gap: 14px;
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 16px 20px;
+            text-decoration: none; color: var(--text);
+            transition: all 0.2s;
+        }
+        .entity-card:hover {
+            border-color: var(--border-bright); background: var(--bg-card-hover);
+            transform: translateY(-2px);
+        }
+        .entity-icon {
+            width: 44px; height: 44px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; flex-shrink: 0;
+        }
+        .entity-icon-artist { background: rgba(232,100,90,0.15); }
+        .entity-icon-venue { background: rgba(59,130,246,0.15); }
+        .entity-icon-label { background: rgba(139,92,246,0.15); }
+        .entity-icon-producer { background: rgba(245,158,11,0.15); }
+        .entity-icon-city { background: rgba(16,185,129,0.15); }
+        .entity-icon-event { background: rgba(236,72,153,0.15); }
+        .entity-name { font-weight: 700; font-size: 15px; }
+        .entity-meta { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+        .entity-type-badge {
+            font-size: 10px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.5px; padding: 2px 8px; border-radius: 6px;
+        }
+        .badge-artist { color: var(--artist); background: rgba(232,100,90,0.12); }
+        .badge-venue { color: var(--venue); background: rgba(59,130,246,0.12); }
+        .badge-label { color: var(--label); background: rgba(139,92,246,0.12); }
+        .badge-producer { color: var(--producer); background: rgba(245,158,11,0.12); }
+        .badge-city { color: var(--city); background: rgba(16,185,129,0.12); }
+        .badge-event { color: var(--event); background: rgba(236,72,153,0.12); }
+        .mention-count {
+            font-size: 11px; color: var(--text-muted); margin-left: auto; white-space: nowrap;
+        }
+
+        .empty-state {
+            text-align: center; padding: 60px 20px; color: var(--text-dim);
+        }
+        .empty-state h3 { font-size: 20px; margin-bottom: 8px; color: var(--text); }
+
+        .cta-banner {
+            background: linear-gradient(135deg, var(--bg-card), rgba(232,100,90,0.05));
+            border: 1px solid var(--border);
+            border-radius: 16px; padding: 40px; text-align: center;
+            margin-top: 48px;
+        }
+        .cta-banner h3 { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+        .cta-banner p { color: var(--text-dim); font-size: 15px; margin-bottom: 20px; }
+        .cta-btn {
+            display: inline-block; padding: 14px 32px; border-radius: 10px;
+            background: var(--accent); color: #fff; font-size: 15px; font-weight: 700;
+            text-decoration: none; transition: all 0.2s;
+        }
+        .cta-btn:hover { background: var(--accent-hover); transform: translateY(-2px); }
+
+        footer {
+            padding: 40px 24px; text-align: center;
+            border-top: 1px solid var(--border); color: var(--text-dim); font-size: 14px;
+        }
+        .footer-links { display: flex; gap: 24px; justify-content: center; margin-bottom: 16px; }
+        .footer-links a { color: var(--text-dim); text-decoration: none; font-size: 13px; }
+        .footer-links a:hover { color: var(--text); }
+
+        @media (max-width: 768px) {
+            nav { padding: 16px 20px; }
+            .hero h1 { font-size: 32px; }
+            .search-box { flex-direction: column; }
+            .stats-grid { grid-template-columns: repeat(3, 1fr); }
+            .entity-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    {% include "partials/public_nav.html" %}
+
+    <div class="hero">
+        <h1>Scene Graph</h1>
+        <p>Explore the music industry knowledge base built from every DISPATCH edition. Search artists, venues, labels, producers, and cities.</p>
+
+        <form class="search-box" method="get" action="/scene/search">
+            <input type="text" name="q" value="{{ query }}" placeholder="Search artists, venues, labels..." autofocus>
+            <button type="submit">Search</button>
+        </form>
+
+        <div class="filter-row">
+            <a href="/scene{% if query %}?q={{ query }}{% endif %}" class="filter-pill {% if not entity_type %}active{% endif %}">All</a>
+            {% for etype, elabel in type_labels.items() %}
+            <a href="/scene/search?q={{ query }}&type={{ etype }}" class="filter-pill {% if entity_type == etype %}active{% endif %}">{{ elabel }}</a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="content">
+        {% if query and results %}
+        <div class="section-label">{{ results|length }} result{% if results|length != 1 %}s{% endif %} for "{{ query }}"</div>
+        <div class="entity-grid">
+            {% for e in results %}
+            <a href="/scene/entity/{{ e.slug }}" class="entity-card">
+                <div class="entity-icon entity-icon-{{ e.entity_type }}">{{ type_icons.get(e.entity_type, '&#9733;') | safe }}</div>
+                <div>
+                    <div class="entity-name">{{ e.name }}</div>
+                    <div class="entity-meta">
+                        <span class="entity-type-badge badge-{{ e.entity_type }}">{{ type_labels.get(e.entity_type, e.entity_type) }}</span>
+                    </div>
+                </div>
+                <span class="mention-count">{{ e.mention_count }} mention{% if e.mention_count != 1 %}s{% endif %}</span>
+            </a>
+            {% endfor %}
+        </div>
+
+        {% elif query and not results %}
+        <div class="empty-state">
+            <h3>No results for "{{ query }}"</h3>
+            <p>Try a different search term or browse the top entities below.</p>
+        </div>
+        {% endif %}
+
+        {% if stats.total_entities > 0 %}
+        <div class="section-label">Knowledge Base Stats</div>
+        <div class="stats-grid">
+            <div class="stat-card stat-artist">
+                <div class="stat-number">{{ stats.by_type.get('artist', 0) }}</div>
+                <div class="stat-label">Artists</div>
+            </div>
+            <div class="stat-card stat-venue">
+                <div class="stat-number">{{ stats.by_type.get('venue', 0) }}</div>
+                <div class="stat-label">Venues</div>
+            </div>
+            <div class="stat-card stat-label-type">
+                <div class="stat-number">{{ stats.by_type.get('label', 0) }}</div>
+                <div class="stat-label">Labels</div>
+            </div>
+            <div class="stat-card stat-producer">
+                <div class="stat-number">{{ stats.by_type.get('producer', 0) }}</div>
+                <div class="stat-label">Producers</div>
+            </div>
+            <div class="stat-card stat-city">
+                <div class="stat-number">{{ stats.by_type.get('city', 0) }}</div>
+                <div class="stat-label">Cities</div>
+            </div>
+            <div class="stat-card stat-connections">
+                <div class="stat-number">{{ stats.total_connections }}</div>
+                <div class="stat-label">Connections</div>
+            </div>
+        </div>
+
+        {% if stats.top_entities and not query %}
+        <div class="section-label">Most Mentioned</div>
+        <div class="entity-grid">
+            {% for e in stats.top_entities %}
+            <a href="/scene/entity/{{ e.slug }}" class="entity-card">
+                <div class="entity-icon entity-icon-{{ e.entity_type }}">{{ type_icons.get(e.entity_type, '&#9733;') | safe }}</div>
+                <div>
+                    <div class="entity-name">{{ e.name }}</div>
+                    <div class="entity-meta">
+                        <span class="entity-type-badge badge-{{ e.entity_type }}">{{ type_labels.get(e.entity_type, e.entity_type) }}</span>
+                    </div>
+                </div>
+                <span class="mention-count">{{ e.mention_count }} mention{% if e.mention_count != 1 %}s{% endif %}</span>
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="empty-state">
+            <h3>The Scene Graph is being built</h3>
+            <p>Entities will appear here once newsletter issues are indexed. Check back soon.</p>
+        </div>
+        {% endif %}
+
+        <div class="cta-banner">
+            <h3>Stay in the know</h3>
+            <p>Get DISPATCH delivered to your inbox. Three editions covering fans, artists, and industry professionals.</p>
+            <a href="/subscribe" class="cta-btn">Subscribe Free</a>
+        </div>
+    </div>
+
+    {% include "partials/public_footer.html" %}
+</body>
+</html>

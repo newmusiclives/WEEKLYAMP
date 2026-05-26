@@ -172,6 +172,7 @@ Requirements:
 def assemble_newsletter(
     repo: Repository, issue_id: int, config: AppConfig,
     subscriber_id: int | None = None,
+    preheader_text: str = "",
 ) -> tuple[str, str]:
     """Assemble approved drafts into final HTML.
 
@@ -382,6 +383,7 @@ def assemble_newsletter(
         ps_closing=ps_closing,
         edition_slug=edition_slug,
         issue_date=issue_date,
+        preheader_text=preheader_text,
     )
 
     # Build plain text with intro and PS

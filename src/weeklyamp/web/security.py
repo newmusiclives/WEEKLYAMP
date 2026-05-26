@@ -161,6 +161,8 @@ _PUBLIC_PREFIXES = (
     # POSTs from Manifest Financial (signature verified inside the handler),
     # and the checkout / success pages are hit by anonymous prospects.
     "/pricing", "/billing/webhook", "/billing/success", "/billing/checkout",
+    # Living Editions — public web-hosted versions of published issues
+    "/edition",
 )
 _PUBLIC_EXACT = frozenset({
     "/",

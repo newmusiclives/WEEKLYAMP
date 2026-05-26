@@ -29,6 +29,11 @@
     </style>
 </head>
 <body>
+    {% if preheader_text %}
+    <div style="display:none;font-size:1px;color:#ffffff;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">
+        {{ preheader_text }}
+    </div>
+    {% endif %}
     <div class="newsletter-wrapper">
         <div class="header" style="padding: 32px 0 28px; text-align: center;">
             <hr style="border: none; border-top: 1px solid #d1d5db; margin: 0 0 32px;">

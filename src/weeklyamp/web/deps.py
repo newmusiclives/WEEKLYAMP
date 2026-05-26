@@ -44,6 +44,7 @@ def _ff(name: str) -> bool:
 _env.globals["ff"] = _ff
 
 
+
 import re as _re
 
 def _plain_preview(text: str, max_len: int = 140) -> str:
@@ -108,4 +109,7 @@ def get_repo() -> Repository:
 
 def render(template_name: str, **ctx) -> str:
     tpl = _env.get_template(template_name)
+    cfg = load_config()
+    ctx.setdefault("plausible_domain", cfg.analytics.plausible_domain)
+    ctx.setdefault("site_domain", cfg.site_domain.rstrip("/"))
     return tpl.render(**ctx)
