@@ -6,7 +6,7 @@
     <title>License a City Edition — TrueFans DISPATCH</title>
     <meta name="description" content="Run your own city music newsletter. License a TrueFans city edition — powered by AI, ready to publish. Nashville, LA, NYC, Atlanta, and 30+ markets available.">
     <meta property="og:title" content="Run Your Own City Music Newsletter — TrueFans">
-    <meta property="og:description" content="License a TrueFans city edition. AI-powered content, built-in monetization, full support. $150/month.">
+    <meta property="og:description" content="License a TrueFans city edition. AI-powered content, built-in monetization, full support. Plans from $50/month.">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -184,6 +184,31 @@
         .pricing-features { list-style: none; text-align: left; margin-bottom: 28px; }
         .pricing-features li { padding: 8px 0; font-size: 14px; color: var(--text-dim); border-bottom: 1px solid var(--border); }
         .pricing-features li::before { content: '\2713'; color: var(--green); font-weight: 700; margin-right: 10px; }
+        .pricing-detail strong { color: var(--accent-light); font-weight: 800; }
+
+        /* Billing toggle */
+        .billing-toggle {
+            display: flex; justify-content: center; align-items: center;
+            gap: 14px; margin-bottom: 44px; flex-wrap: wrap;
+        }
+        .billing-toggle .bill-label { font-size: 15px; font-weight: 600; color: var(--text-dim); transition: color 0.2s; }
+        .billing-toggle .bill-label.active { color: var(--text); }
+        .toggle-switch {
+            position: relative; width: 52px; height: 28px; flex-shrink: 0;
+            background: var(--accent-bg); border: 1px solid var(--accent-border);
+            border-radius: 100px; cursor: pointer; transition: all 0.2s;
+        }
+        .toggle-switch::after {
+            content: ''; position: absolute; top: 2px; left: 2px;
+            width: 22px; height: 22px; border-radius: 50%;
+            background: var(--accent); transition: transform 0.2s;
+        }
+        .toggle-switch.annual::after { transform: translateX(24px); }
+        .save-badge {
+            background: var(--green-bg); border: 1px solid var(--green-border);
+            color: var(--green); font-size: 12px; font-weight: 700;
+            padding: 3px 12px; border-radius: 100px;
+        }
 
         /* City grid */
         .city-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; max-width: 900px; margin: 0 auto; }
@@ -334,7 +359,7 @@
                     <span class="amount">$5,000 - $8,000</span>
                 </div>
             </div>
-            <div class="revenue-note">You keep 80%. Platform fee: just $150/month.</div>
+            <div class="revenue-note">Keep up to 75% of revenue. Plans from just $50/month.</div>
         </div>
     </section>
 
@@ -417,42 +442,87 @@
         <div class="container">
             <div class="section-header">
                 <h2>Simple Pricing</h2>
-                <p>Low risk, high reward. Start with a 30-day free trial.</p>
+                <p>Pick your tier &mdash; the more you invest, the more revenue you keep. Start with a 30-day free trial.</p>
+            </div>
+            <div class="billing-toggle">
+                <span class="bill-label active" id="labelMonthly">Monthly</span>
+                <div class="toggle-switch" id="billingToggle" role="switch" aria-checked="false" tabindex="0" aria-label="Toggle annual billing"></div>
+                <span class="bill-label" id="labelAnnual">Annual</span>
+                <span class="save-badge">2 months free</span>
             </div>
             <div class="pricing-grid">
                 <div class="pricing-card">
-                    <h3>Monthly</h3>
-                    <div class="pricing-price">$150</div>
-                    <div class="pricing-period">per month</div>
-                    <div class="pricing-detail">+ 20% revenue share</div>
+                    <h3>Starter</h3>
+                    <div class="pricing-price"><span class="price-amount" data-monthly="$50" data-annual="$500">$50</span></div>
+                    <div class="pricing-period"><span class="price-period" data-monthly="per month" data-annual="per year &middot; 2 months free">per month</span></div>
+                    <div class="pricing-detail">Keep <strong>25%</strong> of revenue</div>
                     <ul class="pricing-features">
                         <li>All 3 editions (Fan, Artist, Industry)</li>
                         <li>AI content generation</li>
                         <li>Subscriber management tools</li>
-                        <li>Sponsor slot management</li>
-                        <li>Analytics dashboard</li>
                         <li>Email delivery included</li>
+                        <li>Analytics dashboard</li>
                         <li>30-day free trial</li>
                     </ul>
                     <a href="#apply" class="btn btn-primary" style="width:100%;justify-content:center;">Apply Now</a>
                 </div>
                 <div class="pricing-card popular">
-                    <h3>Annual</h3>
-                    <div class="pricing-price">$1,499</div>
-                    <div class="pricing-period">per year</div>
-                    <div class="pricing-detail">+ 20% revenue share &mdash; save $301</div>
+                    <h3>Growth</h3>
+                    <div class="pricing-price"><span class="price-amount" data-monthly="$100" data-annual="$1,000">$100</span></div>
+                    <div class="pricing-period"><span class="price-period" data-monthly="per month" data-annual="per year &middot; 2 months free">per month</span></div>
+                    <div class="pricing-detail">Keep <strong>50%</strong> of revenue</div>
                     <ul class="pricing-features">
-                        <li>Everything in Monthly</li>
-                        <li>2 months free</li>
+                        <li>Everything in Starter</li>
+                        <li>Sponsor slot management</li>
+                        <li>Referral &amp; growth automation</li>
+                        <li>Welcome sequences</li>
+                        <li>Priority support</li>
+                        <li>30-day free trial</li>
+                    </ul>
+                    <a href="#apply" class="btn btn-primary" style="width:100%;justify-content:center;">Apply Now</a>
+                </div>
+                <div class="pricing-card">
+                    <h3>Pro</h3>
+                    <div class="pricing-price"><span class="price-amount" data-monthly="$150" data-annual="$1,500">$150</span></div>
+                    <div class="pricing-period"><span class="price-period" data-monthly="per month" data-annual="per year &middot; 2 months free">per month</span></div>
+                    <div class="pricing-detail">Keep <strong>75%</strong> of revenue</div>
+                    <ul class="pricing-features">
+                        <li>Everything in Growth</li>
                         <li>Priority city selection</li>
                         <li>Dedicated onboarding call</li>
-                        <li>Priority support</li>
+                        <li>White-label portal &amp; domain</li>
                         <li>Early access to new features</li>
                         <li>30-day free trial</li>
                     </ul>
                     <a href="#apply" class="btn btn-primary" style="width:100%;justify-content:center;">Apply Now</a>
                 </div>
             </div>
+            <script>
+                (function () {
+                    var toggle = document.getElementById('billingToggle');
+                    var labelMonthly = document.getElementById('labelMonthly');
+                    var labelAnnual = document.getElementById('labelAnnual');
+                    function setBilling(annual) {
+                        toggle.classList.toggle('annual', annual);
+                        toggle.setAttribute('aria-checked', annual ? 'true' : 'false');
+                        labelMonthly.classList.toggle('active', !annual);
+                        labelAnnual.classList.toggle('active', annual);
+                        var key = annual ? 'annual' : 'monthly';
+                        document.querySelectorAll('.price-amount, .price-period').forEach(function (el) {
+                            el.innerHTML = el.getAttribute('data-' + key);
+                        });
+                    }
+                    toggle.addEventListener('click', function () {
+                        setBilling(!toggle.classList.contains('annual'));
+                    });
+                    toggle.addEventListener('keydown', function (e) {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setBilling(!toggle.classList.contains('annual'));
+                        }
+                    });
+                })();
+            </script>
         </div>
     </section>
 
@@ -497,8 +567,8 @@
 
     <!-- Testimonial -->
     <section class="testimonial">
-        <blockquote>"Nashville Music Media LLC launched 3 months ago and already has 2,500 subscribers and $5,000/month in revenue. The AI content saves us 20+ hours per week."</blockquote>
-        <cite>&mdash; Nashville Music Media LLC, City Licensee</cite>
+        <blockquote>"I spent years building newsletters from scratch &mdash; wrestling with the tech, chasing content week after week, and guessing at what actually grows an audience. DISPATCH is everything I wish I'd had on day one: a proven system that already knows how to grow readers and turn them into revenue. Why spend two years reinventing the wheel when you can license one that's already rolling?"</blockquote>
+        <cite>&mdash; Paul Saunders, Founder, TrueFans DISPATCH</cite>
     </section>
 
     <!-- Application Form -->
@@ -575,7 +645,7 @@
         </div>
         <div class="faq-item">
             <h3>How does revenue sharing work?</h3>
-            <p>You keep 80% of all revenue generated from your city edition &mdash; including subscriber revenue, sponsor payments, affiliate commissions, and paid tier upgrades. The 20% platform share covers infrastructure, AI content generation, email delivery, and ongoing development.</p>
+            <p>Your revenue share is set by your plan: keep 25% on Starter ($50/mo), 50% on Growth ($100/mo), or 75% on Pro ($150/mo) &mdash; across subscriber revenue, sponsor payments, affiliate commissions, and paid tier upgrades. The platform share covers infrastructure, AI content generation, email delivery, and ongoing development. Choose annual billing on any tier and get 2 months free.</p>
         </div>
         <div class="faq-item">
             <h3>Can I choose any city?</h3>
