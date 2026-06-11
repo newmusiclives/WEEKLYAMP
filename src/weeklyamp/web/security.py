@@ -911,6 +911,115 @@ class AuthMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 
+_COMING_SOON_HTML = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>TrueFans DISPATCH &mdash; Coming Soon</title>
+<style>
+  html,body{margin:0;height:100%}
+  body{font-family:Georgia,'Times New Roman',serif;background:#111;color:#f4f4f4;
+       display:flex;align-items:center;justify-content:center;text-align:center;padding:24px}
+  .wrap{max-width:560px}
+  .kicker{letter-spacing:.28em;text-transform:uppercase;font-size:12px;color:#b09a3a;
+          font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;margin:0 0 18px}
+  h1{font-size:40px;line-height:1.1;margin:0 0 18px;font-weight:700}
+  p{font-size:17px;line-height:1.6;color:#c9c9c9;margin:0 auto;max-width:440px}
+  .rule{width:48px;height:3px;background:#b09a3a;margin:28px auto;border-radius:2px}
+  .foot{margin-top:40px;font-size:12px;color:#777;
+        font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;letter-spacing:.04em}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <p class="kicker">TrueFans DISPATCH</p>
+    <h1>Something good is on its way.</h1>
+    <div class="rule"></div>
+    <p>We're putting the finishing touches on a newsletter built for artists, fans,
+       and the people who move the music business. Check back soon.</p>
+    <p class="foot">&copy; 2026 TrueFans DISPATCH</p>
+  </div>
+</body>
+</html>"""
+
+
+class ComingSoonMiddleware(BaseHTTPMiddleware):
+    """Hold the public site behind a "coming soon" page before launch.
+
+    Enabled by ``WEEKLYAMP_COMING_SOON=true``. When on, anonymous visitors
+    to public pages see a holding page instead of the real site, so the
+    deployment stays effectively hidden while admins keep working on it.
+
+    What still passes through while hidden:
+
+    * **Authenticated admins** — a valid session cookie bypasses the gate
+      entirely, so the dashboard, login, and every internal page work as
+      normal. This is the primary "let me in" path.
+    * **Infra paths** — ``/health*`` (uptime monitors must keep getting
+      200s), ``/static/*`` (so the holding page's own assets load), the
+      auth routes (``/login``, ``/logout``), and ``/favicon.ico``.
+    * **Preview link** — if ``WEEKLYAMP_COMING_SOON_TOKEN`` is set, hitting
+      any URL with ``?preview=<token>`` drops a cookie that lets that
+      browser through without logging in. Useful for sharing a private
+      sneak peek (e.g. with a client) without handing over admin creds.
+
+    Everyone else gets the holding page with ``noindex`` headers so search
+    engines don't index the pre-launch site.
+
+    This middleware is registered outermost so it short-circuits before any
+    other request handling when the gate is closed.
+    """
+
+    _PREVIEW_COOKIE = "_preview"
+    # Paths that must remain reachable even while the site is hidden.
+    _ALWAYS_ALLOW = ("/health", "/static", "/login", "/logout", "/favicon.ico")
+
+    def __init__(self, app, enabled: bool = False, token: str = "") -> None:
+        super().__init__(app)
+        self.enabled = enabled
+        self.token = token
+
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+        if not self.enabled:
+            return await call_next(request)
+
+        path = request.url.path
+        for prefix in self._ALWAYS_ALLOW:
+            if path == prefix or path.startswith(prefix + "/"):
+                return await call_next(request)
+
+        # Admins with a valid session always see the real site.
+        if is_authenticated(request):
+            return await call_next(request)
+
+        # Optional shareable preview bypass.
+        if self.token:
+            qp = request.query_params.get("preview", "")
+            if qp and secrets.compare_digest(qp, self.token):
+                response = await call_next(request)
+                response.set_cookie(
+                    self._PREVIEW_COOKIE, self.token,
+                    httponly=True, samesite="lax", max_age=_get_session_max_age(),
+                    secure=request.headers.get("X-Forwarded-Proto") == "https",
+                )
+                return response
+            cookie = request.cookies.get(self._PREVIEW_COOKIE, "")
+            if cookie and secrets.compare_digest(cookie, self.token):
+                return await call_next(request)
+
+        return HTMLResponse(
+            _COMING_SOON_HTML,
+            status_code=503,
+            headers={
+                "Retry-After": "86400",
+                "X-Robots-Tag": "noindex, nofollow",
+                "Cache-Control": "no-store",
+            },
+        )
+
+
 class CSRFMiddleware(BaseHTTPMiddleware):
     """Double-submit cookie CSRF protection for state-changing requests.
 

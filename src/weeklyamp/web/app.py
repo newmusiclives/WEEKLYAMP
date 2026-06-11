@@ -23,6 +23,7 @@ from weeklyamp.web.security import (
     AdminIPAllowlistMiddleware,
     AuthMiddleware,
     BodySizeLimitMiddleware,
+    ComingSoonMiddleware,
     CSRFMiddleware,
     SecurityHeadersMiddleware,
     login_2fa_page,
@@ -294,6 +295,17 @@ def create_app() -> FastAPI:
         exempt_paths=("/webhooks/inbound",),
     )
     app.add_middleware(GZipMiddleware, minimum_size=500)
+
+    # Pre-launch "coming soon" gate. Registered LAST so it sits OUTERMOST and
+    # short-circuits before any other handling when closed. Off unless
+    # WEEKLYAMP_COMING_SOON is truthy; admins with a session and an optional
+    # ?preview=<WEEKLYAMP_COMING_SOON_TOKEN> link bypass it. See
+    # ComingSoonMiddleware for the full allow-list.
+    app.add_middleware(
+        ComingSoonMiddleware,
+        enabled=os.environ.get("WEEKLYAMP_COMING_SOON", "").lower() in ("true", "1", "yes"),
+        token=os.environ.get("WEEKLYAMP_COMING_SOON_TOKEN", "").strip(),
+    )
 
     # CORS — lock cross-origin requests to an explicit allowlist.
     # Default: no origins allowed (same-origin only, no CORS headers).
