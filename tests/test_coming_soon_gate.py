@@ -83,3 +83,10 @@ def test_authenticated_admin_bypasses_the_gate(monkeypatch):
     """A logged-in admin sees the real site while it is still hidden."""
     monkeypatch.setattr("weeklyamp.web.security.is_authenticated", lambda request: True)
     assert _client().get("/samples").status_code == 200
+
+
+def test_advertise_is_reachable_without_a_preview_cookie():
+    """Media kit is a CTA target in the samples, same as /license."""
+    resp = _client().get("/advertise")
+    assert resp.status_code == 200
+    assert "Coming Soon" not in resp.text

@@ -812,6 +812,37 @@ class Repository:
         conn.close()
         return row_id
 
+    def get_average_engagement(self) -> Optional[dict]:
+        """Average open/click rate across issues that actually sent.
+
+        Returns None when nothing has been measured yet. Callers must treat
+        that as "unknown" rather than substituting a default — these numbers
+        are published to advertisers on the public media kit, so an invented
+        figure is a false performance claim.
+        """
+        conn = self._conn()
+        try:
+            row = conn.execute(
+                "SELECT COUNT(*) AS measured, "
+                "       SUM(sends) AS sends, SUM(opens) AS opens, SUM(clicks) AS clicks "
+                "FROM engagement_metrics WHERE sends > 0"
+            ).fetchone()
+        finally:
+            conn.close()
+
+        if not row or not row["measured"] or not row["sends"]:
+            return None
+
+        sends = float(row["sends"])
+        return {
+            "issues_measured": int(row["measured"]),
+            "sends": int(row["sends"]),
+            # Aggregate across all sends rather than averaging per-issue rates,
+            # so a tiny issue cannot swing the headline number.
+            "avg_open_rate": round((row["opens"] or 0) / sends * 100, 1),
+            "avg_click_rate": round((row["clicks"] or 0) / sends * 100, 1),
+        }
+
     def get_engagement(self, issue_id: int) -> Optional[dict]:
         conn = self._conn()
         row = conn.execute(

@@ -111,17 +111,24 @@ class RateCardEngine:
                 "subscriber_count": sub_count // max(len(editions), 1),
             })
 
-        # Estimate engagement rates (placeholder defaults)
-        avg_open_rate = 45.0
-        avg_click_rate = 8.0
+        # Engagement rates come from measured sends only. Before the first
+        # send there is nothing to report, and these figures are published to
+        # advertisers on the public media kit — a placeholder here is a false
+        # performance claim to someone deciding whether to buy ad space.
+        measured = self.repo.get_average_engagement()
+        avg_open_rate = measured["avg_open_rate"] if measured else None
+        avg_click_rate = measured["avg_click_rate"] if measured else None
 
         rates = self.calculate_rates()
         available_slots = self.get_available_slots(weeks_ahead=4)
 
         return {
             "total_subscribers": sub_count,
+            # None means "not measured yet" — the template must omit the tile
+            # rather than render a number.
             "avg_open_rate": avg_open_rate,
             "avg_click_rate": avg_click_rate,
+            "issues_measured": measured["issues_measured"] if measured else 0,
             "issues_per_week": 3,
             "editions": edition_data,
             "rates": rates,

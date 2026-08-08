@@ -1025,9 +1025,11 @@ class ComingSoonMiddleware(BaseHTTPMiddleware):
     # sponsor blocks in the sample newsletters — those samples get forwarded
     # to prospective licensees who have no preview cookie, so gating it turns
     # every ad in every sample into a dead end.
+    # /advertise is the media kit and sponsor-inquiry page, and is likewise a
+    # CTA target in the samples.
     _ALWAYS_ALLOW = (
         "/health", "/static", "/login", "/logout", "/favicon.ico",
-        "/coming-soon", "/t", "/license",
+        "/coming-soon", "/t", "/license", "/advertise",
     )
 
     def __init__(self, app, enabled: bool = False, token: str = "") -> None:

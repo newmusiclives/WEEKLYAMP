@@ -234,14 +234,21 @@
                     <div class="number">{{ "{:,}".format(media_kit.total_subscribers) }}</div>
                     <div class="label">Total Subscribers</div>
                 </div>
+                {# Engagement tiles appear only once there is measured send
+                   data. Showing a placeholder rate here would be a false
+                   performance claim to an advertiser. #}
+                {% if media_kit.avg_open_rate is not none %}
                 <div class="stat-card">
                     <div class="number">{{ media_kit.avg_open_rate }}%</div>
                     <div class="label">Avg Open Rate</div>
                 </div>
+                {% endif %}
+                {% if media_kit.avg_click_rate is not none %}
                 <div class="stat-card">
                     <div class="number">{{ media_kit.avg_click_rate }}%</div>
                     <div class="label">Avg Click Rate</div>
                 </div>
+                {% endif %}
                 <div class="stat-card">
                     <div class="number">{{ media_kit.issues_per_week }}</div>
                     <div class="label">Issues Per Week</div>
