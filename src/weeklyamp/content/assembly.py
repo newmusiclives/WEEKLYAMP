@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import re
 from datetime import datetime
@@ -21,6 +22,20 @@ from weeklyamp.delivery.templates import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _engagement_plain(label: str, poll: dict) -> str:
+    """Plain-text rendering of a poll or trivia block.
+
+    The HTML version links each option to a per-recipient vote URL; plain
+    text just enumerates them, since there is nothing to click.
+    """
+    try:
+        options = json.loads(poll.get("options_json") or "[]")
+    except (ValueError, TypeError):
+        options = []
+    lines = "\n".join(f"  {i + 1}. {opt}" for i, opt in enumerate(options))
+    return f"--- {label}: {poll.get('question_text', '')} ---\n{lines}\n"
 
 
 def _get_issue_date_context(issue: dict) -> dict:
@@ -330,6 +345,53 @@ def assemble_newsletter(
 
     # Convert welcome intro to HTML
     welcome_html = sanitize_html(markdown.markdown(welcome_intro, extensions=["extra"]))
+
+    # Inject engagement blocks — one poll and one trivia question.
+    #
+    # This runs *before* the sponsor pass so that ads still bracket the
+    # finished newsletter at top/mid/bottom rather than landing inside the
+    # engagement units. Config-driven via `trivia_polls.enabled`;
+    # TriviaManager guards on the same flag, so a disabled config renders
+    # nothing even if rows exist.
+    trivia_cfg = getattr(config, "trivia_polls", None)
+    if trivia_cfg is not None and trivia_cfg.enabled:
+        from weeklyamp.content.trivia_polls import TriviaManager
+
+        manager = TriviaManager(repo, trivia_cfg)
+        try:
+            candidates = repo.get_trivia_for_issue(issue_id)
+        except Exception:
+            # Engagement is a nice-to-have; never fail assembly over it.
+            logger.exception("Could not load trivia/polls for issue %s", issue_id)
+            candidates = []
+
+        def _first_open(kind: str) -> dict | None:
+            return next(
+                (
+                    c for c in candidates
+                    if c.get("question_type") == kind
+                    and c.get("status", "open") != "closed"
+                ),
+                None,
+            )
+
+        # The poll lands a third of the way in and the trivia question at the
+        # end: early enough to catch attention, late enough to reward readers
+        # who finish. insert() clamps out-of-range indices, so a short issue
+        # simply places the poll near the front.
+        poll = _first_open("poll")
+        if poll:
+            poll_html = manager.render_trivia_email_html(poll, config.site_domain, issue_id)
+            if poll_html:
+                sections_html.insert(max(1, len(sections_html) // 3), {"html": poll_html})
+                plain_parts.append(_engagement_plain("POLL", poll))
+
+        trivia = _first_open("trivia")
+        if trivia:
+            trivia_html = manager.render_trivia_email_html(trivia, config.site_domain, issue_id)
+            if trivia_html:
+                sections_html.append({"html": trivia_html})
+                plain_parts.append(_engagement_plain("TRIVIA", trivia))
 
     # Fetch and inject sponsor blocks (issue-level + edition-level)
     sponsor_blocks = repo.get_sponsor_blocks_for_issue(issue_id)
