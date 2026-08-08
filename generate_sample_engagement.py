@@ -37,6 +37,16 @@ from weeklyamp.core.models import TriviaPollsConfig  # noqa: E402
 from weeklyamp.delivery.templates import render_sponsor_block  # noqa: E402
 
 MARKER = "<!-- dispatch:engagement -->"
+END_MARKER = "<!-- /dispatch:engagement -->"
+
+# Absolute base for CTA links. Samples get emailed and forwarded, so relative
+# URLs are not an option. This deliberately points at the live Railway host
+# rather than a branded domain: truefansdispatch.com and the configured
+# site_domain (truefansnewsletters.com) are both unregistered (NXDOMAIN), so
+# linking to either ships dead CTAs. Swap this once a domain is live.
+BASE_URL = os.environ.get(
+    "WEEKLYAMP_SAMPLE_BASE_URL", "https://web-production-2684b.up.railway.app"
+).rstrip("/")
 
 # House ads: three angles on DISPATCH's own inventory. Metric-free by design.
 ADS = {
@@ -44,7 +54,7 @@ ADS = {
         "sponsor_name": "TrueFans DISPATCH",
         "headline": "Your brand, in front of a music-obsessed audience",
         "body_html": "Reach artists, industry professionals, and superfans in the inbox they actually open.",
-        "cta_url": "https://truefansdispatch.com/advertise",
+        "cta_url": f"{BASE_URL}/license",
         "cta_text": "Advertise in DISPATCH",
         "image_url": "",
     },
@@ -52,7 +62,7 @@ ADS = {
         "sponsor_name": "TrueFans DISPATCH",
         "headline": "Sponsor a section",
         "body_html": "Put your message beside the stories readers came for — one advertiser per section, per issue.",
-        "cta_url": "https://truefansdispatch.com/advertise",
+        "cta_url": f"{BASE_URL}/license",
         "cta_text": "See section packages",
         "image_url": "",
     },
@@ -60,7 +70,7 @@ ADS = {
         "sponsor_name": "TrueFans DISPATCH",
         "headline": "Run DISPATCH in your city",
         "body_html": "License the format for your local scene and keep the majority of the revenue.",
-        "cta_url": "https://truefansdispatch.com/license",
+        "cta_url": f"{BASE_URL}/license",
         "cta_text": "Explore licensing",
         "image_url": "",
     },
@@ -141,22 +151,48 @@ def _make_block(spec: tuple, poll_id: int) -> str:
         "options_json": json.dumps(options),
         "question_type": "trivia" if correct_index >= 0 else "poll",
     }
-    html = _manager.render_trivia_email_html(poll, "https://truefansdispatch.com", 0)
+    html = _manager.render_trivia_email_html(poll, BASE_URL, 0)
     # Illustrative only — never point demo clicks at the live vote endpoint.
     return re.sub(r'href="[^"]*/t/vote/[^"]*"', 'href="#"', html)
 
 
 def _wrap(html: str) -> str:
-    return f"\n{MARKER}\n{html}\n"
+    """Fence a block between markers so --force can strip it later.
+
+    Without a closing marker there is no reliable way to find where an
+    injected block ends, which makes changing the blocks (say, fixing a CTA
+    URL) a manual edit of every demo file.
+    """
+    return f"\n{MARKER}\n{html}\n{END_MARKER}\n"
 
 
-def inject(path: str) -> str:
+def strip_blocks(source: str) -> str:
+    """Remove previously injected blocks.
+
+    Only fenced blocks are removable. Matching an unfenced block by element
+    would need depth-aware parsing — the sponsor block nests divs, so a
+    non-greedy match to the first ``</div>`` truncates it and leaves broken
+    markup. Blocks predating END_MARKER must be reverted via git instead.
+    """
+    return re.sub(
+        re.escape(MARKER) + r".*?" + re.escape(END_MARKER),
+        "",
+        source,
+        flags=re.DOTALL,
+    )
+
+
+def inject(path: str, force: bool = False) -> str:
     """Inject blocks into one demo file. Returns a short status string."""
     with open(path, encoding="utf-8") as fh:
         source = fh.read()
 
+    replaced = False
     if MARKER in source:
-        return "skipped (already injected)"
+        if not force:
+            return "skipped (already injected — use --force to replace)"
+        source = strip_blocks(source)
+        replaced = True
 
     section_starts = [m.start() for m in re.finditer(r'<div class="section"', source)]
     footer = re.search(r'<div class="footer"', source)
@@ -186,13 +222,62 @@ def inject(path: str) -> str:
 
     with open(path, "w", encoding="utf-8") as fh:
         fh.write(result)
-    return f"injected (3 ads, 1 poll, 1 trivia across {count} sections)"
+    verb = "replaced" if replaced else "injected"
+    return f"{verb} (3 ads, 1 poll, 1 trivia across {count} sections)"
+
+
+def verify_cta_links() -> bool:
+    """Fetch every CTA target and report its status.
+
+    Added after shipping samples whose CTAs pointed at an unregistered
+    domain. A dead call-to-action in a document sent to advertisers and
+    prospective licensees is worse than no call-to-action, so this runs
+    before any file is written.
+
+    Note the gate: while WEEKLYAMP_COMING_SOON is on, these pages return 503
+    to anyone without the preview cookie, so both are checked.
+    """
+    # httpx (a declared dependency) rather than urllib: it bundles a CA
+    # trust store, so this does not fail on Python installs lacking system
+    # certificates.
+    import httpx
+
+    token = os.environ.get("WEEKLYAMP_SAMPLE_PREVIEW_TOKEN", "")
+    ok = True
+    for url in sorted({ad["cta_url"] for ad in ADS.values()}):
+        for label, target in (
+            ("public", url),
+            ("preview", f"{url}?preview={token}" if token else None),
+        ):
+            if target is None:
+                continue
+            try:
+                code = httpx.get(target, timeout=20, follow_redirects=True).status_code
+            except Exception as exc:  # DNS failure, timeout, refused connection
+                print(f"  {label:8s} {url}  UNREACHABLE ({type(exc).__name__})")
+                ok = False
+                continue
+            flag = "" if code == 200 else "  <-- not reachable"
+            if code != 200 and label == "public" and code == 503:
+                flag = "  <-- gated by coming-soon (expected while pre-launch)"
+            elif code != 200:
+                ok = False
+            print(f"  {label:8s} {url}  {code}{flag}")
+    return ok
 
 
 def main() -> int:
     check_only = "--check" in sys.argv
     here = os.path.dirname(os.path.abspath(__file__))
     missing = 0
+
+    if "--skip-link-check" not in sys.argv:
+        print(f"Verifying CTA links against {BASE_URL} ...")
+        if not verify_cta_links() and not check_only:
+            print("\nAborting: at least one CTA is not reachable. "
+                  "Fix BASE_URL or the target route, or pass --skip-link-check.")
+            return 2
+        print()
 
     for name in sorted(ENGAGEMENT):
         path = os.path.join(here, name)
@@ -206,7 +291,7 @@ def main() -> int:
             print(f"{name:32s} {state}")
             missing += state == "ABSENT"
         else:
-            print(f"{name:32s} {inject(path)}")
+            print(f"{name:32s} {inject(path, force='--force' in sys.argv)}")
 
     return 1 if (check_only and missing) else 0
 

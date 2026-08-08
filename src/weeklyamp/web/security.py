@@ -1021,7 +1021,14 @@ class ComingSoonMiddleware(BaseHTTPMiddleware):
     # holding page itself, so it has to work while the gate is closed.
     # /t = email tracking pixels + click/promo redirects; these are email
     # infrastructure and must keep working even while the gate is closed.
-    _ALWAYS_ALLOW = ("/health", "/static", "/login", "/logout", "/favicon.ico", "/coming-soon", "/t")
+    # /license is the B2B city-franchise pitch and is the CTA target for the
+    # sponsor blocks in the sample newsletters — those samples get forwarded
+    # to prospective licensees who have no preview cookie, so gating it turns
+    # every ad in every sample into a dead end.
+    _ALWAYS_ALLOW = (
+        "/health", "/static", "/login", "/logout", "/favicon.ico",
+        "/coming-soon", "/t", "/license",
+    )
 
     def __init__(self, app, enabled: bool = False, token: str = "") -> None:
         super().__init__(app)
