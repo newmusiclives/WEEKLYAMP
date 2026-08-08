@@ -192,8 +192,13 @@ def init_pg_database(database_url: str) -> None:
     conn.close()
 
     # Run migrations for existing databases that need schema updates
-    from weeklyamp.db.migrations import run_pg_migrations
+    from weeklyamp.db.migrations import run_pg_column_repairs, run_pg_migrations
     run_pg_migrations(database_url)
+
+    # Heal any column the schema file and migrations both failed to add: the
+    # schema file stamps version numbers even when CREATE TABLE IF NOT EXISTS
+    # was a no-op, which makes run_pg_migrations skip the matching ALTER.
+    run_pg_column_repairs(database_url)
 
 
 def get_pg_schema_version(database_url: str) -> Optional[int]:

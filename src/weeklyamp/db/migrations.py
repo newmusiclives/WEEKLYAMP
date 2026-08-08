@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import logging
+import re
 import sqlite3
 from typing import Optional
 
 from weeklyamp.core.database import get_connection
+
+logger = logging.getLogger(__name__)
 
 # Migrations keyed by target version number.
 # Each migration runs SQL to advance from (version - 1) to version.
@@ -2075,3 +2079,112 @@ def run_pg_migrations(database_url: str) -> list[int]:
 
     conn.close()
     return applied
+
+
+# ---------------------------------------------------------------------------
+# Column drift repair
+# ---------------------------------------------------------------------------
+#
+# schema_pg.sql both creates tables and stamps schema_version rows. On a
+# database whose tables already exist, `CREATE TABLE IF NOT EXISTS` is a no-op
+# — so a column added to the schema file is never added to the live table —
+# yet the version stamp still lands. run_pg_migrations() then sees the version
+# as already applied and skips the ALTER that would have added the column, so
+# the drift is permanent and survives every restart.
+#
+# Re-deriving every ADD COLUMN from the migrations and applying the missing
+# ones on boot closes that gap for good, including for future migrations.
+
+_ADD_COLUMN_RE = re.compile(
+    r"ALTER\s+TABLE\s+(\w+)\s+ADD\s+COLUMN\s+(?:IF\s+NOT\s+EXISTS\s+)?(\w+)\s+([^;]+);",
+    re.IGNORECASE,
+)
+
+
+def _extract_add_column_repairs() -> dict[tuple[str, str], str]:
+    """Map (table, column) -> idempotent PostgreSQL ADD COLUMN statement.
+
+    Derived from the migration SQL itself so that any future ADD COLUMN
+    migration is covered automatically, with no second list to maintain.
+    PG_MIGRATIONS is read last so a PostgreSQL-specific definition wins over
+    the SQLite one for the same column.
+    """
+    repairs: dict[tuple[str, str], str] = {}
+    for source in (MIGRATIONS, PG_MIGRATIONS):
+        for sql in source.values():
+            if not isinstance(sql, str):
+                continue
+            for table, column, definition in _ADD_COLUMN_RE.findall(sql):
+                definition = " ".join(definition.split())
+                repairs[(table.lower(), column.lower())] = (
+                    f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {column} {definition}"
+                )
+    return repairs
+
+
+PG_COLUMN_REPAIRS: dict[tuple[str, str], str] = _extract_add_column_repairs()
+
+
+def find_missing_pg_columns(conn) -> list[tuple[str, str]]:
+    """Return (table, column) pairs that migrations define but the DB lacks.
+
+    Tables absent from the database are skipped rather than reported — a
+    missing table is a different failure, and ALTERing it would just error.
+    """
+    rows = conn.execute(
+        "SELECT table_name, column_name FROM information_schema.columns "
+        "WHERE table_schema = 'public'"
+    ).fetchall()
+    existing_cols = {(r["table_name"].lower(), r["column_name"].lower()) for r in rows}
+    existing_tables = {table for table, _ in existing_cols}
+
+    return [
+        key for key in PG_COLUMN_REPAIRS
+        if key[0] in existing_tables and key not in existing_cols
+    ]
+
+
+def run_pg_column_repairs(database_url: str) -> list[tuple[str, str]]:
+    """Add any columns that migrations define but the live schema is missing.
+
+    Returns the (table, column) pairs actually added. Each statement runs on
+    its own so one failure cannot abort the rest — in PostgreSQL a failed
+    statement poisons the surrounding transaction.
+    """
+    from weeklyamp.db.postgres import get_pg_connection
+
+    conn = get_pg_connection(database_url, use_pool=False)
+    repaired: list[tuple[str, str]] = []
+    try:
+        missing = find_missing_pg_columns(conn)
+        if not missing:
+            return []
+
+        raw = conn.raw
+        old_autocommit = raw.autocommit
+        if not old_autocommit:
+            raw.commit()
+        raw.autocommit = True
+        try:
+            for key in missing:
+                statement = PG_COLUMN_REPAIRS[key]
+                try:
+                    cur = raw.cursor()
+                    cur.execute(statement)
+                    cur.close()
+                    repaired.append(key)
+                except Exception:
+                    logger.exception("Column repair failed: %s", statement)
+        finally:
+            raw.autocommit = old_autocommit
+    finally:
+        conn.close()
+
+    if repaired:
+        # A warning, not info: reaching here means the schema had drifted.
+        logger.warning(
+            "Schema drift repaired — added %d missing column(s): %s",
+            len(repaired),
+            ", ".join(f"{t}.{c}" for t, c in repaired),
+        )
+    return repaired
