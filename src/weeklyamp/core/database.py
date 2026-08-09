@@ -1241,6 +1241,20 @@ DEFAULT_EDITIONS = [
         "industry_pulse,deal_or_no_deal,streaming_dashboard,money_moves,rights_and_royalties,tech_talk,ai_music_lab,guest_column,executive_moves,global_markets,playlist_politics,startup_spotlight,festival_economy,catalog_watch,sync_and_licensing",
         3,
     ),
+    (
+        "daily-action",
+        "Single Daily Action",
+        "One move a day to build your TrueFans",
+        "A thirty-second read every weekday: one specific, doable action that turns a listener into a fan whose attention you actually own. Capture, connect, create, convert, amplify, perform, sustain — one pillar per day.",
+        "Independent artists building a direct fan base",
+        "#111827",
+        "&#9889;",
+        # Intentionally empty: the daily action is a single-action format
+        # and does not run through section rotation. See
+        # weeklyamp.content.daily_action for why it bypasses assembly.
+        "",
+        4,
+    ),
 ]
 
 
@@ -1269,6 +1283,408 @@ def seed_editions(db_path: str = "", database_url: str = "", backend: str = "") 
                 f"UPDATE newsletter_editions SET section_slugs = {p} WHERE slug = {p}",
                 (section_slugs, slug),
             )
+    conn.commit()
+    conn.close()
+    return inserted
+
+
+# Seed bank for the TrueFans Single Daily Action edition.
+# (pillar, title, action_text, why_it_works, time_minutes, difficulty, tags)
+#
+# Seven actions per pillar. With the default weekday schedule each pillar
+# comes round once a week, so this is seven weeks of non-repeating sends
+# before the rotation wraps — and every action is evergreen, so wrapping
+# is a feature, not a gap to fill.
+#
+# House rules for anything added here: one action, no named companies or
+# platforms that could go stale, no promised outcomes, and it has to be
+# genuinely finishable in the stated time by an artist with no budget.
+DEFAULT_DAILY_ACTIONS = [
+    # ---- CAPTURE: turn anonymous listeners into contacts you own ----
+    (
+        "capture",
+        "Audit every bio you own",
+        "Open every profile you control and check the link in each one. Any bio pointing at a streaming page instead of a page that captures an email is a leak. Change them all to the same signup link today.",
+        "Streams are rented attention. An email address is the only version of a fan you keep when a platform changes its rules.",
+        20, "easy", "bio,links,list-building",
+    ),
+    (
+        "capture",
+        "Put one unreleased thing behind an email",
+        "Pick one demo, voice memo, or alternate take you are never going to release commercially. Set up a single page that gives it away in exchange for an email address, and post the link once.",
+        "People trade contact details for something they cannot get anywhere else. An unfinished song is worth more here than a polished one.",
+        30, "medium", "lead-magnet,demos,list-building",
+    ),
+    (
+        "capture",
+        "Ask the last ten people who commented",
+        "Go to your most recent posts and find the last ten people who commented. Message each one personally and ask if they want to be on your list. Say what they will get and how often.",
+        "The people already talking to you convert at a rate no advertising can match, and nobody ever asks them directly.",
+        25, "easy", "dm,outreach,list-building",
+    ),
+    (
+        "capture",
+        "Make your lock screen a signup code",
+        "Generate a QR code for your signup page and set it as your phone's lock screen. Next time someone says they like your stuff, hand them your phone instead of asking them to search for you later.",
+        "The gap between someone meaning to look you up and actually doing it is where most fans are lost.",
+        10, "easy", "qr,live,list-building",
+    ),
+    (
+        "capture",
+        "Pin one post with one job",
+        "Write a short pinned post whose only call to action is joining your list. No release links, no tour dates, no merch. Say who it is for and what turns up in the inbox.",
+        "A pinned post is the one piece of real estate every new visitor sees. Most artists waste it on an announcement that expired months ago.",
+        15, "easy", "social,pinned,list-building",
+    ),
+    (
+        "capture",
+        "Write the welcome email you never wrote",
+        "Draft the first message every new subscriber gets. Two paragraphs: who you are, and one honest thing about what you are working on right now. Set it to send automatically.",
+        "The moment someone signs up is the most interested they will ever be. Silence at that moment teaches them to ignore you later.",
+        30, "medium", "welcome,automation,list-building",
+    ),
+    (
+        "capture",
+        "Add the line to your signature",
+        "Put a single sentence with your signup link at the bottom of your email signature, and in the notes app text you paste when someone asks where to follow you.",
+        "Capture works when it costs you nothing to repeat. Anything you have to remember to do will stop happening by Thursday.",
+        10, "easy", "email,signature,list-building",
+    ),
+
+    # ---- CONNECT: deepen the relationship with fans you already have ----
+    (
+        "connect",
+        "Send five messages with no ask",
+        "Find five people who engaged with you this week and send each a short personal message. Thank them for something specific. Do not mention a release, a show, or a link.",
+        "Fans can tell the difference between being marketed to and being noticed. Only one of those gets remembered.",
+        20, "easy", "dm,gratitude,retention",
+    ),
+    (
+        "connect",
+        "Reply to everyone, by name",
+        "Go back through the comments on your last three posts and reply to every single one, using the person's name. Yes, including the ones that just say a fire emoji.",
+        "Replying converts a passive audience into a room where people expect to be heard, and people come back to rooms like that.",
+        25, "easy", "comments,engagement,retention",
+    ),
+    (
+        "connect",
+        "Answer three fans with your voice",
+        "Pick three messages sitting in your inbox and reply with a voice note instead of text. Thirty seconds each, unscripted.",
+        "A voice carries warmth that typing cannot fake, and almost nobody gets one from an artist they follow.",
+        15, "easy", "voice-note,dm,retention",
+    ),
+    (
+        "connect",
+        "Ask your list one question",
+        "Email your list with one question they can answer in a single line. Make it about them, not about your music. Read every reply.",
+        "A list that has never replied to you is a broadcast channel. The first reply is what turns it into a relationship.",
+        20, "easy", "email,survey,retention",
+    ),
+    (
+        "connect",
+        "Start naming your first hundred",
+        "Open a blank document and write down the names of people who would genuinely care if you stopped making music. Get to twenty today. Keep the document.",
+        "You cannot build a career on people you cannot name. Knowing exactly who is already there changes what you make next.",
+        20, "medium", "superfans,list,retention",
+    ),
+    (
+        "connect",
+        "Thank one fan in public",
+        "Pick one person who has shown up repeatedly and thank them publicly for something specific they did. Not a shoutout for engagement — an actual thank you.",
+        "Public recognition tells everyone else what being a real fan of yours looks like, and gives them a role to step into.",
+        10, "easy", "social,gratitude,community",
+    ),
+    (
+        "connect",
+        "Post something to the three longest-standing",
+        "Identify the three people who have supported you longest. Write each a postcard or a letter and put it in the post this week.",
+        "Physical mail from an artist is rare enough that people photograph it, keep it, and tell other people about it for years.",
+        30, "medium", "mail,superfans,retention",
+    ),
+
+    # ---- CREATE: give fans a reason to care this week ----
+    (
+        "create",
+        "Post the mess, not the polish",
+        "Film sixty seconds of something unfinished — a part you cannot get right, a lyric you have rewritten four times — and post it with one line of context.",
+        "Finished work invites judgement. Unfinished work invites people in, and the ones who come in stay.",
+        20, "easy", "process,video,content",
+    ),
+    (
+        "create",
+        "Write the story behind one song",
+        "Pick one song and write 150 words on where it actually came from. Not the press release version — the real one. Send it to your list.",
+        "People do not become attached to songs. They become attached to what a song turns out to be about.",
+        30, "medium", "storytelling,email,content",
+    ),
+    (
+        "create",
+        "Break down one moment",
+        "Take one specific moment in a track — a harmony, a drum fill, a lyric turn — and explain in a short clip how it was built and why.",
+        "Teaching one small thing makes listeners hear the whole song differently, and people share what made them feel clever.",
+        25, "medium", "video,craft,content",
+    ),
+    (
+        "create",
+        "Publish one photo with two lines",
+        "Go into your camera roll, find one photo from a session, rehearsal, or van, and post it with two lines of honest context.",
+        "Consistency beats production value. A real photo posted today outperforms the perfect video you have not finished.",
+        10, "easy", "photo,social,content",
+    ),
+    (
+        "create",
+        "Strip one song back",
+        "Record a rough acoustic or single-instrument version of a song you already own. Phone microphone is fine. Give it to your list only.",
+        "A stripped version costs you nothing to make and gives existing fans something new without you having to write anything.",
+        45, "medium", "recording,exclusive,content",
+    ),
+    (
+        "create",
+        "Annotate your most-played lyric",
+        "Take the song of yours people play most and write a line-by-line note on what one verse actually means. Post it as text.",
+        "The people who already replay a song are the ones most likely to want more of it, and they are the cheapest audience you will ever reach.",
+        20, "easy", "lyrics,writing,content",
+    ),
+    (
+        "create",
+        "Cut your best fifteen seconds",
+        "Find the single strongest fifteen seconds in anything you have recorded and cut it out on its own. Post it with no explanation.",
+        "Most listeners decide in the first few seconds. Leading with your peak instead of your intro respects that.",
+        15, "easy", "clip,video,content",
+    ),
+
+    # ---- CONVERT: turn fans into people who pay you directly ----
+    (
+        "convert",
+        "Make paying you take sixty seconds",
+        "Try to buy something from yourself on your phone, start to finish. Count the taps. Remove everything that is not needed to complete the purchase.",
+        "Most lost sales are not a lack of desire. They are a form that asked one question too many.",
+        25, "easy", "checkout,sales,revenue",
+    ),
+    (
+        "convert",
+        "Run a name-your-price window",
+        "Offer one release to your list at whatever they want to pay, for forty-eight hours only. Say plainly what the money goes toward.",
+        "People pay more than the minimum when they know who they are paying and what it funds.",
+        30, "medium", "pricing,email,revenue",
+    ),
+    (
+        "convert",
+        "Build the one page that lists every way to pay you",
+        "Make a single page with the three ways someone can support you directly, in order of what helps most. Link it everywhere.",
+        "Fans who want to help usually do nothing, because they do not know what would actually help.",
+        30, "medium", "page,support,revenue",
+    ),
+    (
+        "convert",
+        "Go back to everyone who already bought",
+        "Pull the list of people who have bought from you before. Offer them one thing first, before anyone else sees it, and say that is why.",
+        "The strongest predictor that someone will buy from you is that they have already bought from you.",
+        25, "easy", "email,repeat-buyers,revenue",
+    ),
+    (
+        "convert",
+        "Price the physical thing you already have",
+        "Find something physical you already own that a fan would want — a test press, a marked-up lyric sheet, a used setlist — and put a price on it.",
+        "Scarce physical objects sell to superfans at prices digital files never will, and you already have them in a drawer.",
+        20, "easy", "merch,physical,revenue",
+    ),
+    (
+        "convert",
+        "Bundle two things you already sell",
+        "Take two things you already offer and sell them together for slightly less than the sum. Announce it to your list only.",
+        "A bundle raises what an interested fan spends without asking you to make anything new.",
+        20, "easy", "bundle,pricing,revenue",
+    ),
+    (
+        "convert",
+        "Say the number out loud",
+        "Write one honest message telling your list what you are trying to fund and what it costs. Ask directly. Then stop apologising for asking.",
+        "People fund things they understand. Vagueness, not greed, is what makes an ask feel uncomfortable.",
+        20, "hard", "ask,transparency,revenue",
+    ),
+
+    # ---- AMPLIFY: make existing fans bring the next ones ----
+    (
+        "amplify",
+        "Ask five people to send one song to one person",
+        "Message five engaged fans. Name the specific song and ask them to send it to one specific person they think would like it.",
+        "A vague request to share gets ignored. A precise one is easy enough to do while reading the message.",
+        20, "easy", "referral,dm,growth",
+    ),
+    (
+        "amplify",
+        "Hand your fans something to post",
+        "Make one shareable asset — a lyric card, a short clip, a still — and give it to your list with permission to post it however they want.",
+        "Most fans would happily spread the word and never do, because making something to post is work you can do for them.",
+        30, "medium", "assets,sharing,growth",
+    ),
+    (
+        "amplify",
+        "Give your most active fans a role",
+        "Pick the ten people who show up most and tell them you are giving them early access to everything, in exchange for telling one person when it drops.",
+        "People act on identity more reliably than incentives. Being named part of something is stickier than a discount.",
+        25, "medium", "street-team,superfans,growth",
+    ),
+    (
+        "amplify",
+        "Ask for the playlist add",
+        "Ask your list to add one of your songs to a playlist they made themselves — not a big editorial one. Their own.",
+        "A song sitting in a personal playlist gets replayed for years and reaches the exact people who trust that person's taste.",
+        15, "easy", "playlists,streaming,growth",
+    ),
+    (
+        "amplify",
+        "Repost three fans and say why",
+        "Find three pieces of fan-made content about you, repost them, and add a line about what you liked in each.",
+        "Visibly rewarding fan effort produces more of it. Silence trains people to stop.",
+        15, "easy", "ugc,social,growth",
+    ),
+    (
+        "amplify",
+        "Swap with one peer",
+        "Find one artist whose audience overlaps with yours and propose a straight swap: you tell your people about them, they tell theirs about you. Same week.",
+        "Borrowed trust travels further than paid reach, and peers at your level say yes far more often than you expect.",
+        25, "medium", "collab,cross-promo,growth",
+    ),
+    (
+        "amplify",
+        "Set up one referral reward",
+        "Decide one thing you can give a fan who brings three new people to your list, and tell your list what it is.",
+        "Word of mouth happens anyway. A named reward turns it from an accident into something you can count.",
+        30, "medium", "referral,rewards,growth",
+    ),
+
+    # ---- PERFORM: the live room, where fans are made fastest ----
+    (
+        "perform",
+        "Tell your list before you tell the internet",
+        "Announce your next date to your list a day before it goes anywhere else, and say explicitly that they are hearing it first.",
+        "Giving your list something socials do not get is what makes people stay on it.",
+        15, "easy", "announce,email,live",
+    ),
+    (
+        "perform",
+        "Fix the merch table capture",
+        "Set up the exact way you will collect emails at your next show — a form on a phone, a paper list, a code on the banner — and test it end to end today.",
+        "The merch table is the highest-intent moment you will ever get, and it usually goes uncaptured because nothing was set up in advance.",
+        25, "easy", "live,capture,merch",
+    ),
+    (
+        "perform",
+        "Write one twenty-second story",
+        "Write and rehearse one short true story to tell between two songs in your set. Time it. Twenty seconds, not two minutes.",
+        "People forget setlists and remember the thing you said before the third song.",
+        20, "medium", "stagecraft,storytelling,live",
+    ),
+    (
+        "perform",
+        "Send the rehearsal footage",
+        "Film one song at your next rehearsal on a phone, unedited, and send it to your list with one line about what you are working on.",
+        "Rehearsal footage sells a show better than a poster, because it shows the thing they would actually be buying.",
+        20, "easy", "video,live,email",
+    ),
+    (
+        "perform",
+        "Approach three rooms in a city you have never played",
+        "Pick a city you want to play and email three venues or promoters. Include the size of your list in that area and a link to live footage.",
+        "Bookers are answering the question of who you will bring. Numbers you own answer it far better than streams.",
+        40, "hard", "booking,outreach,live",
+    ),
+    (
+        "perform",
+        "Plan the after-show follow-up",
+        "Write, in advance, the message you will send to everyone you meet at your next show. Have it ready before you play.",
+        "The window after a show closes in about two days, and nobody writes a good follow-up at one in the morning.",
+        20, "easy", "follow-up,live,retention",
+    ),
+    (
+        "perform",
+        "Give the stage one call to action",
+        "Decide the single thing you will ask the room to do from stage, and write it into your set where it fits naturally.",
+        "A room that has just watched you play will do what you ask. Most artists ask for nothing.",
+        15, "medium", "stagecraft,cta,live",
+    ),
+
+    # ---- SUSTAIN: the systems that keep a career going ----
+    (
+        "sustain",
+        "Find the action that got a reply",
+        "Look back at the last week. Identify which single thing produced an actual human response. Schedule it twice next week.",
+        "Most artists repeat what feels productive rather than what worked. The difference compounds over a year.",
+        15, "easy", "review,systems,habits",
+    ),
+    (
+        "sustain",
+        "Write down the only number that matters",
+        "Count the people you can reach without a platform's permission — list subscribers, phone numbers, group members. Write the number and today's date somewhere you will see it weekly.",
+        "Owned reach is the number that survives an algorithm change. Tracking it weekly changes which tasks feel urgent.",
+        10, "easy", "metrics,review,systems",
+    ),
+    (
+        "sustain",
+        "Defend two blocks of making time",
+        "Open next week's calendar and block two ninety-minute sessions for creating only. Treat them like a booked show.",
+        "Promotion expands to fill every hour available. Only protected time produces the thing you are promoting.",
+        10, "easy", "calendar,craft,habits",
+    ),
+    (
+        "sustain",
+        "Mute ten accounts that make you feel behind",
+        "Go through your feeds and mute ten accounts that consistently leave you feeling like you are losing. Keep the ones that teach you something.",
+        "Comparison quietly sets your goals for you, and the goals it sets are rarely yours.",
+        10, "easy", "mindset,social,habits",
+    ),
+    (
+        "sustain",
+        "Answer who this is for",
+        "Write one sentence naming exactly who your music is for. Not a genre — a person. Put it where you will see it while working.",
+        "Every decision about what to make and where to put it gets faster once that sentence exists.",
+        20, "medium", "positioning,clarity,strategy",
+    ),
+    (
+        "sustain",
+        "Back up one release properly",
+        "Pick one release and make sure the stems, masters, and artwork exist in two places, one of them not in your house.",
+        "Careers have been reset to zero by one failed drive. This is the cheapest insurance available to you.",
+        30, "easy", "backup,archive,admin",
+    ),
+    (
+        "sustain",
+        "Take the day off on purpose",
+        "Do nothing for your career today and tell your list that is what you are doing. Then actually do nothing.",
+        "Rest taken deliberately is repeatable. Rest taken by collapse costs you the following month too.",
+        5, "easy", "rest,burnout,habits",
+    ),
+]
+
+
+def seed_daily_actions(db_path: str = "", database_url: str = "", backend: str = "") -> int:
+    """Insert the Single Daily Action seed bank. Returns count newly inserted.
+
+    Idempotent by ``(pillar, title)``: re-running adds only actions that
+    are new to the bank and never overwrites copy an admin has edited in
+    /admin/daily-action.
+    """
+    backend = backend or _get_backend()
+    conn = get_connection(db_path, database_url, backend)
+    p = _ph(backend)
+    inserted = 0
+    for entry in DEFAULT_DAILY_ACTIONS:
+        pillar, title, action_text, why, minutes, difficulty, tags = entry
+        existing = conn.execute(
+            f"SELECT id FROM daily_action_library WHERE pillar = {p} AND title = {p}",
+            (pillar, title),
+        ).fetchone()
+        if existing:
+            continue
+        conn.execute(
+            f"""INSERT INTO daily_action_library
+               (pillar, title, action_text, why_it_works, time_minutes, difficulty, tags)
+               VALUES ({p}, {p}, {p}, {p}, {p}, {p}, {p})""",
+            (pillar, title, action_text, why, minutes, difficulty, tags),
+        )
+        inserted += 1
     conn.commit()
     conn.close()
     return inserted

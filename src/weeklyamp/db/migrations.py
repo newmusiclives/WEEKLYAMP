@@ -1870,6 +1870,74 @@ CREATE INDEX IF NOT EXISTS idx_promo_events_created ON promo_events(created_at D
 
 INSERT OR IGNORE INTO schema_version (version) VALUES (54);
 """,
+    55: """
+-- v55: TrueFans Single Daily Action — the daily one-action artist edition.
+--
+-- Three tables, deliberately separate from `issues`/`assembled_issues`:
+-- a daily action is one action, not a multi-section issue, and forcing it
+-- through the section-assembly pipeline would mean carrying section
+-- rotation, sponsor slots and draft review for a 120-word email.
+--
+-- daily_action_library  = the evergreen bank of actions (seeded, editable)
+-- daily_action_issues   = one row per calendar day, the thing that ships
+-- daily_action_completions = "I did it" clicks, which drive the streak
+--
+-- Dates are stored as ISO 'YYYY-MM-DD' TEXT and always computed in
+-- Python. Postgres and SQLite disagree about date functions, so no query
+-- here is allowed to do date maths itself.
+CREATE TABLE IF NOT EXISTS daily_action_library (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    pillar TEXT NOT NULL DEFAULT '',
+    title TEXT NOT NULL DEFAULT '',
+    action_text TEXT NOT NULL DEFAULT '',
+    why_it_works TEXT NOT NULL DEFAULT '',
+    time_minutes INTEGER DEFAULT 15,
+    difficulty TEXT NOT NULL DEFAULT 'easy',
+    tags TEXT NOT NULL DEFAULT '',
+    is_active INTEGER DEFAULT 1,
+    times_used INTEGER DEFAULT 0,
+    last_used_date TEXT NOT NULL DEFAULT '',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_da_library_pillar ON daily_action_library(pillar, is_active);
+CREATE INDEX IF NOT EXISTS idx_da_library_used ON daily_action_library(last_used_date);
+
+CREATE TABLE IF NOT EXISTS daily_action_issues (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    action_date TEXT NOT NULL UNIQUE,
+    library_id INTEGER,
+    pillar TEXT NOT NULL DEFAULT '',
+    subject TEXT NOT NULL DEFAULT '',
+    preheader TEXT NOT NULL DEFAULT '',
+    hook TEXT NOT NULL DEFAULT '',
+    action_text TEXT NOT NULL DEFAULT '',
+    why_it_works TEXT NOT NULL DEFAULT '',
+    time_minutes INTEGER DEFAULT 15,
+    html_content TEXT NOT NULL DEFAULT '',
+    text_content TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'draft',
+    generated_by TEXT NOT NULL DEFAULT '',
+    tokens_used INTEGER DEFAULT 0,
+    recipients INTEGER DEFAULT 0,
+    sent_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_da_issues_date ON daily_action_issues(action_date DESC);
+CREATE INDEX IF NOT EXISTS idx_da_issues_status ON daily_action_issues(status);
+
+CREATE TABLE IF NOT EXISTS daily_action_completions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    issue_id INTEGER NOT NULL,
+    subscriber_id INTEGER,
+    action_date TEXT NOT NULL DEFAULT '',
+    ip_address TEXT NOT NULL DEFAULT '',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(issue_id, subscriber_id)
+);
+CREATE INDEX IF NOT EXISTS idx_da_done_sub ON daily_action_completions(subscriber_id, action_date DESC);
+
+INSERT OR IGNORE INTO schema_version (version) VALUES (55);
+""",
 }
 
 

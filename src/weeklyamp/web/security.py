@@ -146,6 +146,9 @@ _CSRF_COOKIE = "_csrf"
 _PUBLIC_PREFIXES = (
     "/health", "/login", "/static", "/submit", "/subscribe", "/unsubscribe",
     "/resubscribe", "/feedback", "/sample",
+    # Daily Action "Mark it done" links are clicked from an email by a
+    # reader who has never logged in.
+    "/daily",
     "/verify", "/newsletters", "/api/", "/feed.xml", "/feed.json", "/feed/", "/t/", "/preferences/",
     "/webhooks/inbound", "/artists", "/trivia/leaderboard", "/advertise",
     "/resources", "/refer", "/contests", "/contribute", "/embed",
@@ -1027,9 +1030,12 @@ class ComingSoonMiddleware(BaseHTTPMiddleware):
     # every ad in every sample into a dead end.
     # /advertise is the media kit and sponsor-inquiry page, and is likewise a
     # CTA target in the samples.
+    # /daily is email infrastructure like /t — a daily action already in
+    # someone's inbox must keep its "Mark it done" link working even
+    # while the public site is hidden.
     _ALWAYS_ALLOW = (
         "/health", "/static", "/login", "/logout", "/favicon.ico",
-        "/coming-soon", "/t", "/license", "/advertise",
+        "/coming-soon", "/t", "/license", "/advertise", "/daily",
     )
 
     def __init__(self, app, enabled: bool = False, token: str = "") -> None:

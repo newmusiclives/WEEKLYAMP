@@ -41,6 +41,7 @@ class FeatureFlag:
     CONTESTS = "contests"
     TRIVIA = "trivia"
     USER_SUBMISSIONS = "user_submissions"
+    DAILY_ACTION = "daily_action"
 
     # Engagement
     WELCOME_SEQUENCE = "welcome_sequence"
@@ -76,6 +77,7 @@ FLAG_METADATA: dict[str, tuple[str, str, str]] = {
     FeatureFlag.CONTESTS: ("Contests / giveaways", "Content", "Reader contests + entry tracking"),
     FeatureFlag.TRIVIA: ("Trivia / leaderboard", "Content", "Trivia questions + public leaderboard"),
     FeatureFlag.USER_SUBMISSIONS: ("User submissions", "Content", "Reader-submitted content pipeline"),
+    FeatureFlag.DAILY_ACTION: ("Single Daily Action", "Content", "Daily one-action artist edition + streaks"),
     FeatureFlag.WELCOME_SEQUENCE: ("Welcome sequence", "Engagement", "Drip emails for new subscribers"),
     FeatureFlag.REENGAGEMENT: ("Re-engagement", "Engagement", "Win-back emails for inactive readers"),
     FeatureFlag.REFERRALS: ("Referrals", "Engagement", "Subscriber referral rewards"),

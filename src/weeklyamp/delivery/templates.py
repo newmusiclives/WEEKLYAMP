@@ -103,6 +103,55 @@ def render_newsletter(
     )
 
 
+def render_daily_action_email(
+    subject: str = "",
+    preheader: str = "",
+    pillar_name: str = "",
+    pillar_color: str = "#7c5cfc",
+    pillar_question: str = "",
+    date_str: str = "",
+    hook: str = "",
+    action_text: str = "",
+    why_it_works: str = "",
+    time_minutes: int = 15,
+    cta_label: str = "Mark it done",
+    cta_url: str = "#",
+    streak: int = 0,
+    newsletter_name: str = "",
+    footer_html: str = "",
+    preferences_url: str = "#",
+) -> str:
+    """Render one TrueFans Single Daily Action email.
+
+    Copy fields are sanitized because they can come back from the model
+    (or from an admin editing a draft), and this HTML is stored and sent
+    verbatim. The unsubscribe link is intentionally *not* resolved here —
+    the template emits the ``{{ unsubscribe_url }}`` token literally and
+    :class:`weeklyamp.delivery.smtp_sender.SMTPSender` substitutes a
+    per-recipient URL at send time.
+    """
+    env = get_env()
+    template = env.get_template("daily_action.html.j2")
+    return template.render(
+        subject=sanitize_html(subject),
+        preheader=sanitize_html(preheader),
+        pillar_name=sanitize_html(pillar_name),
+        pillar_color=pillar_color,
+        pillar_question=sanitize_html(pillar_question),
+        date_str=sanitize_html(date_str),
+        hook=sanitize_html(hook),
+        action_text=sanitize_html(action_text),
+        why_it_works=sanitize_html(why_it_works),
+        time_minutes=int(time_minutes or 0),
+        cta_label=sanitize_html(cta_label),
+        cta_url=cta_url,
+        streak=int(streak or 0),
+        newsletter_name=sanitize_html(newsletter_name),
+        footer_html=footer_html,
+        preferences_url=preferences_url,
+    )
+
+
 def render_guest_section(content_html: str, author_name: str = "", author_bio: str = "", original_url: str = "") -> str:
     """Render a guest column section with attribution block."""
     env = get_env()

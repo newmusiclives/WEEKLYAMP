@@ -889,6 +889,40 @@ class TriviaPollsConfig(BaseModel):
     leaderboard_size: int = 25
 
 
+class DailyActionConfig(BaseModel):
+    """TrueFans Single Daily Action — one tactical action per day, emailed
+    to artists who opt into the ``daily-action`` edition.
+
+    The format is deliberately tiny: subject, one-line hook, one action,
+    one reason it works. Anything longer stops being daily-doable, which
+    is the whole product.
+
+    Actions come from the seeded ``daily_action_library`` and rotate by
+    pillar on a fixed weekday cycle (see :data:`PILLAR_BY_WEEKDAY` in
+    ``weeklyamp.content.daily_action``), so Monday always lands on the
+    same theme. The AI only rewrites copy around a library row it was
+    handed — it never invents the action, which keeps this edition inside
+    the same no-fabrication rule as the verified-facts pipeline.
+
+    ``require_approval`` is on by default: a draft is generated ahead of
+    time and waits in /admin/daily-action until a human approves it.
+    Turning it off makes the daily send fully autonomous.
+    """
+    enabled: bool = False
+    send_days: list[str] = Field(default_factory=lambda: [
+        "monday", "tuesday", "wednesday", "thursday", "friday",
+    ])
+    send_hour: int = 7                 # local hour the day's action goes out
+    draft_hour: int = 5                # hour the next action is drafted
+    draft_days_ahead: int = 1          # how far ahead to keep drafts queued
+    require_approval: bool = True
+    subject_prefix: str = "Today's TrueFans action"
+    max_tokens: int = 600              # short by design — keeps cost per send low
+    ai_rewrite: bool = True            # False = ship library copy verbatim, zero AI cost
+    show_streak: bool = True
+    cta_label: str = "Mark it done"
+
+
 class LeadMagnetsConfig(BaseModel):
     enabled: bool = False
 
@@ -1014,6 +1048,7 @@ class AppConfig(BaseModel):
     genre_preferences: GenrePreferencesConfig = Field(default_factory=GenrePreferencesConfig)
     section_engagement: SectionEngagementConfig = Field(default_factory=SectionEngagementConfig)
     trivia_polls: TriviaPollsConfig = Field(default_factory=TriviaPollsConfig)
+    daily_action: DailyActionConfig = Field(default_factory=DailyActionConfig)
     lead_magnets: LeadMagnetsConfig = Field(default_factory=LeadMagnetsConfig)
     sponsor_portal: SponsorPortalConfig = Field(default_factory=SponsorPortalConfig)
     contests: ContestsConfig = Field(default_factory=ContestsConfig)

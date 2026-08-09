@@ -73,6 +73,11 @@
                     <span class="icon">&#127915;</span> Events
                 </a>
                 {% endif %}
+                {% if ff("daily_action") %}
+                <a href="/admin/daily-action" class="{% block nav_daily_action %}{% endblock %}">
+                    <span class="icon">&#9889;</span> Daily Action
+                </a>
+                {% endif %}
 
                 <div class="nav-section-label">Planning</div>
                 <a href="/sections/" class="{% block nav_sections %}{% endblock %}">

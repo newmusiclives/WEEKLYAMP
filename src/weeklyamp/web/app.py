@@ -17,7 +17,15 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.gzip import GZipMiddleware
 
 from weeklyamp.core.config import load_config
-from weeklyamp.core.database import init_database, seed_agents, seed_content, seed_editions, seed_guest_contacts, seed_sections
+from weeklyamp.core.database import (
+    init_database,
+    seed_agents,
+    seed_content,
+    seed_daily_actions,
+    seed_editions,
+    seed_guest_contacts,
+    seed_sections,
+)
 from weeklyamp.research.sources import sync_sources_from_config
 from weeklyamp.web.security import (
     AdminIPAllowlistMiddleware,
@@ -244,6 +252,7 @@ def create_app() -> FastAPI:
             seed_guest_contacts(db_path, database_url, backend)
             seed_agents(db_path, database_url, backend)
             seed_content(db_path, database_url, backend)
+            seed_daily_actions(db_path, database_url, backend)
             # Sync any new sources from sources.yaml into DB
             from weeklyamp.db.repository import Repository
             repo = Repository(db_path, database_url, backend)
@@ -379,6 +388,7 @@ def create_app() -> FastAPI:
         "tucson": ("demo_tucson_artist.html", "Tucson Artist Edition", "Local edition — Tucson, AZ"),
         "corrales": ("demo_corrales_artist.html", "Corrales Artist Edition", "Local edition — Corrales, NM"),
         "sugar-lime-blue": ("demo_sugar_lime_blue.html", "Sugar Lime Blue Edition", "Artist-specific edition"),
+        "daily-action": ("demo_daily_action.html", "Single Daily Action", "Daily &mdash; one action for artists, thirty seconds to read"),
     }
 
     @app.get("/sample/{edition}")
@@ -418,7 +428,8 @@ def create_app() -> FastAPI:
             '<div style="max-width:640px;margin:0 auto;">'
             '<h1 style="font-size:28px;margin:0 0 8px;color:#1a1a1a;">TrueFans DISPATCH &mdash; Sample Editions</h1>'
             '<p style="color:#6b7280;font-size:15px;margin:0 0 28px;">'
-            'Six sample issues. Three top-line editions plus two local editions and one artist-specific edition. '
+            'Seven samples. Three top-line editions, two local editions, one artist-specific edition, '
+            'and the daily one-action email for artists. '
             'Every fact is sourced &mdash; click through to read.</p>'
             f'<div style="display:flex;flex-direction:column;gap:12px;">{"".join(cards)}</div>'
             '<p style="color:#9ca3af;font-size:12px;margin:32px 0 0;text-align:center;">'
@@ -777,6 +788,7 @@ def create_app() -> FastAPI:
     from weeklyamp.web.routes import admin_cost_dashboard as admin_cost_dashboard_routes
     from weeklyamp.web.routes import admin_feature_flags as admin_feature_flags_routes
     from weeklyamp.web.routes import admin_password_reset as admin_password_reset_routes
+    from weeklyamp.web.routes import daily_action as daily_action_routes
     from weeklyamp.web.routes import analytics as analytics_hub_routes
     from weeklyamp.web.routes import send_time as send_time_routes
     # v36+ future vision features
@@ -927,6 +939,9 @@ def create_app() -> FastAPI:
     app.include_router(promo_admin_routes.router, prefix="/admin/promo")
     app.include_router(admin_account_routes.router, prefix="/admin")
     app.include_router(admin_feature_flags_routes.router, prefix="/admin")
+    # Daily Action: public "mark it done" links plus the admin review desk.
+    app.include_router(daily_action_routes.router)
+    app.include_router(daily_action_routes.admin_router, prefix="/admin")
     app.include_router(admin_2fa_routes.router, prefix="/admin")
     app.include_router(admin_cost_dashboard_routes.router, prefix="/admin")
     # Password reset lives under /login/* so it's reachable unauthenticated.

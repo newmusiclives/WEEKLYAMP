@@ -75,6 +75,68 @@ def _reengagement_check():
         logger.exception("reengagement_check failed")
 
 
+def _daily_action_draft():
+    """Hourly tick: build the upcoming TrueFans Single Daily Action.
+
+    Runs every hour but only does work in the configured ``draft_hour``,
+    so the send time can be changed from config at runtime without
+    restarting the scheduler to re-register a cron trigger.
+
+    Drafts ``draft_days_ahead`` days forward so a human has time to
+    approve before the send job looks for an approved row.
+    """
+    try:
+        from datetime import date, timedelta
+        from weeklyamp.web.deps import get_config, get_repo
+        cfg = get_config()
+        da = cfg.daily_action
+        if not da.enabled:
+            return
+
+        from datetime import datetime
+        if datetime.now().hour != da.draft_hour:
+            return
+
+        from weeklyamp.content.daily_action import build_daily_action, should_send_on
+        repo = get_repo()
+        built = 0
+        for offset in range(0, max(1, da.draft_days_ahead) + 1):
+            target = date.today() + timedelta(days=offset)
+            if not should_send_on(target, da):
+                continue
+            if build_daily_action(repo, cfg, target):
+                built += 1
+        logger.info("daily_action_draft: %d action(s) ready", built)
+    except Exception:
+        logger.exception("daily_action_draft failed")
+
+
+def _daily_action_send():
+    """Hourly tick: send today's approved daily action at ``send_hour``."""
+    try:
+        from datetime import datetime
+        from weeklyamp.web.deps import get_config, get_repo
+        cfg = get_config()
+        da = cfg.daily_action
+        if not da.enabled:
+            return
+        if datetime.now().hour != da.send_hour:
+            return
+
+        from weeklyamp.content.daily_action import send_daily_action
+        repo = get_repo()
+        result = send_daily_action(repo, cfg)
+        if result.get("skipped"):
+            logger.info("daily_action_send: skipped — %s", result["skipped"])
+        else:
+            logger.info(
+                "daily_action_send: sent=%s failed=%s",
+                result.get("sent", 0), result.get("failed", 0),
+            )
+    except Exception:
+        logger.exception("daily_action_send failed")
+
+
 def _marketing_prospect_scan():
     """Weekly: AI identifies new sponsor prospects."""
     try:
@@ -201,6 +263,11 @@ def start_scheduler():
     _scheduler.add_job(_welcome_queue, "interval", minutes=30, id="welcome_queue", name="Process welcome sequence")
     _scheduler.add_job(_scheduled_sends, "interval", seconds=60, id="scheduled_sends", name="Process scheduled sends")
     _scheduler.add_job(_reengagement_check, "cron", hour=3, id="reengagement_check", name="Re-engagement check")
+
+    # TrueFans Single Daily Action — both tick hourly and no-op outside
+    # their configured hour, so draft_hour/send_hour are runtime-editable.
+    _scheduler.add_job(_daily_action_draft, "cron", minute=5, id="daily_action_draft", name="Draft daily action")
+    _scheduler.add_job(_daily_action_send, "cron", minute=0, id="daily_action_send", name="Send daily action")
 
     # Marketing automation (only runs when agents.default_autonomy == "autonomous")
     _scheduler.add_job(_marketing_prospect_scan, "cron", day_of_week="mon", hour=9, id="marketing_prospect_scan", name="AI prospect identification")

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ newsletter_name }} — Single Daily Action — {{ date_str }}</title>
+</head>
+{# Every style here is inline or in this file only. A daily action is read
+   on a phone, half-awake, in under thirty seconds — so it deliberately
+   does not load styles.css or share the multi-section edition chrome. #}
+<body style="margin:0;padding:0;background:#f4f4f5;">
+    {% if preheader %}
+    <div style="display:none;font-size:1px;color:#f4f4f5;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">
+        {{ preheader }}
+    </div>
+    {% endif %}
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f4f5;">
+      <tr>
+        <td align="center" style="padding:24px 12px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+                 style="max-width:520px;background:#ffffff;border-radius:12px;overflow:hidden;">
+
+            <!-- Masthead -->
+            <tr>
+              <td style="padding:28px 28px 0;text-align:center;">
+                <div style="font-family:Georgia,'Times New Roman',serif;font-size:20px;color:#9ca3af;font-style:italic;">A TrueFans</div>
+                <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:22px;font-weight:900;color:#1a1a1a;letter-spacing:2px;margin-top:2px;">SINGLE DAILY ACTION</div>
+              </td>
+            </tr>
+
+            <!-- Pillar badge + date -->
+            <tr>
+              <td style="padding:20px 28px 0;text-align:center;">
+                <span style="display:inline-block;background:{{ pillar_color }};color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:6px 16px;border-radius:20px;">{{ pillar_name }}</span>
+                <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:13px;color:#9ca3af;margin-top:10px;">{{ date_str }}</div>
+              </td>
+            </tr>
+
+            <!-- Hook -->
+            {% if hook %}
+            <tr>
+              <td style="padding:22px 28px 0;">
+                <p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:19px;line-height:1.45;color:#1a1a1a;">{{ hook }}</p>
+              </td>
+            </tr>
+            {% endif %}
+
+            <!-- The action -->
+            <tr>
+              <td style="padding:22px 28px 0;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+                       style="background:#fafafa;border-left:4px solid {{ pillar_color }};border-radius:6px;">
+                  <tr>
+                    <td style="padding:18px 20px;">
+                      <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;margin-bottom:10px;">
+                        Today&rsquo;s action &middot; {{ time_minutes }} min
+                      </div>
+                      <p style="margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:16px;line-height:1.6;color:#1a1a1a;">{{ action_text }}</p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Why it works -->
+            {% if why_it_works %}
+            <tr>
+              <td style="padding:18px 28px 0;">
+                <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#6b7280;margin-bottom:6px;">Why it works</div>
+                <p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.55;color:#4b5563;">{{ why_it_works }}</p>
+              </td>
+            </tr>
+            {% endif %}
+
+            <!-- CTA -->
+            <tr>
+              <td style="padding:26px 28px 0;text-align:center;">
+                <a href="{{ cta_url }}" style="display:inline-block;background:#1a1a1a;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:15px;font-weight:700;text-decoration:none;padding:13px 32px;border-radius:40px;">{{ cta_label }}</a>
+                {% if streak %}
+                <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:13px;color:#6b7280;margin-top:12px;">
+                  {{ streak }} day{{ '' if streak == 1 else 's' }} in a row. Keep it going.
+                </div>
+                {% endif %}
+              </td>
+            </tr>
+
+            <!-- Pillar framing -->
+            {% if pillar_question %}
+            <tr>
+              <td style="padding:26px 28px 0;">
+                <hr style="border:none;border-top:1px solid #e5e7eb;margin:0 0 16px;">
+                <p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:14px;font-style:italic;line-height:1.5;color:#9ca3af;text-align:center;">{{ pillar_question }}</p>
+              </td>
+            </tr>
+            {% endif %}
+
+            <!-- Footer -->
+            <tr>
+              <td style="padding:26px 28px 28px;">
+                <hr style="border:none;border-top:1px solid #e5e7eb;margin:0 0 16px;">
+                <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:12px;line-height:1.6;color:#9ca3af;text-align:center;">
+                  {{ footer_html }}
+                  <div style="margin-top:10px;">
+                    {# Emitted literally, not resolved here: SMTPSender swaps this
+                       token for a per-recipient link at send time. #}
+                    <a href="{% raw %}{{ unsubscribe_url }}{% endraw %}" style="color:#9ca3af;text-decoration:underline;">Unsubscribe</a>
+                    &nbsp;&middot;&nbsp;
+                    <a href="{{ preferences_url }}" style="color:#9ca3af;text-decoration:underline;">Change frequency</a>
+                  </div>
+                </div>
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+</body>
+</html>
