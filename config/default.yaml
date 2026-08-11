@@ -9,9 +9,17 @@ newsletter:
 
 ai:
   provider: "anthropic"
-  model: "claude-sonnet-4-5-20250929"
+  # Reader-facing prose. Sonnet 5 is a better writer than Sonnet 4.5 and,
+  # on introductory pricing through 2026-08-31, a third cheaper.
+  model: "claude-sonnet-5"
+  # Scoring and short-critique passes (editor review). One call per draft,
+  # so this is the highest call-count model in the pipeline — Haiku is
+  # $1/$5 per 1M against Sonnet's $3/$15. Blank = use `model`.
+  review_model: "claude-haiku-4-5"
   max_tokens: 2000
   temperature: 0.7
+  # Cap on sections drafted per issue. 0 = draft the whole library.
+  max_sections_per_issue: 15
 
 # --- Feature flags (unified on/off switches) ---
 # These are the baseline values each deploy starts with. Overrides live

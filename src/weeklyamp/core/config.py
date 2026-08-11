@@ -90,11 +90,22 @@ def load_config(config_path: Optional[str] = None) -> AppConfig:
     # Build AI config with env overrides
     ai_data = yaml_data.get("ai", {})
     provider_str = os.getenv("WEEKLYAMP_AI_PROVIDER", ai_data.get("provider", "anthropic"))
+    _ai_defaults = AIConfig()
     ai = AIConfig(
         provider=AIProvider(provider_str),
-        model=os.getenv("WEEKLYAMP_AI_MODEL", ai_data.get("model", "claude-sonnet-4-5-20250929")),
-        max_tokens=int(ai_data.get("max_tokens", 2000)),
-        temperature=float(ai_data.get("temperature", 0.7)),
+        model=os.getenv("WEEKLYAMP_AI_MODEL", ai_data.get("model", _ai_defaults.model)),
+        review_model=os.getenv(
+            "WEEKLYAMP_AI_REVIEW_MODEL",
+            ai_data.get("review_model", _ai_defaults.review_model),
+        ),
+        max_tokens=int(ai_data.get("max_tokens", _ai_defaults.max_tokens)),
+        temperature=float(ai_data.get("temperature", _ai_defaults.temperature)),
+        max_sections_per_issue=int(
+            os.getenv(
+                "WEEKLYAMP_MAX_SECTIONS_PER_ISSUE",
+                ai_data.get("max_sections_per_issue", _ai_defaults.max_sections_per_issue),
+            )
+        ),
     )
 
     # Build GoHighLevel config with env overrides

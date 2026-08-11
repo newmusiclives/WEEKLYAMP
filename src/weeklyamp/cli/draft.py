@@ -11,7 +11,7 @@ from rich.table import Table
 
 from weeklyamp.content.generator import generate_draft
 from weeklyamp.content.prompts import build_prompt
-from weeklyamp.content.sections import get_section_slugs, validate_section
+from weeklyamp.content.sections import get_draftable_section_slugs, validate_section
 from weeklyamp.core.config import load_config
 from weeklyamp.db.repository import Repository
 
@@ -47,7 +47,7 @@ def generate(
             raise typer.Exit(1)
         slugs = [section]
     else:
-        slugs = get_section_slugs(repo)
+        slugs = get_draftable_section_slugs(repo, cfg)
 
     console.print(f"[bold]Generating drafts for issue #{issue['issue_number']}...[/bold]\n")
 

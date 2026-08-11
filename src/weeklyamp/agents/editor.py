@@ -6,7 +6,7 @@ import json
 from typing import Optional
 
 from weeklyamp.agents.base import AgentBase
-from weeklyamp.content.generator import generate_draft_with_usage
+from weeklyamp.content.generator import generate_draft_with_usage, resolve_review_model
 from weeklyamp.content.rotation import select_rotating_sections
 
 
@@ -119,8 +119,12 @@ class EditorInChiefAgent(AgentBase):
             )
 
             try:
+                # One call per draft — the highest call count in the
+                # pipeline. Rating 1-10 and listing fixes doesn't need the
+                # writing model, so this runs on the cheaper review tier.
                 review_text, model, tokens_used = generate_draft_with_usage(
-                    prompt, self.config, max_tokens_override=500
+                    prompt, self.config, max_tokens_override=500,
+                    model_override=resolve_review_model(self.config),
                 )
                 total_tokens += tokens_used
                 reviews.append({

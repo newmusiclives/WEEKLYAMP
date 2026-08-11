@@ -658,10 +658,27 @@ class SocialPost(BaseModel):
 # --- Config models ---
 
 class AIConfig(BaseModel):
+    """Model selection and per-issue generation limits.
+
+    Two models, split by task. ``model`` writes the prose that ships to
+    readers. ``review_model`` runs the cheap, high-volume passes that only
+    have to produce a score or a short critique — the editor's per-draft
+    review is one call per draft, so it is the single largest call count in
+    the pipeline and the least deserving of a flagship model.
+
+    ``max_sections_per_issue`` caps how many sections a drafting run will
+    generate. Without it every run drafts the entire section library (74
+    active sections as of 2026-08), which is where most of the per-issue
+    cost goes. See :mod:`weeklyamp.core.cost_model`.
+    """
     provider: AIProvider = AIProvider.ANTHROPIC
-    model: str = "claude-sonnet-4-5-20250929"
+    model: str = "claude-sonnet-5"
+    # Empty string = fall back to `model` (single-model operation).
+    review_model: str = "claude-haiku-4-5"
     max_tokens: int = 2000
     temperature: float = 0.7
+    # 0 = uncapped (the old behaviour: draft the whole library).
+    max_sections_per_issue: int = 15
 
 
 class GHLConfig(BaseModel):

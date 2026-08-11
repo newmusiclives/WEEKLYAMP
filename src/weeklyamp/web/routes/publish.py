@@ -222,10 +222,10 @@ async def autopilot(request: Request, edition_slug: str = Form("fan")):
         issue = repo.get_latest_issue()
         if issue:
             issue_id = issue["id"]
-            sections = repo.get_all_sections()
+            from weeklyamp.content.sections import get_draftable_section_slugs
+            slugs = get_draftable_section_slugs(repo, config)
             drafted = 0
-            for section in sections[:5]:  # Limit to 5 sections
-                slug = section.get("slug", "")
+            for slug in slugs:
                 try:
                     draft_id = auto_draft_from_research(repo, config, issue_id, slug)
                     if draft_id:

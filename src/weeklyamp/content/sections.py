@@ -8,9 +8,52 @@ from weeklyamp.db.repository import Repository
 
 
 def get_section_slugs(repo: Repository) -> list[str]:
-    """Return ordered list of active section slugs."""
+    """Return ordered list of active section slugs (the full library).
+
+    For a drafting run use :func:`get_draftable_section_slugs` instead —
+    this returns every active section, which is the whole library rather
+    than one issue's worth.
+    """
     sections = repo.get_active_sections()
     return [s["slug"] for s in sections]
+
+
+def get_draftable_section_slugs(repo: Repository, config=None) -> list[str]:
+    """Return the section slugs a single drafting run should generate.
+
+    The section library is much larger than any one issue — 74 active
+    sections as of 2026-08, of which only 7 are ``core`` — and a run that
+    drafts all of them costs one API call per section plus one
+    editor-review call per resulting draft. That was the dominant line in
+    the cost model, so a run is capped at
+    ``config.ai.max_sections_per_issue``.
+
+    The cap honours the editorial structure rather than slicing blindly:
+    every ``core`` section runs, and the remaining slots are filled from
+    the rotating pool by :func:`weeklyamp.content.rotation.select_rotating_sections`,
+    which favours sections that haven't appeared recently and spreads them
+    across categories. Order follows ``sort_order`` so the running order is
+    preserved.
+
+    Pass ``config=None``, or set the cap to 0, to draft the whole library.
+    """
+    all_slugs = get_section_slugs(repo)
+    cap = getattr(getattr(config, "ai", None), "max_sections_per_issue", 0) or 0
+    if cap <= 0:
+        return all_slugs
+
+    core = [s["slug"] for s in repo.get_sections_by_type("core")]
+    # Core alone can exceed the cap; truncating it is better than blowing
+    # through the budget, and sort_order decides which core sections stay.
+    if len(core) >= cap:
+        chosen = set(core)
+    else:
+        from weeklyamp.content.rotation import select_rotating_sections
+        rotating = select_rotating_sections(repo, max_rotating=cap - len(core))
+        chosen = set(core) | set(rotating)
+
+    ordered = [slug for slug in all_slugs if slug in chosen]
+    return ordered[:cap]
 
 
 def get_section_map(repo: Repository) -> dict[str, dict]:
