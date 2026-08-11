@@ -153,3 +153,84 @@ def test_editor_assign_sections_respects_the_cap(repo, library):
     assert assigned.issubset(set(library["all"]))
     for slug in library["core"][:cap]:
         assert slug in assigned
+
+
+# --- sampling params must not be sent to models that reject them -------
+
+
+@pytest.mark.parametrize("model", [
+    "claude-sonnet-5", "claude-opus-5", "claude-opus-4-7",
+    "claude-opus-4-8", "claude-fable-5", "claude-mythos-5",
+])
+def test_current_generation_rejects_sampling_params(model):
+    """Sending temperature to these returns a 400 the generator swallows,
+    which surfaces as an empty draft rather than an error."""
+    from weeklyamp.content.generator import supports_sampling_params
+    assert supports_sampling_params(model) is False
+
+
+@pytest.mark.parametrize("model", [
+    "claude-sonnet-4-5-20250929", "claude-haiku-4-5",
+    "claude-opus-4-6", "claude-sonnet-4-6", "gpt-4o", "some-proxy-model",
+])
+def test_older_and_unknown_models_still_get_sampling_params(model):
+    """Unrecognised names keep the pre-4.7 behaviour rather than silently
+    dropping a parameter the caller set on purpose."""
+    from weeklyamp.content.generator import supports_sampling_params
+    assert supports_sampling_params(model) is True
+
+
+def test_temperature_omitted_for_rejecting_model(monkeypatch):
+    """The request body must not carry temperature for a 5-series model."""
+    from weeklyamp.content import generator
+
+    captured = {}
+
+    class _Msg:
+        content = [type("B", (), {"text": "ok"})()]
+        usage = type("U", (), {"input_tokens": 10, "output_tokens": 5})()
+
+    class _Messages:
+        def create(self, **kwargs):
+            captured.update(kwargs)
+            return _Msg()
+
+    class _Client:
+        messages = _Messages()
+
+    monkeypatch.setattr(generator, "anthropic", type("M", (), {"Anthropic": lambda: _Client()}), raising=False)
+    monkeypatch.setitem(__import__("sys").modules, "anthropic",
+                        type("M", (), {"Anthropic": staticmethod(lambda: _Client())}))
+
+    cfg = AppConfig(ai=AIConfig(model="claude-sonnet-5", temperature=0.7))
+    content, model, tokens = generator.generate_draft_with_usage("hi", cfg)
+
+    assert content == "ok"
+    assert model == "claude-sonnet-5"
+    assert tokens == 15
+    assert "temperature" not in captured, captured
+
+
+def test_temperature_sent_for_accepting_model(monkeypatch):
+    from weeklyamp.content import generator
+
+    captured = {}
+
+    class _Msg:
+        content = [type("B", (), {"text": "ok"})()]
+        usage = type("U", (), {"input_tokens": 1, "output_tokens": 1})()
+
+    class _Messages:
+        def create(self, **kwargs):
+            captured.update(kwargs)
+            return _Msg()
+
+    class _Client:
+        messages = _Messages()
+
+    monkeypatch.setitem(__import__("sys").modules, "anthropic",
+                        type("M", (), {"Anthropic": staticmethod(lambda: _Client())}))
+
+    cfg = AppConfig(ai=AIConfig(model="claude-haiku-4-5", temperature=0.3))
+    generator.generate_draft_with_usage("hi", cfg)
+    assert captured.get("temperature") == 0.3

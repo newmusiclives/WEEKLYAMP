@@ -22,6 +22,33 @@ from weeklyamp.core.models import AIProvider, AppConfig
 logger = logging.getLogger(__name__)
 
 
+# Model families that reject `temperature` / `top_p` / `top_k` outright.
+# Sending a non-default sampling parameter to one of these returns
+# 400 "`temperature` is deprecated for this model" — and because the
+# call sites below swallow provider errors, that surfaces as an empty
+# draft rather than a crash. Older families (Sonnet 4.5/4.6, Haiku 4.5,
+# Opus 4.5/4.6) still accept sampling params.
+_SAMPLING_REJECTED_PREFIXES: tuple[str, ...] = (
+    "claude-opus-5",
+    "claude-opus-4-7",
+    "claude-opus-4-8",
+    "claude-sonnet-5",
+    "claude-fable-5",
+    "claude-mythos-5",
+)
+
+
+def supports_sampling_params(model: str) -> bool:
+    """Whether *model* accepts ``temperature`` and friends.
+
+    Conservative by prefix: an unrecognised model is assumed to accept
+    them, which matches how every model behaved before the 4.7/5
+    generation and keeps custom or proxied model names working.
+    """
+    name = (model or "").strip().lower()
+    return not name.startswith(_SAMPLING_REJECTED_PREFIXES)
+
+
 def resolve_review_model(config: AppConfig) -> str:
     """Return the model to use for scoring / short-critique passes.
 
@@ -97,9 +124,10 @@ def _generate_anthropic(
     kwargs: dict = dict(
         model=model,
         max_tokens=max_tokens,
-        temperature=config.ai.temperature,
         messages=[{"role": "user", "content": prompt}],
     )
+    if supports_sampling_params(model):
+        kwargs["temperature"] = config.ai.temperature
     if system_prompt:
         kwargs["system"] = system_prompt
 
@@ -136,12 +164,14 @@ def _generate_openai(
 
     try:
         client = openai.OpenAI()  # uses OPENAI_API_KEY env var
-        response = client.chat.completions.create(
+        openai_kwargs: dict = dict(
             model=model,
             max_tokens=max_tokens,
-            temperature=config.ai.temperature,
             messages=messages,
         )
+        if supports_sampling_params(model):
+            openai_kwargs["temperature"] = config.ai.temperature
+        response = client.chat.completions.create(**openai_kwargs)
         content = response.choices[0].message.content
         usage = getattr(response, "usage", None)
         tokens_used = int(getattr(usage, "total_tokens", 0)) if usage else 0

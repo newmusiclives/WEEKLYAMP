@@ -130,6 +130,16 @@ class WriterAgent(AgentBase):
             prompt, self.config, max_tokens_override=max_tokens, system_prompt=agent_system_prompt,
         )
 
+        # The generator returns empty content on provider failure rather
+        # than raising, so without this check a rejected request saves an
+        # empty draft and the task reports success. Fail loudly instead —
+        # a run that generated nothing should not look like a clean run.
+        if not (content or "").strip():
+            raise RuntimeError(
+                f"Generation returned no content for section '{section_slug}' "
+                f"(model={model}). Check provider logs for a rejected request."
+            )
+
         # Enforce the 2-image floor per Paul 2026-04-17: every edition
         # / genre / city / artist issue needs at least 2 images. The
         # helper tries content-matched CC0 images first, falls back to
