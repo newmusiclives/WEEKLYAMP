@@ -8,6 +8,7 @@ from typing import Optional
 from weeklyamp.agents.base import AgentBase
 from weeklyamp.content.generator import generate_draft_with_usage, resolve_review_model
 from weeklyamp.content.rotation import select_rotating_sections
+from weeklyamp.content.sections import get_draftable_section_slugs
 
 
 class EditorInChiefAgent(AgentBase):
@@ -80,20 +81,24 @@ class EditorInChiefAgent(AgentBase):
         if not fallback_writer:
             return {"error": "No writer agent found"}
 
-        sections = self.repo.get_active_sections()
+        # Respect the per-issue section cap. Assigning the whole library
+        # here would hand every writer a task and bypass the cap that the
+        # CLI and autopilot paths already honour — one write call plus one
+        # review call per section, so the cost lands twice.
+        slugs = get_draftable_section_slugs(self.repo, self.config)
         created_tasks = []
 
-        for sec in sections:
+        for slug in slugs:
             # Route to specialist writer for this section
-            writer = self.repo.get_writer_for_section(sec["slug"]) or fallback_writer
+            writer = self.repo.get_writer_for_section(slug) or fallback_writer
             t_id = self.repo.create_agent_task(
                 agent_id=writer["id"],
                 task_type="write_section",
                 issue_id=issue_id,
-                section_slug=sec["slug"],
+                section_slug=slug,
                 priority=3,
             )
-            created_tasks.append({"task_id": t_id, "section": sec["slug"], "writer": writer["name"]})
+            created_tasks.append({"task_id": t_id, "section": slug, "writer": writer["name"]})
 
         self.log_output(task_id, "assignments", json.dumps(created_tasks))
         return {"assigned": len(created_tasks), "tasks": created_tasks}

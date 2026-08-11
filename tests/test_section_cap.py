@@ -129,3 +129,27 @@ def test_shipped_config_splits_the_tiers():
     cfg = AppConfig()
     assert resolve_review_model(cfg) != cfg.ai.model
     assert cfg.ai.max_sections_per_issue > 0
+
+
+# --- the agent path must honour the cap too ---------------------------
+
+
+def test_editor_assign_sections_respects_the_cap(repo, library):
+    """The agent path generates the telemetry the cost dashboard reads, so
+    a cap it ignores would silently undo the saving twice over — one write
+    call and one review call per extra section."""
+    from weeklyamp.agents.editor import EditorInChiefAgent
+
+    cap = 6
+    issue_id = repo.create_issue(1, title="Cap test")
+    repo.create_agent("writer", "Test Writer")
+    agent = EditorInChiefAgent(repo, _config(cap))
+    task_id = agent.assign_task("assign_sections", issue_id=issue_id)
+    result = agent.execute(task_id)
+
+    assert result.get("assigned") == cap, result
+    assigned = {t["section"] for t in result["tasks"]}
+    assert len(assigned) == cap
+    assert assigned.issubset(set(library["all"]))
+    for slug in library["core"][:cap]:
+        assert slug in assigned
