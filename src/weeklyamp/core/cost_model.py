@@ -32,24 +32,31 @@ import os
 
 CANONICAL_EDITIONS: tuple[str, ...] = ("fan", "artist", "industry")
 
-# --- Modeled call mix for one issue -----------------------------------
-# Calibrated against the one real assembly run (2026-08-08): 74 drafts
-# averaging 2,247 characters, i.e. ~562 output tokens per section. Input
-# is estimated from prompt construction (system prompt + section brief +
-# verified-facts sheet), not measured — it is the least certain number
-# here and should be replaced by telemetry when available.
-WRITE_INPUT_TOKENS_PER_SECTION = 2000
-WRITE_OUTPUT_TOKENS_PER_SECTION = 562
+# --- Measured call mix for one issue ----------------------------------
+# Calibrated 2026-08-11 against three real agent cycles (fan, artist,
+# industry), 45 write calls and 45 reviews: 1,337 tokens per write call
+# over drafts averaging 3,481 characters (~870 output tokens), and 1,095
+# tokens per review call.
+#
+# The shape matters as much as the totals. Generation is *output-heavy*
+# — roughly 870 out against 470 in — where the pre-measurement estimate
+# had it backwards at 562 out against 2,000 in. Output costs five times
+# input, so that inversion made the derived blended rate far too cheap
+# and understated every measured edition on the dashboard.
+WRITE_INPUT_TOKENS_PER_SECTION = 470
+WRITE_OUTPUT_TOKENS_PER_SECTION = 870
 
 # The editor reviews every draft — one call per section, capped at 500
 # output tokens, sending up to 2,000 characters of the draft back.
-REVIEW_INPUT_TOKENS_PER_SECTION = 650
-REVIEW_OUTPUT_TOKENS_PER_SECTION = 350
+REVIEW_INPUT_TOKENS_PER_SECTION = 550
+REVIEW_OUTPUT_TOKENS_PER_SECTION = 545
 
-# Per-issue extras on the writing tier: subject lines, preheader, and the
-# verified-facts audit pass.
-EXTRA_INPUT_TOKENS_PER_ISSUE = 8000
-EXTRA_OUTPUT_TOKENS_PER_ISSUE = 3000
+# Per-issue extras on the writing tier: subject lines (300 output cap),
+# preheader (200 cap), and the verified-facts audit. These run at
+# assembly rather than through an agent, so they are not in
+# agent_output_log and remain the one modeled term here.
+EXTRA_INPUT_TOKENS_PER_ISSUE = 3000
+EXTRA_OUTPUT_TOKENS_PER_ISSUE = 1000
 
 # Used only when the section cap can't be read off the config.
 DEFAULT_SECTIONS_PER_ISSUE = 15
