@@ -1028,12 +1028,99 @@ class ArtistNewslettersConfig(BaseModel):
     waitlist_enabled: bool = True
 
 
+class LicenseTier(BaseModel):
+    """One rung of the city-license ladder.
+
+    The ladder trades fee against revenue split: a licensee pays more per
+    month to keep more of what they sell. ``platform_share_pct`` is *our*
+    cut — the invoice line reads "Platform revenue share" — so the
+    licensee keeps ``100 - platform_share_pct``.
+
+    ``included_sends`` is the monthly subscriber-send allowance. Delivery
+    is 60-97% of the marginal cost of serving a location, so a flat fee
+    gets worse the more successful the licensee becomes; sends beyond the
+    allowance bill at ``LicensingConfig.overage_per_1k_cents``.
+    """
+    slug: str = ""
+    name: str = ""
+    monthly_fee_cents: int = 0
+    annual_fee_cents: int = 0
+    platform_share_pct: float = 0.0
+    included_sends: int = 0
+
+    @property
+    def licensee_share_pct(self) -> float:
+        return round(100.0 - self.platform_share_pct, 2)
+
+
+def _default_license_tiers() -> list[LicenseTier]:
+    # Annual = 10x monthly (two months free). The previous $999 annual was
+    # 45% off the monthly rate, far deeper than the usual discount.
+    return [
+        LicenseTier(slug="starter", name="Starter", monthly_fee_cents=5000,
+                    annual_fee_cents=50000, platform_share_pct=75.0,
+                    included_sends=2500),
+        LicenseTier(slug="growth", name="Growth", monthly_fee_cents=10000,
+                    annual_fee_cents=100000, platform_share_pct=50.0,
+                    included_sends=6000),
+        LicenseTier(slug="pro", name="Pro", monthly_fee_cents=19900,
+                    annual_fee_cents=199000, platform_share_pct=25.0,
+                    included_sends=12000),
+    ]
+
+
 class LicensingConfig(BaseModel):
     enabled: bool = False
-    default_monthly_fee_cents: int = 15000  # $150/mo
-    default_annual_fee_cents: int = 99900  # $999/yr
-    default_revenue_share_pct: float = 20.0
+    tiers: list[LicenseTier] = Field(default_factory=_default_license_tiers)
+    default_tier: str = "growth"
+    # Delivery beyond a tier's allowance. Costs $9.60 per 1,000 sends per
+    # month at $0.80/1k across 12 sends, so $15 leaves a working margin
+    # and keeps a growing list from going underwater.
+    overage_per_1k_cents: int = 1500
     trial_days: int = 30
+
+    def tier(self, slug: str = "") -> LicenseTier:
+        """Return a tier by slug, falling back to the configured default.
+
+        An unrecognised slug must land on ``default_tier`` rather than
+        whichever rung happens to sit first in the list — a typo in a
+        signup form should not silently pick a plan nobody chose.
+        """
+        by_slug = {t.slug: t for t in self.tiers}
+        wanted = (slug or self.default_tier or "").strip().lower()
+        if wanted in by_slug:
+            return by_slug[wanted]
+        default = (self.default_tier or "").strip().lower()
+        if default in by_slug:
+            return by_slug[default]
+        return self.tiers[0] if self.tiers else LicenseTier()
+
+    # --- backwards compatibility -------------------------------------
+    # Older call sites read these three directly; keep them resolving to
+    # the default tier rather than to a separate, drifting set of numbers.
+    @property
+    def default_monthly_fee_cents(self) -> int:
+        return self.tier().monthly_fee_cents
+
+    @property
+    def default_annual_fee_cents(self) -> int:
+        return self.tier().annual_fee_cents
+
+    @property
+    def default_revenue_share_pct(self) -> float:
+        return self.tier().platform_share_pct
+
+    def monthly_overage_cents(self, tier_slug: str, subscriber_sends: int) -> int:
+        """Delivery charge for sends beyond the tier's allowance.
+
+        Billed per started 1,000 so a partial block isn't given away.
+        """
+        t = self.tier(tier_slug)
+        excess = max(0, int(subscriber_sends) - t.included_sends)
+        if excess <= 0:
+            return 0
+        blocks = -(-excess // 1000)  # ceil
+        return blocks * self.overage_per_1k_cents
 
 
 class RateLimitConfig(BaseModel):

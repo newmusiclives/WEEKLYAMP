@@ -152,13 +152,17 @@ async def licensee_detail(licensee_id: int, request: Request):
     return HTMLResponse(render("licensee_detail.html", licensee=licensee, revenue=revenue, invoices=invoices, config=config))
 
 @router.post("/create", response_class=HTMLResponse)
-async def create_licensee(request: Request, company_name: str = Form(...), contact_name: str = Form(...), email: str = Form(...), password: str = Form(...), city_market_slug: str = Form(""), edition_slugs: str = Form("fan,artist,industry"), plan: str = Form("monthly")):
+async def create_licensee(request: Request, company_name: str = Form(...), contact_name: str = Form(...), email: str = Form(...), password: str = Form(...), city_market_slug: str = Form(""), edition_slugs: str = Form("fan,artist,industry"), plan: str = Form("monthly"), tier: str = Form("")):
     repo = get_repo()
     config = get_config()
     from weeklyamp.web.security import hash_password
     pw_hash = hash_password(password)
-    fee = config.licensing.default_monthly_fee_cents if plan == "monthly" else config.licensing.default_annual_fee_cents
-    share = config.licensing.default_revenue_share_pct
+    # Bill the tier the licensee actually signed up for. Reading a single
+    # default here meant a Starter signup on the public page was created
+    # on the default plan's fee and split.
+    selected = config.licensing.tier(tier)
+    fee = selected.monthly_fee_cents if plan == "monthly" else selected.annual_fee_cents
+    share = selected.platform_share_pct
     licensee_id = repo.create_licensee(company_name, contact_name, email, pw_hash, city_market_slug, edition_slugs, plan, fee, share)
 
     # If billing is active, redirect to Manifest checkout
