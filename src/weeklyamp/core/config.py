@@ -100,6 +100,9 @@ def load_config(config_path: Optional[str] = None) -> AppConfig:
         ),
         max_tokens=int(ai_data.get("max_tokens", _ai_defaults.max_tokens)),
         temperature=float(ai_data.get("temperature", _ai_defaults.temperature)),
+        thinking=os.getenv(
+            "WEEKLYAMP_AI_THINKING", ai_data.get("thinking", _ai_defaults.thinking)
+        ),
         max_sections_per_issue=int(
             os.getenv(
                 "WEEKLYAMP_MAX_SECTIONS_PER_ISSUE",

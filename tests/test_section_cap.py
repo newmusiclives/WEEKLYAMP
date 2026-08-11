@@ -187,7 +187,7 @@ def test_temperature_omitted_for_rejecting_model(monkeypatch):
     captured = {}
 
     class _Msg:
-        content = [type("B", (), {"text": "ok"})()]
+        content = [type("B", (), {"type": "text", "text": "ok"})()]
         usage = type("U", (), {"input_tokens": 10, "output_tokens": 5})()
 
     class _Messages:
@@ -217,7 +217,7 @@ def test_temperature_sent_for_accepting_model(monkeypatch):
     captured = {}
 
     class _Msg:
-        content = [type("B", (), {"text": "ok"})()]
+        content = [type("B", (), {"type": "text", "text": "ok"})()]
         usage = type("U", (), {"input_tokens": 1, "output_tokens": 1})()
 
     class _Messages:
@@ -234,3 +234,83 @@ def test_temperature_sent_for_accepting_model(monkeypatch):
     cfg = AppConfig(ai=AIConfig(model="claude-haiku-4-5", temperature=0.3))
     generator.generate_draft_with_usage("hi", cfg)
     assert captured.get("temperature") == 0.3
+
+
+# --- response parsing must survive thinking blocks --------------------
+
+
+def _fake_anthropic(monkeypatch, blocks, captured):
+    """Install a stub Anthropic client returning *blocks* as content."""
+    class _Msg:
+        content = blocks
+        usage = type("U", (), {"input_tokens": 4, "output_tokens": 6})()
+
+    class _Messages:
+        def create(self, **kwargs):
+            captured.update(kwargs)
+            return _Msg()
+
+    class _Client:
+        messages = _Messages()
+
+    monkeypatch.setitem(__import__("sys").modules, "anthropic",
+                        type("M", (), {"Anthropic": staticmethod(lambda: _Client())}))
+
+
+def _block(kind, text=""):
+    return type("B", (), {"type": kind, "text": text, "thinking": text})()
+
+
+def test_text_extracted_past_a_leading_thinking_block(monkeypatch):
+    """Thinking models put a ThinkingBlock first; content[0].text raises."""
+    from weeklyamp.content import generator
+    captured = {}
+    _fake_anthropic(monkeypatch, [_block("thinking", "reasoning"), _block("text", "the prose")], captured)
+
+    cfg = AppConfig(ai=AIConfig(model="claude-sonnet-5"))
+    content, _model, _tokens = generator.generate_draft_with_usage("hi", cfg)
+    assert content == "the prose"
+
+
+def test_no_text_block_returns_empty_not_crash(monkeypatch):
+    from weeklyamp.content import generator
+    captured = {}
+    _fake_anthropic(monkeypatch, [_block("thinking", "only reasoning")], captured)
+
+    cfg = AppConfig(ai=AIConfig(model="claude-sonnet-5"))
+    content, _model, _tokens = generator.generate_draft_with_usage("hi", cfg)
+    assert content == ""
+
+
+def test_thinking_disabled_by_default_for_thinking_models(monkeypatch):
+    """max_tokens is one budget for thinking + prose; sections want prose."""
+    from weeklyamp.content import generator
+    captured = {}
+    _fake_anthropic(monkeypatch, [_block("text", "ok")], captured)
+
+    cfg = AppConfig(ai=AIConfig(model="claude-sonnet-5"))
+    generator.generate_draft_with_usage("hi", cfg)
+    assert captured.get("thinking") == {"type": "disabled"}
+    assert "temperature" not in captured
+
+
+def test_thinking_not_sent_to_older_models(monkeypatch):
+    """Older families take sampling params and no thinking parameter."""
+    from weeklyamp.content import generator
+    captured = {}
+    _fake_anthropic(monkeypatch, [_block("text", "ok")], captured)
+
+    cfg = AppConfig(ai=AIConfig(model="claude-haiku-4-5", temperature=0.4))
+    generator.generate_draft_with_usage("hi", cfg)
+    assert "thinking" not in captured
+    assert captured.get("temperature") == 0.4
+
+
+def test_thinking_mode_is_configurable(monkeypatch):
+    from weeklyamp.content import generator
+    captured = {}
+    _fake_anthropic(monkeypatch, [_block("text", "ok")], captured)
+
+    cfg = AppConfig(ai=AIConfig(model="claude-sonnet-5", thinking="adaptive"))
+    generator.generate_draft_with_usage("hi", cfg)
+    assert captured.get("thinking") == {"type": "adaptive"}

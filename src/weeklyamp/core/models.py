@@ -677,6 +677,11 @@ class AIConfig(BaseModel):
     review_model: str = "claude-haiku-4-5"
     max_tokens: int = 2000
     temperature: float = 0.7
+    # Thinking mode for models that support it ("disabled" | "adaptive").
+    # Only sent to models that run thinking by default; max_tokens is a
+    # single budget covering thinking and response, so leaving it on
+    # spends part of every section's budget on reasoning nobody reads.
+    thinking: str = "disabled"
     # 0 = uncapped (the old behaviour: draft the whole library).
     max_sections_per_issue: int = 15
 

@@ -49,6 +49,20 @@ def supports_sampling_params(model: str) -> bool:
     return not name.startswith(_SAMPLING_REJECTED_PREFIXES)
 
 
+def _first_text_block(message) -> str:
+    """Return the first text block's content from an Anthropic response.
+
+    ``content`` is a list of typed blocks, and on models with thinking
+    enabled the first one is a ThinkingBlock, not a TextBlock — indexing
+    ``content[0].text`` raises AttributeError there. Select by type
+    instead of position.
+    """
+    for block in getattr(message, "content", None) or []:
+        if getattr(block, "type", "") == "text":
+            return getattr(block, "text", "") or ""
+    return ""
+
+
 def resolve_review_model(config: AppConfig) -> str:
     """Return the model to use for scoring / short-critique passes.
 
@@ -128,13 +142,20 @@ def _generate_anthropic(
     )
     if supports_sampling_params(model):
         kwargs["temperature"] = config.ai.temperature
+    else:
+        # These models run adaptive thinking by default, and max_tokens is
+        # a single budget covering thinking *and* the response. For section
+        # prose we want the whole budget spent on prose, and a predictable
+        # cost per draft, so thinking is off unless config asks for it.
+        thinking = (getattr(config.ai, "thinking", "") or "disabled").strip()
+        kwargs["thinking"] = {"type": thinking}
     if system_prompt:
         kwargs["system"] = system_prompt
 
     try:
         client = anthropic.Anthropic()  # uses ANTHROPIC_API_KEY env var
         message = client.messages.create(**kwargs)
-        content = message.content[0].text
+        content = _first_text_block(message)
         usage = getattr(message, "usage", None)
         tokens_used = 0
         if usage is not None:

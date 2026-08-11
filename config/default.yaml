@@ -18,6 +18,11 @@ ai:
   review_model: "claude-haiku-4-5"
   max_tokens: 2000
   temperature: 0.7
+  # "disabled" | "adaptive". Sonnet 5 and the Opus 4.7+/5 families think
+  # by default, and max_tokens covers thinking *and* the response — so
+  # leaving it on spends part of every section's budget on reasoning that
+  # never reaches the reader.
+  thinking: "disabled"
   # Cap on sections drafted per issue. 0 = draft the whole library.
   max_sections_per_issue: 15
 
