@@ -10,7 +10,13 @@ from __future__ import annotations
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
-from weeklyamp.core.cost_model import issues_per_month, per_edition_costs, pricing
+from weeklyamp.core.cost_model import (
+    blended_per_1k,
+    issues_per_month,
+    per_edition_costs,
+    pricing,
+    sections_per_issue,
+)
 from weeklyamp.web.deps import get_config, get_repo, render
 from weeklyamp.web.security import is_authenticated
 
@@ -35,6 +41,10 @@ async def cost_dashboard(request: Request) -> Response:
         "admin_cost_dashboard.html",
         rows=rows,
         pricing=pricing(),
+        blended_rate=blended_per_1k(config),
+        sections_per_issue=sections_per_issue(config),
+        write_model=config.ai.model,
+        review_model=(getattr(config.ai, "review_model", "") or config.ai.model),
         issues_per_month=issues_per_month(config),
         window_days=30,
     ))
