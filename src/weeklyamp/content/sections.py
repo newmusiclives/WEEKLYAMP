@@ -18,7 +18,28 @@ def get_section_slugs(repo: Repository) -> list[str]:
     return [s["slug"] for s in sections]
 
 
-def get_draftable_section_slugs(repo: Repository, config=None) -> list[str]:
+def get_edition_section_slugs(repo: Repository, edition_slug: str) -> list[str]:
+    """Return an edition's declared running order, filtered to live sections.
+
+    ``newsletter_editions.section_slugs`` is a comma-separated ordered
+    list. Entries that no longer resolve to an active section are dropped
+    rather than handed to a writer.
+    """
+    if not edition_slug:
+        return []
+    edition = repo.get_edition_by_slug(edition_slug)
+    if not edition:
+        return []
+    raw = (edition.get("section_slugs") or "").strip()
+    if not raw:
+        return []
+    active = set(get_section_slugs(repo))
+    return [s.strip() for s in raw.split(",") if s.strip() and s.strip() in active]
+
+
+def get_draftable_section_slugs(
+    repo: Repository, config=None, edition_slug: str = ""
+) -> list[str]:
     """Return the section slugs a single drafting run should generate.
 
     The section library is much larger than any one issue — 74 active
@@ -28,31 +49,49 @@ def get_draftable_section_slugs(repo: Repository, config=None) -> list[str]:
     the cost model, so a run is capped at
     ``config.ai.max_sections_per_issue``.
 
-    The cap honours the editorial structure rather than slicing blindly:
-    every ``core`` section runs, and the remaining slots are filled from
-    the rotating pool by :func:`weeklyamp.content.rotation.select_rotating_sections`,
-    which favours sections that haven't appeared recently and spreads them
-    across categories. Order follows ``sort_order`` so the running order is
-    preserved.
+    ``edition_slug`` scopes the run to that edition's declared running
+    order. Without it the candidate pool is the whole library, which
+    produces a technically-capped but editorially incoherent issue — a
+    fan edition full of industry sections. An edition with no declared
+    list falls back to the library.
 
-    Pass ``config=None``, or set the cap to 0, to draft the whole library.
+    Within the pool the cap honours editorial structure rather than
+    slicing blindly: every ``core`` section runs, and the remaining slots
+    are filled from the rotating pool by
+    :func:`weeklyamp.content.rotation.select_rotating_sections`, which
+    favours sections that haven't appeared recently and spreads them
+    across categories. Order follows the edition's declared order when
+    scoped, otherwise ``sort_order``.
+
+    Pass ``config=None``, or set the cap to 0, to draft the whole pool.
     """
-    all_slugs = get_section_slugs(repo)
+    pool = get_edition_section_slugs(repo, edition_slug) or get_section_slugs(repo)
     cap = getattr(getattr(config, "ai", None), "max_sections_per_issue", 0) or 0
-    if cap <= 0:
-        return all_slugs
+    if cap <= 0 or len(pool) <= cap:
+        return pool
 
-    core = [s["slug"] for s in repo.get_sections_by_type("core")]
+    pool_set = set(pool)
+    core = [s["slug"] for s in repo.get_sections_by_type("core") if s["slug"] in pool_set]
     # Core alone can exceed the cap; truncating it is better than blowing
-    # through the budget, and sort_order decides which core sections stay.
+    # through the budget, and the pool's order decides which core stays.
     if len(core) >= cap:
         chosen = set(core)
     else:
         from weeklyamp.content.rotation import select_rotating_sections
-        rotating = select_rotating_sections(repo, max_rotating=cap - len(core))
-        chosen = set(core) | set(rotating)
+        rotating = [
+            s for s in select_rotating_sections(repo, max_rotating=len(pool))
+            if s in pool_set
+        ]
+        chosen = set(core) | set(rotating[: cap - len(core)])
+        # Rotation can come up short inside a narrow pool; top up in order
+        # so the cap is a ceiling we reach, not one we undershoot.
+        if len(chosen) < cap:
+            for slug in pool:
+                if len(chosen) >= cap:
+                    break
+                chosen.add(slug)
 
-    ordered = [slug for slug in all_slugs if slug in chosen]
+    ordered = [slug for slug in pool if slug in chosen]
     return ordered[:cap]
 
 

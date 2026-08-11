@@ -47,7 +47,9 @@ def generate(
             raise typer.Exit(1)
         slugs = [section]
     else:
-        slugs = get_draftable_section_slugs(repo, cfg)
+        slugs = get_draftable_section_slugs(
+            repo, cfg, edition_slug=(issue or {}).get("edition_slug", "") or ""
+        )
 
     console.print(f"[bold]Generating drafts for issue #{issue['issue_number']}...[/bold]\n")
 

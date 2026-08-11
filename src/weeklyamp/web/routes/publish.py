@@ -223,7 +223,9 @@ async def autopilot(request: Request, edition_slug: str = Form("fan")):
         if issue:
             issue_id = issue["id"]
             from weeklyamp.content.sections import get_draftable_section_slugs
-            slugs = get_draftable_section_slugs(repo, config)
+            slugs = get_draftable_section_slugs(
+                repo, config, edition_slug=issue.get("edition_slug", "") or ""
+            )
             drafted = 0
             for slug in slugs:
                 try:

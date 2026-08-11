@@ -85,7 +85,12 @@ class EditorInChiefAgent(AgentBase):
         # here would hand every writer a task and bypass the cap that the
         # CLI and autopilot paths already honour — one write call plus one
         # review call per section, so the cost lands twice.
-        slugs = get_draftable_section_slugs(self.repo, self.config)
+        # Scope to the issue's edition — an unscoped run drafts whatever
+        # the library offers, which fills a fan issue with industry copy.
+        issue = self.repo.get_issue(issue_id) or {}
+        slugs = get_draftable_section_slugs(
+            self.repo, self.config, edition_slug=issue.get("edition_slug", "") or ""
+        )
         created_tasks = []
 
         for slug in slugs:

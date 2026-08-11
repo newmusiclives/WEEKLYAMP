@@ -314,3 +314,79 @@ def test_thinking_mode_is_configurable(monkeypatch):
     cfg = AppConfig(ai=AIConfig(model="claude-sonnet-5", thinking="adaptive"))
     generator.generate_draft_with_usage("hi", cfg)
     assert captured.get("thinking") == {"type": "adaptive"}
+
+
+# --- the cap must respect the issue's edition -------------------------
+
+
+@pytest.fixture()
+def fan_edition(repo, library):
+    """Declare a fan edition whose running order is a slice of the library."""
+    wanted = library["all"][:8]
+    repo.update_edition_sections("fan", ",".join(wanted))
+    return wanted
+
+
+def test_edition_scopes_the_candidate_pool(repo, fan_edition):
+    """An unscoped run fills a fan issue with whatever the library offers."""
+    slugs = get_draftable_section_slugs(repo, _config(5), edition_slug="fan")
+    assert set(slugs).issubset(set(fan_edition))
+
+
+def test_edition_order_is_preserved(repo, fan_edition):
+    slugs = get_draftable_section_slugs(repo, _config(5), edition_slug="fan")
+    positions = [fan_edition.index(s) for s in slugs]
+    assert positions == sorted(positions)
+
+
+def test_cap_is_reached_inside_a_narrow_pool(repo, fan_edition):
+    """Rotation can come up short in a small pool; the cap is a ceiling to
+    reach, not one to undershoot."""
+    slugs = get_draftable_section_slugs(repo, _config(5), edition_slug="fan")
+    assert len(slugs) == 5
+
+
+def test_pool_smaller_than_cap_returns_whole_pool(repo, fan_edition):
+    slugs = get_draftable_section_slugs(repo, _config(50), edition_slug="fan")
+    assert slugs == fan_edition
+
+
+def test_unknown_edition_falls_back_to_library(repo, library):
+    slugs = get_draftable_section_slugs(repo, _config(5), edition_slug="nope")
+    assert len(slugs) == 5
+    assert set(slugs).issubset(set(library["all"]))
+
+
+def test_edition_with_no_declared_sections_falls_back(repo, library):
+    repo.update_edition_sections("fan", "")
+    slugs = get_draftable_section_slugs(repo, _config(5), edition_slug="fan")
+    assert len(slugs) == 5
+    assert set(slugs).issubset(set(library["all"]))
+
+
+def test_stale_slugs_in_an_edition_list_are_dropped(repo, library):
+    """A retired section must not be handed to a writer."""
+    repo.update_edition_sections("fan", library["all"][0] + ",ghost_section")
+    slugs = get_draftable_section_slugs(repo, _config(5), edition_slug="fan")
+    assert slugs == [library["all"][0]]
+
+
+def test_editor_assigns_only_the_editions_sections(repo, library, fan_edition):
+    """The agent path is what produced a fan issue full of industry copy."""
+    from weeklyamp.agents.editor import EditorInChiefAgent
+
+    issue_id = repo.create_issue(7, title="Fan issue")
+    repo.update_issue(issue_id, edition_slug="fan") if hasattr(repo, "update_issue") else None
+    conn = repo._conn()
+    conn.execute("UPDATE issues SET edition_slug = ? WHERE id = ?", ("fan", issue_id))
+    conn.commit()
+    conn.close()
+
+    repo.create_agent("writer", "Test Writer")
+    agent = EditorInChiefAgent(repo, _config(5))
+    task_id = agent.assign_task("assign_sections", issue_id=issue_id)
+    result = agent.execute(task_id)
+
+    assigned = {t["section"] for t in result["tasks"]}
+    assert len(assigned) == 5
+    assert assigned.issubset(set(fan_edition)), assigned
