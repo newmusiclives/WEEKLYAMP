@@ -42,7 +42,7 @@ END_MARKER = "<!-- /dispatch:engagement -->"
 # Absolute base for CTA links. Samples get emailed and forwarded, so relative
 # URLs are not an option. This deliberately points at the live Railway host
 # rather than a branded domain: truefansdispatch.com and the configured
-# site_domain (truefansnewsletters.com) are both unregistered (NXDOMAIN), so
+# site_domain (truefansdispatch.com) are both unregistered (NXDOMAIN), so
 # linking to either ships dead CTAs. Swap this once a domain is live.
 BASE_URL = os.environ.get(
     "WEEKLYAMP_SAMPLE_BASE_URL", "https://web-production-2684b.up.railway.app"

@@ -38,7 +38,7 @@ class WarmupManager:
         Formula: ``daily_limit + (ramp_increment * current_day)``
 
         Args:
-            domain: The sending domain (e.g. ``"truefansnewsletters.com"``).
+            domain: The sending domain (e.g. ``"truefansdispatch.com"``).
 
         Returns:
             The send limit for today, or ``None`` if warm-up is not active

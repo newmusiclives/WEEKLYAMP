@@ -705,6 +705,11 @@ class NewsletterConfig(BaseModel):
     header_image_url: str = ""
     intro_copy: str = ""
     footer_html: str = ""
+    # Public contact address. Left empty deliberately: the previous
+    # hardcoded support@truefansnewsletters.com sat on an unregistered
+    # domain, so anything sent there was silently lost. Pages that offer
+    # a contact address hide it until this is set to a real inbox.
+    support_email: str = ""
 
 
 class ScheduleConfig(BaseModel):
@@ -814,7 +819,7 @@ class PromoConfig(BaseModel):
 class TrackingConfig(BaseModel):
     open_tracking: bool = False
     click_tracking: bool = False
-    tracking_domain: str = ""  # e.g. "trk.truefansnewsletters.com"
+    tracking_domain: str = ""  # e.g. "trk.truefansdispatch.com"
 
 
 class ABTestConfig(BaseModel):
@@ -1178,7 +1183,7 @@ class AppConfig(BaseModel):
     db_path: str = "data/weeklyamp.db"
     db_backend: str = "sqlite"  # "sqlite" or "postgres"
     database_url: str = ""  # PostgreSQL connection string
-    site_domain: str = "https://truefansnewsletters.com"
+    site_domain: str = "https://truefansdispatch.com"
     session_max_age: int = 43200  # 12 hours
     pagination_default: int = 50
     max_request_body: int = 1_048_576  # 1 MB

@@ -239,7 +239,7 @@ th {{ background: #f8f9fa; font-weight: 600; }}
 </ul>
 
 <h2>Contact</h2>
-<p>Email: <strong>sponsors@truefansnewsletters.com</strong><br>
+<p>Email: <strong>sponsors@truefansdispatch.com</strong><br>
 Website: <strong>{config.site_domain}</strong></p>
 
 <div class="footer">

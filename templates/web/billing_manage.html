@@ -200,7 +200,7 @@
 
     <footer class="pricing-footer">
         <div class="container">
-            <p>Questions? Email <a href="mailto:support@truefansnewsletters.com">support@truefansnewsletters.com</a></p>
+            {% if support_email %}<p>Questions? Email <a href="mailto:{{ support_email }}">{{ support_email }}</a></p>{% endif %}
             <p style="margin-top: 8px;">&copy; TrueFans DISPATCH</p>
         </div>
     </footer>

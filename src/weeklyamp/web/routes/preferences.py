@@ -232,7 +232,7 @@ async def subscriber_data_export(token: str, request: Request):
         "audit_note": (
             "This export was generated under GDPR Article 20 (right to data "
             "portability) and CCPA right-to-know. To request deletion, "
-            "use the unsubscribe link or contact privacy@truefansnewsletters.com."
+            "use the unsubscribe link or contact privacy@truefansdispatch.com."
         ),
     }
     conn.close()

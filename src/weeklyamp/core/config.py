@@ -341,7 +341,7 @@ def load_config(config_path: Optional[str] = None) -> AppConfig:
     database_url = os.getenv("WEEKLYAMP_DATABASE_URL", "") or os.getenv("DATABASE_URL", "") or yaml_data.get("database_url", "")
 
     # Site domain
-    site_domain = os.getenv("WEEKLYAMP_SITE_DOMAIN", yaml_data.get("site_domain", "https://truefansnewsletters.com"))
+    site_domain = os.getenv("WEEKLYAMP_SITE_DOMAIN", yaml_data.get("site_domain", "https://truefansdispatch.com"))
 
     # Session max age
     session_max_age = int(os.getenv("WEEKLYAMP_SESSION_MAX_AGE", yaml_data.get("session_max_age", 43200)))

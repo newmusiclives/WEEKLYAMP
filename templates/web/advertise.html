@@ -440,7 +440,7 @@
 
     <footer class="adv-footer">
         <div class="container">
-            <p>Questions? Email <a href="mailto:sponsors@truefansnewsletters.com">sponsors@truefansnewsletters.com</a></p>
+            {% if support_email %}<p>Questions? Email <a href="mailto:{{ support_email }}">{{ support_email }}</a></p>{% endif %}
             <p style="margin-top: 8px;">&copy; TrueFans DISPATCH</p>
         </div>
     </footer>

@@ -44,7 +44,7 @@ class TrackingProcessor:
             issue_id: Database ID of the current issue.
             subscriber_id: Database ID of the recipient.
             site_domain: Base URL for tracking endpoints
-                (e.g. ``https://truefansnewsletters.com``).
+                (e.g. ``https://truefansdispatch.com``).
 
         Returns:
             Modified HTML with tracking injected, or the original HTML if

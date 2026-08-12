@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class DomainRoutingMiddleware(BaseHTTPMiddleware):
     """Route requests to edition-specific content based on Host header.
 
-    When a custom domain is configured for an edition (e.g., nashville.truefansnewsletters.com
+    When a custom domain is configured for an edition (e.g., nashville.truefansdispatch.com
     or nashvillemusic.com), this middleware sets the edition context on the request state
     so that templates render with the edition's branding.
     """

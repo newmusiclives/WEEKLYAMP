@@ -112,4 +112,5 @@ def render(template_name: str, **ctx) -> str:
     cfg = load_config()
     ctx.setdefault("plausible_domain", cfg.analytics.plausible_domain)
     ctx.setdefault("site_domain", cfg.site_domain.rstrip("/"))
+    ctx.setdefault("support_email", cfg.newsletter.support_email)
     return tpl.render(**ctx)

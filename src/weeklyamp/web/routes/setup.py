@@ -130,7 +130,7 @@ async def setup_page(request: Request):
         "secret_key": bool(os.environ.get("WEEKLYAMP_SECRET_KEY")),
         "tracking_domain": bool(config.tracking.tracking_domain) if hasattr(config, 'tracking') else False,
         "manifest": bool(config.paid_tiers.manifest_api_key) if hasattr(config, 'paid_tiers') else False,
-        "site_domain": config.site_domain != "https://truefansnewsletters.com",
+        "site_domain": config.site_domain != "https://truefansdispatch.com",
     }
     return HTMLResponse(render("setup.html", checks=checks, config=config))
 

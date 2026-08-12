@@ -50,7 +50,7 @@
             </tbody>
         </table>
         {% else %}
-        <p class="text-dim">Rate card information is not currently available. Please contact us at <a href="mailto:sponsors@truefansnewsletters.com">sponsors@truefansnewsletters.com</a>.</p>
+        <p class="text-dim">Rate card information is not currently available. {% if support_email %}Please contact us at <a href="mailto:{{ support_email }}">{{ support_email }}</a>.{% endif %}</p>
         {% endif %}
     </div>
 </div>

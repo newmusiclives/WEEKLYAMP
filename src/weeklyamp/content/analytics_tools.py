@@ -109,7 +109,7 @@ PRICING
   Monthly discount: {int((1-config.sponsor_portal.monthly_discount)*100)}% off
 
 CONTACT
-  Email: sales@truefansnewsletters.com
+  Email: sales@truefansdispatch.com
   Advertise page: {config.site_domain}/advertise
 
 {'=' * 50}
