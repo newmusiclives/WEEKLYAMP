@@ -119,6 +119,7 @@ def load_config(config_path: Optional[str] = None) -> AppConfig:
         edition_tags=ghl_data.get("edition_tags", {
             "fan": "newsletter-fan",
             "artist": "newsletter-artist",
+            "venue": "newsletter-venue",
             "industry": "newsletter-industry",
         }),
     )

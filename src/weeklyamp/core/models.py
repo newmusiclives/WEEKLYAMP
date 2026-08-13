@@ -693,6 +693,7 @@ class GHLConfig(BaseModel):
     edition_tags: dict[str, str] = Field(default_factory=lambda: {
         "fan": "newsletter-fan",
         "artist": "newsletter-artist",
+        "venue": "newsletter-venue",
         "industry": "newsletter-industry",
     })
 
@@ -788,6 +789,9 @@ class PromoConfig(BaseModel):
     routing: dict[str, str] = Field(default_factory=lambda: {
         "fan": "amp",
         "industry": "amp",
+        # Venue operators are a trade audience, not artists — RISE's
+        # artist-crew ladder does not apply, so they route to AMP.
+        "venue": "amp",
         "artist": "rise",
     })
     default_target: str = "edge"

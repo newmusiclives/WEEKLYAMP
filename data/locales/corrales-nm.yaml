@@ -5,6 +5,27 @@ locale:
   last_full_review: 2026-05-07
 
 venues:
+  - name: Sandia Bar
+    type: bar
+    address: 4445 Corrales Rd, Corrales, NM 87048
+    city: Corrales
+    drive_minutes_from_locale: 0
+    capacity: null
+    books_original_music: yes
+    booking_contact: https://sandiabar.com/live-music-submission/
+    notes: >-
+      Established 1948; run by the Chavez family until 2018 and reopened under new
+      ownership after Steve Chavez's death, with Lane McIntyre as general manager.
+      Renovation nearly doubled the interior and added a patio and rooftop, keeping
+      the adobe walls, "truth windows" and vintage Budweiser and Schlitz signs.
+      Free live music Saturdays and Sundays 2-5pm on the patio, family-friendly.
+      Artists pitch through a web form, not a named buyer. Phone (505) 835-5983.
+      Bar Sun-Tues 11a-10p, Wed-Thur 11a-11p, Fri-Sat 11a-12a; restaurant
+      Sun-Thur 11a-9p, Fri-Sat 11a-10p. Capacity, PA spec, pay and set length are
+      all unpublished - ask before pitching.
+    source_url: https://corralescomment.com/2024/09/12/new-ownership-brings-new-life-to-the-sandia-bar/
+    verified_on: 2026-08-12
+
   - name: Casa Vieja
     type: brewery
     address: 4541 Corrales Rd, Corrales, NM 87048
@@ -161,6 +182,26 @@ scene_facts:
   - claim: Frogville Studios in Santa Fe was officially established in 2003.
     source_url: https://frogvilleplanet.com/recording-studio/
     verified_on: 2026-05-07
+
+  - claim: The Sandia Bar at 4445 Corrales Rd was established in 1948 and was run by the Chavez family until 2018; Steve Chavez was the last family operator.
+    source_url: https://corralescomment.com/2024/09/12/new-ownership-brings-new-life-to-the-sandia-bar/
+    verified_on: 2026-08-12
+
+  - claim: Sandia Bar hosts free live music on its patio Saturdays and Sundays from 2pm to 5pm, listed as a family-friendly daytime slot with no cover.
+    source_url: https://www.visitalbuquerque.org/event/weekend-live-music-at-sandia-bar/64066/
+    verified_on: 2026-08-12
+
+  - claim: As of April 2026 the Village of Corrales has not adopted a new noise ordinance; Mayor Fred Hashimoto said it would be at least a few months, and the village contracted sound engineer Joshua Leasure of Colorado Analytics through Complete Safety Supply to make recommendations.
+    source_url: https://corralescomment.com/2026/04/01/the-sound-of-silence-corrales-council-takes-next-step-in-drafting-noise-ordinance/
+    verified_on: 2026-08-12
+
+  - claim: Corrales Village Attorney Randy Autio has said the existing noise ordinance, which bars "excessive or unusually loud noise", may not be enforceable because of its vagueness.
+    source_url: https://corralescomment.com/2025/07/21/corrales-seeks-public-input-on-noise-ordinance-revision/
+    verified_on: 2026-08-12
+
+  - claim: At a July 2025 Corrales work study on noise, Casa Vieja's Dan O'Brien proposed the test "If those folks at that first table can't talk, then it's too loud."
+    source_url: https://corralescomment.com/2025/07/31/all-abuzz-about-noise/
+    verified_on: 2026-08-12
 
 do_not_mention:
   - name: Corrales Bistro Brewery

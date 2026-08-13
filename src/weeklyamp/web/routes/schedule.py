@@ -223,7 +223,7 @@ async def remove_day(edition_slug: str, day: str):
 
 @router.post("/setup-all", response_class=HTMLResponse)
 async def setup_all():
-    """One-click setup: distribute sections across 3 days for each of 3 editions."""
+    """One-click setup: distribute sections across 3 days for every active edition."""
     repo = get_repo()
     editions = repo.get_editions()
     created = 0

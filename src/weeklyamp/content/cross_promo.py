@@ -113,7 +113,7 @@ def generate_cross_promo_html(
     Returns email-safe HTML with inline CSS and table layout.
     Returns empty string if no other editions have content to show.
     """
-    all_slugs = ["fan", "artist", "industry"]
+    all_slugs = ["fan", "artist", "venue", "industry"]
     other_slugs = [s for s in all_slugs if s != current_edition_slug]
 
     snippets = []

@@ -2,8 +2,8 @@
 
 Manages:
 - Sponsor directory (CRM contacts, bookings, revenue)
-- 9 main sponsors: 3 newsletters x 3 editions x 1 sponsor
-- 27 ad block slots: 3 newsletters x 3 editions x 3 positions
+- 12 main sponsors: 4 newsletters x 3 editions x 1 sponsor
+- 36 ad block slots: 4 newsletters x 3 editions x 3 positions
 """
 
 from __future__ import annotations

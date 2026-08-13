@@ -22,7 +22,7 @@ from weeklyamp.web.routes.admin_account import _ensure_csrf, _require_admin
 router = APIRouter()
 
 TARGET_KEYS = ["amp", "rise", "edge"]
-ROUTE_EDITIONS = ["fan", "artist", "industry"]
+ROUTE_EDITIONS = ["fan", "artist", "venue", "industry"]
 
 
 def _env_forced() -> bool:

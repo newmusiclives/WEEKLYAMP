@@ -368,7 +368,13 @@ async def process_onboarding(request: Request):
     interests = form.get("interests", "")
 
     # Map role to edition
-    edition_map = {"fan": "fan", "artist": "artist", "industry": "industry", "both": "fan,artist"}
+    edition_map = {
+        "fan": "fan",
+        "artist": "artist",
+        "venue": "venue",
+        "industry": "industry",
+        "both": "fan,artist",
+    }
     recommended_edition = edition_map.get(music_role, "fan")
 
     return HTMLResponse(render("onboarding_result.html",

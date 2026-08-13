@@ -377,13 +377,15 @@ def create_app() -> FastAPI:
             site_domain=site_domain,
         ))
 
-    # Public sample-issue pages — link from the "3 Editions, One Mission"
+    # Public sample-issue pages — link from the "Four editions, one mission"
     # cards on the landing page. Serves the pre-rendered demo files from
     # the repo root. Whitelist of slugs to prevent path traversal; any
     # other slug 404s.
     _SAMPLE_FILES = {
         "fan": ("demo_fan_monday.html", "Fan Edition", "Music for fans"),
         "artist": ("demo_artist_monday.html", "Artist Edition", "Working musicians"),
+        "venue": ("demo_venue_sandia_bar.html", "Venue Edition",
+                  "Live music rooms &mdash; Sandia Bar, Corrales NM"),
         "industry": ("demo_industry_monday.html", "Industry Edition", "Music business"),
         "tucson": ("demo_tucson_artist.html", "Tucson Artist Edition", "Local edition — Tucson, AZ"),
         "corrales": ("demo_corrales_artist.html", "Corrales Artist Edition", "Local edition — Corrales, NM"),

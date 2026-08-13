@@ -16,18 +16,21 @@ router = APIRouter()
 EDITION_LABELS = {
     "fan": "Fan Edition",
     "artist": "Artist Edition",
+    "venue": "Venue Edition",
     "industry": "Industry Edition",
 }
 
 EDITION_COLORS = {
     "fan": "#e8645a",
     "artist": "#7c5cfc",
+    "venue": "#14b8a6",
     "industry": "#f59e0b",
 }
 
 EDITION_ICONS = {
     "fan": "&#127911;",
     "artist": "&#127928;",
+    "venue": "&#127917;",
     "industry": "&#128200;",
 }
 
@@ -44,7 +47,7 @@ _LEADERSHIP_RANK = {
     "sales_lead": 6,
     "expansion_lead": 7,
 }
-_EDITION_RANK = {"fan": 0, "artist": 1, "industry": 2, "": 3}
+_EDITION_RANK = {"fan": 0, "artist": 1, "venue": 2, "industry": 3, "": 4}
 
 
 def _leadership_role(atype: str, cfg: dict, editions_count: int) -> str:
@@ -85,6 +88,7 @@ def _enrich_staff(staff: list[dict]) -> dict:
     edition_teams = {
         "fan": {"editor": None, "researchers": [], "writers": [], "sales": None, "promotion": None},
         "artist": {"editor": None, "researchers": [], "writers": [], "sales": None, "promotion": None},
+        "venue": {"editor": None, "researchers": [], "writers": [], "sales": None, "promotion": None},
         "industry": {"editor": None, "researchers": [], "writers": [], "sales": None, "promotion": None},
     }
     cross_newsletter = []
@@ -124,13 +128,13 @@ def _enrich_staff(staff: list[dict]) -> dict:
 
     leadership.sort(key=lambda a: (
         _LEADERSHIP_RANK.get(a.get("leadership_role", ""), 99),
-        _EDITION_RANK.get(a.get("edition") or "", 3),
+        _EDITION_RANK.get(a.get("edition") or "", 4),
         a.get("expansion") or "",
         a.get("name") or "",
     ))
 
     editions = []
-    for slug in ("fan", "artist", "industry"):
+    for slug in ("fan", "artist", "venue", "industry"):
         team = edition_teams[slug]
         members = []
         if team["editor"]:

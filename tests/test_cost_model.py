@@ -146,5 +146,10 @@ def test_monthly_total_is_the_sum_of_its_parts(repo):
 
 
 def test_issues_per_month_tracks_schedule():
-    assert cm.issues_per_month(_config(sends=3)) == 36
-    assert cm.issues_per_month(_config(sends=1)) == 12
+    # sends/week × len(CANONICAL_EDITIONS) × 4 weeks. The edition count is
+    # read off the constant so adding a fifth edition fails here loudly
+    # rather than silently shifting every cost projection.
+    editions = len(cm.CANONICAL_EDITIONS)
+    assert editions == 4  # fan, artist, venue, industry
+    assert cm.issues_per_month(_config(sends=3)) == 3 * editions * 4
+    assert cm.issues_per_month(_config(sends=1)) == 1 * editions * 4

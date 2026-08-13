@@ -183,6 +183,11 @@
                             <span>Artist Edition</span>
                         </label>
                         <label>
+                            <input type="checkbox" name="editions" value="venue"
+                                   {% if subscriber.editions and 'venue' in subscriber.editions %}checked{% endif %}>
+                            <span>Venue Edition</span>
+                        </label>
+                        <label>
                             <input type="checkbox" name="editions" value="industry"
                                    {% if subscriber.editions and 'industry' in subscriber.editions %}checked{% endif %}>
                             <span>Industry Edition</span>

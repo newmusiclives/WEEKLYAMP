@@ -80,6 +80,7 @@ ghl:
   edition_tags:
     fan: "newsletter-fan"
     artist: "newsletter-artist"
+    venue: "newsletter-venue"
     industry: "newsletter-industry"
     daily-action: "newsletter-daily-action"
 

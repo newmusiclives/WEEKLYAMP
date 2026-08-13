@@ -152,7 +152,7 @@ async def licensee_detail(licensee_id: int, request: Request):
     return HTMLResponse(render("licensee_detail.html", licensee=licensee, revenue=revenue, invoices=invoices, config=config))
 
 @router.post("/create", response_class=HTMLResponse)
-async def create_licensee(request: Request, company_name: str = Form(...), contact_name: str = Form(...), email: str = Form(...), password: str = Form(...), city_market_slug: str = Form(""), edition_slugs: str = Form("fan,artist,industry"), plan: str = Form("monthly"), tier: str = Form("")):
+async def create_licensee(request: Request, company_name: str = Form(...), contact_name: str = Form(...), email: str = Form(...), password: str = Form(...), city_market_slug: str = Form(""), edition_slugs: str = Form("fan,artist,venue,industry"), plan: str = Form("monthly"), tier: str = Form("")):
     repo = get_repo()
     config = get_config()
     from weeklyamp.web.security import hash_password

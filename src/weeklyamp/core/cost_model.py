@@ -30,7 +30,7 @@ from __future__ import annotations
 import os
 
 
-CANONICAL_EDITIONS: tuple[str, ...] = ("fan", "artist", "industry")
+CANONICAL_EDITIONS: tuple[str, ...] = ("fan", "artist", "venue", "industry")
 
 # --- Measured call mix for one issue ----------------------------------
 # Calibrated 2026-08-11 against three real agent cycles (fan, artist,
