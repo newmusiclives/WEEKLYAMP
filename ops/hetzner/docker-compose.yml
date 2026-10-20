@@ -1,0 +1,36 @@
+# DISPATCH on the Hetzner CX23 (shared with the Live Music Hub, TFC Festivals and TrueFans RADIO's Icecast on :8000).
+# Lives at /opt/dispatch/app/ops/hetzner/ on the server; Postgres data at /opt/dispatch/pgdata, settings in /opt/dispatch/dispatch.env.
+# Public HTTPS comes from the hub's Caddy (tfc-hub-caddy-1), which reaches this container over the tfc-hub_default network.
+services:
+  web:
+    build: ../..
+    restart: unless-stopped
+    env_file: /opt/dispatch/dispatch.env
+    environment:
+      PORT: "8090"              # 8000 on the host belongs to Icecast
+    ports:
+      - "127.0.0.1:8090:8090"   # local only, for health checks and SSH tunnels
+    networks: [default, hub]
+    depends_on:
+      db: { condition: service_healthy }
+    mem_limit: 768m
+    logging: { driver: json-file, options: { max-size: 10m, max-file: "3" } }
+
+  db:
+    image: postgres:18          # match Railway's major version so dumps restore cleanly
+    restart: unless-stopped
+    env_file: /opt/dispatch/dispatch.env   # POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_DB
+    volumes:
+      - /opt/dispatch/pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    mem_limit: 384m
+    logging: { driver: json-file, options: { max-size: 10m, max-file: "3" } }
+
+networks:
+  hub:
+    name: tfc-hub_default
+    external: true
