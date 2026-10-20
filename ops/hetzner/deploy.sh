@@ -7,7 +7,7 @@ HOST="${HETZNER_HOST:-root@89.167.23.152}"
 cd "$(dirname "$0")/../.."
 
 echo "== sending code to $HOST"
-rsync -az --delete --exclude-from=.dockerignore --exclude 'demo_*.html' --exclude 'test_*.html' ./ "$HOST:/opt/dispatch/app/"
+rsync -az --delete --exclude-from=.dockerignore --exclude 'test_*.html' ./ "$HOST:/opt/dispatch/app/"
 
 echo "== building and restarting"
 ssh "$HOST" 'set -e
