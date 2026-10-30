@@ -17,7 +17,7 @@
 
     <div style="text-align:center;background:#f7f7f9;padding:24px;border-radius:8px;">
         <img src="{{ qr_data_uri }}" alt="TOTP QR code" style="width:220px;height:220px;">
-        <div style="margin-top:16px;font-size:13px;color:#666;">
+        <div style="margin-top:16px;font-size:13px;color:var(--text-dim);">
             Or paste this secret manually:<br>
             <code style="background:#fff;padding:4px 8px;border-radius:4px;border:1px solid #e0e0e0;display:inline-block;margin-top:4px;font-size:14px;">{{ secret }}</code>
         </div>
@@ -34,7 +34,7 @@
         <a href="/admin/2fa" style="margin-left:12px;font-size:13px;">Cancel</a>
     </form>
 
-    <div style="margin-top:16px;font-size:12px;color:#888;">
+    <div style="margin-top:16px;font-size:12px;color:var(--text-muted);">
         <strong>Heads up:</strong> keep recovery codes or a second device enrolled in your authenticator app. Losing your TOTP secret means the only way back in is direct DB surgery.
     </div>
 </div>

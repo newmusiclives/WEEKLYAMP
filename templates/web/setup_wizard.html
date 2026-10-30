@@ -135,7 +135,7 @@
     }
     .step-badge.pending {
         background: rgba(156, 163, 175, 0.12);
-        color: #9ca3af;
+        color: var(--text-muted);
     }
 
     .step-btn {
@@ -153,12 +153,12 @@
         background: transparent;
     }
     .step-btn:hover {
-        background: rgba(255,255,255,0.05);
+        background: var(--bg-card-hover);
         border-color: rgba(255,255,255,0.2);
     }
     .step-btn.primary {
-        background: var(--accent-color, #e8645a);
-        border-color: var(--accent-color, #e8645a);
+        background: var(--accent-color, var(--accent));
+        border-color: var(--accent-color, var(--accent));
         color: #fff;
     }
     .step-btn.primary:hover {
@@ -179,7 +179,7 @@
         margin-bottom: 12px;
     }
     .wizard-footer a {
-        color: var(--accent-color, #e8645a);
+        color: var(--accent-color, var(--accent));
         text-decoration: none;
         font-weight: 600;
     }

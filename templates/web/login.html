@@ -4,34 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login — TrueFans DISPATCH</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="/static/style.css">
-    <link rel="stylesheet" href="/static/login.css">
+{% include "partials/site_head.html" %}
+    <style>
+        .solo-inner.auth { max-width: 460px; }
+        .auth h1 { font-size: clamp(2.6rem, 11vw, 3.6rem); }
+        .auth form { display: grid; gap: 16px; }
+        .auth .alt { text-align: center; }
+        .auth .alt a { color: var(--muted); }
+        .auth .alt a:hover { color: var(--accent); }
+    </style>
 </head>
 <body>
-    <div class="login-card">
-        <div class="login-brand">
-            <h1>TrueFans DISPATCH</h1>
-            <div class="tagline">for Industry Professionals, Music Artists and Fans</div>
-        </div>
-        {% if error %}
-        <div class="login-error">{{ error }}</div>
-        {% endif %}
-        <form method="post" action="{{ form_action or '/login' }}">
-            {% if csrf_token %}
-            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
-            {% endif %}
-            <div class="login-field">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" required autofocus>
+    <main class="solo" id="main">
+        <div class="solo-inner auth">
+            <a href="/" class="brand"><span>True<em>Fans</em> Dispatch</span></a>
+            <div class="panel">
+                <p class="eyebrow">Sign in</p>
+                <h1>TrueFans <em>DISPATCH</em></h1>
+                <p class="muted">for Industry Professionals, Music Artists and Fans</p>
+                {% if error %}
+                <p class="note err" role="alert">{{ error }}</p>
+                {% endif %}
+                <form method="post" action="{{ form_action or '/login' }}">
+                    {% if csrf_token %}
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                    {% endif %}
+                    <label class="field" for="password">Password
+                        <input type="password" id="password" name="password" required autofocus>
+                    </label>
+                    <button type="submit" class="btn primary block">Sign In</button>
+                </form>
+                <p class="fine alt"><a href="/login/forgot">Forgot password?</a></p>
             </div>
-            <button type="submit" class="login-btn">Sign In</button>
-        </form>
-        <p style="margin-top:16px;text-align:center;font-size:13px;color:#888;">
-            <a href="/login/forgot" style="color:#888;">Forgot password?</a>
-        </p>
-    </div>
+        </div>
+    </main>
 </body>
 </html>

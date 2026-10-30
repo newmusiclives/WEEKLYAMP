@@ -17,7 +17,7 @@
                 <tr>
                     <td>
                         {% if s.edition_slug %}
-                        <span class="badge badge-core" style="background:{% if s.edition_slug == 'fan' %}#e8645a{% elif s.edition_slug == 'artist' %}#6366f1{% elif s.edition_slug == 'industry' %}#059669{% else %}#6b7280{% endif %};color:#fff">
+                        <span class="badge badge-core" style="background:{% if s.edition_slug == 'fan' %}var(--ed-fan){% elif s.edition_slug == 'artist' %}#6366f1{% elif s.edition_slug == 'industry' %}#059669{% else %}#6b7280{% endif %};color:#fff">
                             {{ s.edition_slug | replace('_', ' ') | title }}
                         </span>
                         {% else %}
@@ -59,7 +59,7 @@
                     <td>{{ i.issue_number }}</td>
                     <td>
                         {% if i.edition_slug %}
-                        <span class="badge" style="background:{% if i.edition_slug == 'fan' %}#e8645a{% elif i.edition_slug == 'artist' %}#6366f1{% elif i.edition_slug == 'industry' %}#059669{% else %}#6b7280{% endif %};color:#fff;font-size:11px">
+                        <span class="badge" style="background:{% if i.edition_slug == 'fan' %}var(--ed-fan){% elif i.edition_slug == 'artist' %}#6366f1{% elif i.edition_slug == 'industry' %}#059669{% else %}#6b7280{% endif %};color:#fff;font-size:11px">
                             {{ i.edition_slug | replace('_', ' ') | title }}
                         </span>
                         {% else %}—{% endif %}

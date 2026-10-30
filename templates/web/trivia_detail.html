@@ -41,7 +41,7 @@
     <div style="padding:16px;">
         <p style="font-size:18px;font-weight:600;margin-bottom:8px;">{{ poll.question_text }}</p>
         {% if poll.question_type == 'trivia' and poll.explanation %}
-        <p style="color:#6B7280;font-size:14px;">
+        <p style="color:var(--text-dim);font-size:14px;">
             <strong>Explanation:</strong> {{ poll.explanation }}
         </p>
         {% endif %}
@@ -65,10 +65,10 @@
                 <span style="font-weight:600;{% if is_correct %}color:#065F46;{% endif %}">
                     {{ option }}
                     {% if is_correct %}
-                        <span style="color:#10B981;" title="Correct answer">&#10003;</span>
+                        <span style="color:var(--green);" title="Correct answer">&#10003;</span>
                     {% endif %}
                 </span>
-                <span style="color:#6B7280;font-size:14px;">{{ votes }} ({{ pct }}%)</span>
+                <span style="color:var(--text-dim);font-size:14px;">{{ votes }} ({{ pct }}%)</span>
             </div>
             <div style="background:#F3F4F6;border-radius:4px;height:10px;width:100%;">
                 <div style="background:{% if is_correct %}#10B981{% else %}#6C3AED{% endif %};

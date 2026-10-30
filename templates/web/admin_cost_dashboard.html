@@ -18,9 +18,9 @@
 .cd-tag.measured { background: #e8f4e8; color: #1e5a1e; }
 .cd-tag.modeled { background: #fff6e0; color: #b06000; }
 .cd-total { font-size: 28px; font-weight: 700; color: #111; margin: 8px 0; }
-.cd-line { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; color: #555; border-top: 1px dashed #eee; }
+.cd-line { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; color: #555; border-top: 1px dashed var(--border); }
 .cd-line:first-of-type { border-top: none; }
-.cd-meta { font-size: 12px; color: #888; margin-top: 12px; }
+.cd-meta { font-size: 12px; color: var(--text-muted); margin-top: 12px; }
 .cd-assumptions { background: #f7f7f9; padding: 16px 20px; border-radius: 8px; font-size: 13px; color: #555; }
 .cd-assumptions table { width: 100%; border-collapse: collapse; }
 .cd-assumptions td { padding: 4px 0; }
@@ -35,7 +35,7 @@
             <span class="cd-tag {{ row.source }}">{{ row.source }}</span>
         </h3>
         <div class="cd-total">${{ "%.2f"|format(row.total) }}</div>
-        <div style="font-size:12px;color:#888;margin-bottom:12px;">per issue, all-in</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">per issue, all-in</div>
         <div class="cd-line"><span>LLM generation</span><span>${{ "%.3f"|format(row.llm_cost) }}</span></div>
         <div class="cd-line"><span>Infra (amortized)</span><span>${{ "%.3f"|format(row.infra_cost) }}</span></div>
         <div class="cd-line"><span>Email delivery ({{ row.subscribers }} subs)</span><span>${{ "%.3f"|format(row.email_cost) }}</span></div>
@@ -51,7 +51,7 @@
 </div>
 
 <div class="cd-assumptions">
-    <h3 style="margin-top:0;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:#666;">Pricing assumptions</h3>
+    <h3 style="margin-top:0;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);">Pricing assumptions</h3>
     <table>
         <tr><td>Writing model — <code>{{ write_model }}</code></td><td>${{ "%.4f"|format(pricing.write_input_per_1k) }} in / ${{ "%.4f"|format(pricing.write_output_per_1k) }} out per 1k</td></tr>
         <tr><td>Review model — <code>{{ review_model }}</code></td><td>${{ "%.4f"|format(pricing.review_input_per_1k) }} in / ${{ "%.4f"|format(pricing.review_output_per_1k) }} out per 1k</td></tr>
@@ -63,12 +63,12 @@
         <tr><td>Locations sharing the infra bill</td><td>{{ "%.0f"|format(pricing.locations) }}</td></tr>
         <tr><td>Issues per month (schedule × 4 editions × 4 wks)</td><td>{{ issues_per_month }}</td></tr>
     </table>
-    <p style="margin-top:12px;font-size:12px;color:#888;">
+    <p style="margin-top:12px;font-size:12px;color:var(--text-muted);">
         Infrastructure is one platform bill shared across every location, so it is amortized over
         <strong>{{ issues_per_month }} issues × {{ "%.0f"|format(pricing.locations) }} location(s)</strong>.
         Set <code>WEEKLYAMP_COST_LOCATIONS</code> as you add cities, or the per-issue infra line will overstate.
     </p>
-    <p style="margin-top:8px;font-size:12px;color:#888;">
+    <p style="margin-top:8px;font-size:12px;color:var(--text-muted);">
         Overridable via <code>WEEKLYAMP_COST_WRITE_INPUT_PER_1K</code>, <code>WEEKLYAMP_COST_WRITE_OUTPUT_PER_1K</code>,
         <code>WEEKLYAMP_COST_REVIEW_INPUT_PER_1K</code>, <code>WEEKLYAMP_COST_REVIEW_OUTPUT_PER_1K</code>,
         <code>WEEKLYAMP_COST_BLENDED_PER_1K</code>, <code>WEEKLYAMP_COST_EMAIL_PER_1K</code>,

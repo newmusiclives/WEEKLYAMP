@@ -7,7 +7,7 @@
     <div>
         <h2>Notifications
             {% if unread_count > 0 %}
-            <span class="badge" style="background:#3b82f6;color:#fff;font-size:13px;vertical-align:middle;margin-left:6px;">{{ unread_count }} unread</span>
+            <span class="badge" style="background:var(--blue);color:#fff;font-size:13px;vertical-align:middle;margin-left:6px;">{{ unread_count }} unread</span>
             {% endif %}
         </h2>
     </div>
@@ -24,7 +24,7 @@
 {% if notifications %}
 <div style="display:flex;flex-direction:column;gap:10px;">
     {% for n in notifications %}
-    <div class="card" style="padding:16px;border-left:4px solid {% if n.notification_type == 'success' %}#10b981{% elif n.notification_type == 'warning' %}#f59e0b{% elif n.notification_type == 'error' %}#ef4444{% elif n.notification_type == 'milestone' %}#8b5cf6{% else %}#3b82f6{% endif %};{% if n.is_read %}opacity:0.65;{% endif %}">
+    <div class="card" style="padding:16px;border-left:4px solid {% if n.notification_type == 'success' %}var(--green){% elif n.notification_type == 'warning' %}var(--gold){% elif n.notification_type == 'error' %}var(--red){% elif n.notification_type == 'milestone' %}#8b5cf6{% else %}#3b82f6{% endif %};{% if n.is_read %}opacity:0.65;{% endif %}">
         <div style="display:flex;justify-content:space-between;align-items:start;">
             <div style="flex:1;">
                 <div style="font-size:15px;font-weight:700;">

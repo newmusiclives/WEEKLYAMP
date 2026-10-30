@@ -1,40 +1,83 @@
 /* TrueFans DISPATCH Dashboard Styles */
 
+/* Fonts: the same self-hosted families as the public site (see dispatch.css). */
+@font-face { font-family: "Big Shoulders Display"; font-style: normal; font-weight: 600 900; font-display: swap;
+  src: url(/static/fonts/big-shoulders-display-latin.woff2) format("woff2"); }
+@font-face { font-family: "Schibsted Grotesk"; font-style: normal; font-weight: 400 700; font-display: swap;
+  src: url(/static/fonts/schibsted-grotesk-latin.woff2) format("woff2"); }
+@font-face { font-family: "Schibsted Grotesk"; font-style: italic; font-weight: 400 700; font-display: swap;
+  src: url(/static/fonts/schibsted-grotesk-italic-latin.woff2) format("woff2"); }
+@font-face { font-family: "DM Mono"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url(/static/fonts/dm-mono-400-latin.woff2) format("woff2"); }
+@font-face { font-family: "DM Mono"; font-style: normal; font-weight: 500; font-display: swap;
+  src: url(/static/fonts/dm-mono-500-latin.woff2) format("woff2"); }
+
+/* Tokens: the public site's palette (chart paper, ink, stave green, stage
+   gold). The admin stays light: its pages carry a lot of hard-coded white. */
 :root {
-    --bg: #f5f5f7;
-    --bg-card: #ffffff;
-    --bg-card-hover: #f9f9fb;
-    --bg-input: #f0f0f4;
-    --border: #e2e4ea;
-    --text: #1a1a2e;
-    --text-dim: #6b7280;
-    --text-muted: #9ca3af;
-    --accent: #e8645a;
-    --accent-hover: #d4524a;
-    --accent-secondary: #7c5cfc;
-    --accent-secondary-hover: #6a4be0;
-    --green: #16a34a;
-    --green-bg: rgba(22, 163, 74, 0.1);
-    --red: #dc2626;
-    --red-bg: rgba(220, 38, 38, 0.08);
-    --blue: #2563eb;
-    --blue-bg: rgba(37, 99, 235, 0.08);
-    --yellow: #ca8a04;
-    --yellow-bg: rgba(202, 138, 4, 0.1);
-    --purple: #7c5cfc;
-    --purple-bg: rgba(124, 92, 252, 0.1);
-    --orange: #ea580c;
-    --orange-bg: rgba(234, 88, 12, 0.08);
-    --teal: #0d9488;
-    --teal-bg: rgba(13, 148, 136, 0.08);
-    --cyan: #0891b2;
-    --cyan-bg: rgba(8, 145, 178, 0.08);
-    --radius: 10px;
-    --radius-sm: 6px;
-    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
-    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
-    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+    --bg: #F1F0EC;
+    --bg-card: #FFFFFF;
+    --bg-card-hover: #F6F5F1;
+    --bg-input: #FFFFFF;
+    --border: #D6D3CA;
+    --text: #15140F;
+    --text-dim: #5E5B52;
+    --text-muted: #6E6A60;
+    --accent: #17624A;            /* stave green: the action */
+    --accent-hover: #12503C;
+    --accent-soft: #DCEBE3;
+    --accent-secondary: #15140F;  /* ink: the second button */
+    --accent-secondary-hover: #34332C;
+    --gold: #E3B23C;              /* stage gold: the highlight */
+    --gold-text: #7E5C10;
+    --gold-soft: #F6E8C3;
+    --green: #1A6A43;
+    --green-bg: #DCEBE3;
+    --red: #B23A2B;
+    --red-bg: #F5DEDA;
+    --blue: #2E5E8C;
+    --blue-bg: #DDE7F1;
+    --yellow: #7E5C10;
+    --yellow-bg: #F6E8C3;
+    --purple: #5B4A8C;
+    --purple-bg: #E6E1F1;
+    --orange: #8C5507;
+    --orange-bg: #F3E2CC;
+    --teal: #17624A;
+    --teal-bg: #DCEBE3;
+    --cyan: #1F6470;
+    --cyan-bg: #D9EAEC;
+    --radius: 18px;
+    --radius-sm: 12px;
+    --shadow: 0 1px 2px rgba(21, 20, 15, .06), 0 10px 28px -14px rgba(21, 20, 15, .22);
+    --shadow-md: 0 1px 2px rgba(21, 20, 15, .08), 0 14px 32px -14px rgba(21, 20, 15, .28);
+    --font: "Schibsted Grotesk", -apple-system, "Segoe UI", Verdana, sans-serif;
+    --display: "Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
+    --font-mono: "DM Mono", ui-monospace, Menlo, Consolas, monospace;
+    --mono: var(--font-mono);
+
+    /* Names some admin pages use that were never defined here. */
+    --muted: var(--text-dim);
+    --text-secondary: var(--text-dim);
+    --text-primary: var(--text);
+    --bg-secondary: #E6E4DD;
+    --bg-tertiary: #E6E4DD;
+    --bg-primary: var(--bg);
+    --bg-dim: #E6E4DD;
+    --bg-hover: var(--bg-card-hover);
+    --card-bg: var(--bg-card);
+    --surface: var(--bg-card);
+    --surface-2: #E6E4DD;
+    --border-color: var(--border);
+    --line: var(--border);
+    --primary: var(--accent);
+    --danger: var(--red);
+    /* One colour per edition, as on the public site. */
+    --ed-fan: #B23A2B;
+    --ed-artist: #17624A;
+    --ed-venue: #2E5E8C;
+    --ed-industry: #E3B23C;
+    color-scheme: light;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -888,3 +931,76 @@ textarea {
     color: var(--text);
     margin-bottom: 8px;
 }
+
+
+/* ==========================================================================
+   Brand layer: the public site's look (dispatch.css) applied to the admin.
+   ========================================================================== */
+body { font: 400 15px/1.55 var(--font); -webkit-font-smoothing: antialiased; }
+::selection { background: var(--gold); color: #1C1503; }
+:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; border-radius: 4px; }
+
+/* Sidebar: paper, with the staff-and-wordmark brand. */
+.sidebar { background: #E6E4DD; box-shadow: none; }
+.sidebar-brand h1 {
+    display: flex; align-items: center; gap: 10px;
+    font: 900 22px/1 var(--display); text-transform: uppercase; letter-spacing: .02em; color: var(--text);
+}
+.sidebar-brand h1::before {
+    content: ""; width: 18px; height: 10px; flex: none;
+    background:
+        linear-gradient(var(--text), var(--text)) 0 0 / 100% 1.5px no-repeat,
+        linear-gradient(var(--text), var(--text)) 0 2.1px / 100% 1.5px no-repeat,
+        linear-gradient(var(--gold), var(--gold)) 0 4.25px / 100% 1.5px no-repeat,
+        linear-gradient(var(--text), var(--text)) 0 6.4px / 100% 1.5px no-repeat,
+        linear-gradient(var(--text), var(--text)) 0 8.5px / 100% 1.5px no-repeat;
+}
+.sidebar-brand h1 em { font-style: normal; color: var(--accent); }
+.sidebar-brand .tagline { font: 500 10px/1.4 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); margin-top: 8px; }
+.nav-section-label { font: 500 10.5px/1.2 var(--font-mono) !important; letter-spacing: .14em !important; text-transform: uppercase; color: var(--gold-text) !important; }
+.sidebar nav a { border-radius: 999px; font-weight: 500; }
+.sidebar nav a:hover { background: rgba(255, 255, 255, .6); }
+.sidebar nav a.active { background: var(--bg-card); color: var(--text); box-shadow: inset 3px 0 0 var(--gold); }
+
+/* Headings: the poster type. */
+.page-header h2, .main h1, .main > h2 {
+    font: 900 clamp(30px, 4vw, 44px)/.95 var(--display); text-transform: uppercase; letter-spacing: .005em; color: var(--text);
+}
+.page-header h2 em { font-style: normal; color: var(--accent); }
+.page-header p { color: var(--text-dim); }
+.card-title, .card h3 { font: 800 19px/1.05 var(--display); text-transform: uppercase; letter-spacing: .01em; }
+
+/* Cards, stats, badges: the public card and mono labels. */
+.card, .stat-card, .section-card, .suggestion-card { border-radius: var(--radius); border-color: var(--border); box-shadow: var(--shadow); }
+.stat-card .label { font: 500 10.5px/1.2 var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--text-dim); }
+.stat-card .value { font: 900 34px/1.05 var(--display); font-variant-numeric: tabular-nums; }
+.stat-card .value.gold { color: var(--gold-text); }
+.badge { border-radius: 999px; font: 500 10.5px/1 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
+
+/* Buttons: pills. Primary green, secondary ink, ghost outline. */
+.btn { border-radius: 999px; font: 600 13.5px/1.2 var(--font); padding: 9px 18px; border-width: 1.5px; }
+.btn:active { transform: scale(.97); }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.btn-secondary { background: var(--text); border-color: var(--text); color: var(--bg); }
+.btn-secondary:hover { background: var(--accent-secondary-hover); }
+.btn-ghost { border-color: var(--text); color: var(--text); }
+.btn-ghost:hover { background: var(--text); color: var(--bg); }
+.btn-sm { padding: 6px 13px; font-size: 12px; }
+
+/* Tables and forms: mono labels, paper inputs, green focus ring. */
+th { font: 500 10.5px/1.2 var(--font-mono); letter-spacing: .12em; color: var(--text-dim); }
+td { font-variant-numeric: tabular-nums; }
+.form-group label { font: 500 10.5px/1.2 var(--font-mono); letter-spacing: .1em; }
+input, select, textarea { background: var(--bg-input); border-radius: 10px; }
+input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+input[type=checkbox], input[type=radio] { accent-color: var(--accent); width: auto; }
+.alert { border-radius: var(--radius-sm); }
+
+/* Pipeline steps and the content preview keep their layout, take the palette. */
+.pipeline-step.active { background: var(--text); color: var(--bg); }
+code, pre, kbd { font-family: var(--font-mono); }
+
+/* Controls and links take the green. */
+input[type=range] { accent-color: var(--accent); padding: 0; border: 0; background: transparent; box-shadow: none; }
+.main a:not(.btn):not(.badge) { color: var(--accent); }

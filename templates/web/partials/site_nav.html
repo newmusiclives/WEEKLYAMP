@@ -1,0 +1,28 @@
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="nav">
+        <div class="wrap nav-inner">
+            <a href="/" class="brand"><span>True<em>Fans</em> Dispatch</span></a>
+            <nav class="nav-links" aria-label="Main">
+                <a href="/#editions"{% if nav_current == 'editions' %} aria-current="page"{% endif %}>Editions</a>
+                <a href="/samples"{% if nav_current == 'samples' %} aria-current="page"{% endif %}>Samples</a>
+                <a href="/newsletters/archive"{% if nav_current == 'archive' %} aria-current="page"{% endif %}>Archive</a>
+                <a href="/advertise"{% if nav_current == 'advertise' %} aria-current="page"{% endif %}>Advertise</a>
+                <a href="/license"{% if nav_current == 'license' %} aria-current="page"{% endif %}>License a city</a>
+            </nav>
+            <div class="nav-cta">
+                {% if authenticated %}<a href="/dashboard" class="btn ghost">Dashboard</a>{% else %}<a href="/submit" class="btn ghost">Submit music</a>{% endif %}
+                <a href="/subscribe" class="btn primary">Subscribe free</a>
+                <button class="menu-toggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="mobile-menu"><span></span></button>
+            </div>
+        </div>
+        <nav class="mobile-menu" id="mobile-menu" aria-label="Main" hidden>
+            <a href="/#editions">Editions</a>
+            <a href="/samples">Samples</a>
+            <a href="/newsletters/archive">Archive</a>
+            <a href="/advertise">Advertise</a>
+            <a href="/license">License a city</a>
+            <a href="/submit">Submit music</a>
+            {% if authenticated %}<a href="/dashboard">Dashboard</a>{% endif %}
+        </nav>
+    </header>
+    <script src="/static/site.js" defer></script>

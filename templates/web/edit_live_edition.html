@@ -42,7 +42,7 @@
 <form method="POST" action="/admin/editions/{{ assembled_id }}/live">
     <div class="card" style="margin-bottom:16px;">
         <label style="font-size:14px;font-weight:600;display:block;margin-bottom:8px;">Web Edition HTML</label>
-        <textarea name="web_html" rows="30" style="width:100%;font-family:'Fira Code','Cascadia Code','Consolas',monospace;font-size:13px;line-height:1.5;padding:16px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);color:var(--text);resize:vertical;tab-size:2;">{{ web_html }}</textarea>
+        <textarea name="web_html" rows="30" style="width:100%;font-family:'Fira Code','Cascadia Code','Consolas',monospace;font-size:13px;line-height:1.5;padding:16px;border-radius:8px;background:var(--bg-card-hover);border:1px solid var(--border);color:var(--text);resize:vertical;tab-size:2;">{{ web_html }}</textarea>
     </div>
     <div style="display:flex;gap:12px;align-items:center;">
         <button type="submit" class="btn btn-primary">Save Web Edition</button>

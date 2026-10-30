@@ -144,15 +144,15 @@
                     <td>${{ "%.2f"|format(c.budget_cents / 100) }}</td>
                     <td>
                         {% if c.status == "draft" %}
-                        <span class="badge" style="background: #6b7280; color: #fff;">Draft</span>
+                        <span class="badge" style="background: var(--text-dim); color: #fff;">Draft</span>
                         {% elif c.status == "submitted" %}
-                        <span class="badge" style="background: #f59e0b; color: #000;">Submitted</span>
+                        <span class="badge" style="background: var(--gold); color: #000;">Submitted</span>
                         {% elif c.status == "approved" %}
-                        <span class="badge" style="background: #3b82f6; color: #fff;">Approved</span>
+                        <span class="badge" style="background: var(--blue); color: #fff;">Approved</span>
                         {% elif c.status == "live" %}
-                        <span class="badge" style="background: #10b981; color: #fff;">Live</span>
+                        <span class="badge" style="background: var(--green); color: #fff;">Live</span>
                         {% elif c.status == "completed" %}
-                        <span class="badge" style="background: #9ca3af; color: #fff;">Completed</span>
+                        <span class="badge" style="background: var(--border); color: #fff;">Completed</span>
                         {% else %}
                         <span class="badge">{{ c.status }}</span>
                         {% endif %}

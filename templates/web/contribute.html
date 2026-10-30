@@ -4,176 +4,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contribute — TrueFans DISPATCH</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+{% include "partials/site_head.html" %}
     <style>
-        :root {
-            --bg: #0a0a12;
-            --bg-card: #13131f;
-            --border: rgba(255,255,255,0.08);
-            --text: #f0f0f5;
-            --text-dim: #9ca3af;
-            --accent: #e8645a;
-            --accent-hover: #f07a70;
-            --green: #10b981;
-            --red: #ef4444;
-            --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.6; }
-
-        .container { max-width: 600px; margin: 0 auto; padding: 40px 20px; }
-
-        .brand { text-align: center; margin-bottom: 32px; }
-        .brand h1 { font-size: 24px; font-weight: 800; }
-        .brand h1 span { color: var(--accent); }
-        .brand p { color: var(--text-dim); margin-top: 4px; font-size: 14px; }
-
-        .page-title { text-align: center; margin-bottom: 32px; }
-        .page-title h2 { font-size: 28px; font-weight: 800; }
-        .page-title p { color: var(--text-dim); margin-top: 8px; font-size: 15px; }
-
-        .form-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 32px;
-        }
-
-        .form-group { margin-bottom: 16px; }
-        .form-group label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 6px;
-            color: var(--text);
-        }
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
-            width: 100%;
-            padding: 10px 14px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text);
-            font-size: 15px;
-            font-family: var(--font);
-        }
-        .form-group input:focus,
-        .form-group textarea:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: var(--accent);
-        }
-        .form-group textarea { resize: vertical; min-height: 120px; }
-        .form-group .hint { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
-
-        .type-selector {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-        .type-option {
-            position: relative;
-        }
-        .type-option input[type="radio"] {
-            position: absolute;
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        .type-option label {
-            display: block;
-            text-align: center;
-            padding: 10px 8px;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-        .type-option input[type="radio"]:checked + label {
-            border-color: var(--accent);
-            background: rgba(232, 100, 90, 0.1);
-            color: var(--accent);
-        }
-
-        .btn {
-            display: block;
-            width: 100%;
-            padding: 12px 24px;
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background 0.2s;
-            font-family: var(--font);
-        }
-        .btn:hover { background: var(--accent-hover); }
-
-        .alert {
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-size: 14px;
-            margin-bottom: 16px;
-        }
-        .alert-error { background: rgba(239, 68, 68, 0.15); color: var(--red); border: 1px solid rgba(239, 68, 68, 0.3); }
-        .alert-success { background: rgba(16, 185, 129, 0.15); color: var(--green); border: 1px solid rgba(16, 185, 129, 0.3); }
-
-        .feature-note {
-            text-align: center;
-            margin-top: 16px;
-            padding: 12px;
-            background: rgba(124, 92, 252, 0.1);
-            border: 1px solid rgba(124, 92, 252, 0.2);
-            border-radius: 8px;
-            font-size: 13px;
-            color: #a78bfa;
-        }
-
-        .back-link {
-            display: inline-block;
-            color: var(--accent);
-            text-decoration: none;
-            font-size: 14px;
-            margin-top: 24px;
-        }
-        .back-link:hover { text-decoration: underline; }
+        .form-card form { display: flex; flex-direction: column; gap: 18px; }
+        .form-group > label { display: block; font: 500 .74rem var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+        .form-group .hint { font-size: .84rem; color: var(--faint); margin-top: 6px; }
+        /* Content type: radio pills. */
+        .type-selector { display: flex; flex-wrap: wrap; gap: 8px; }
+        .type-option { position: relative; }
+        .type-option input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+        .type-option label { display: block; padding: 10px 16px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); cursor: pointer; font-size: .92rem; font-weight: 500; }
+        .type-option label:hover { border-color: var(--text); }
+        .type-option input[type="radio"]:checked + label { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+        .type-option input[type="radio"]:focus-visible + label { outline: 3px solid var(--gold); outline-offset: 2px; }
+        .feature-note { text-align: center; color: var(--muted); }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="brand">
-            <h1>True<span>Fans</span> DISPATCH</h1>
-            <p>for Industry Professionals, Music Artists and Fans</p>
-        </div>
+{% include "partials/site_nav.html" %}
 
-        <div class="page-title">
-            <h2>Share Your Voice</h2>
-            <p>Submit your hot takes, reviews, tips, and stories for a chance to be featured in our newsletter</p>
-        </div>
+<main id="main">
+    <section class="section">
+        <div class="wrap" style="max-width:680px">
+            <div class="stack-lg">
+                <div class="section-head page-title" style="margin-bottom:0">
+                    <p class="eyebrow">for Industry Professionals, Music Artists and Fans</p>
+                    <h1 style="font-size:clamp(2.6rem,6vw,4.2rem)">Share Your <em>Voice</em></h1>
+                    <p class="lede">Submit your hot takes, reviews, tips, and stories for a chance to be featured in our newsletter</p>
+                </div>
 
         {% if not enabled %}
-        <div class="form-card" style="text-align:center;padding:48px 32px;">
-            <p style="color:var(--text-dim);font-size:15px;">Reader contributions are coming soon! Check back later.</p>
+        <div class="panel form-card" style="text-align:center">
+            <p class="muted">Reader contributions are coming soon! Check back later.</p>
         </div>
         {% else %}
 
-        <div class="form-card">
+        <div class="panel form-card">
             {% if error %}
-            <div class="alert alert-error">{{ error }}</div>
+            <div class="note err alert alert-error">{{ error }}</div>
             {% endif %}
 
             {% if success %}
-            <div class="alert alert-success">{{ success }}</div>
+            <div class="note ok alert alert-success">{{ success }}</div>
             {% else %}
 
             <form action="/contribute" method="POST">
@@ -238,19 +110,22 @@
                     </select>
                 </div>
 
-                <button type="submit" class="btn">Submit Contribution</button>
+                <button type="submit" class="btn primary lg block">Submit Contribution</button>
             </form>
 
-            <div class="feature-note">
+            <div class="note feature-note">
                 Your contribution may be featured in an upcoming issue of TrueFans DISPATCH!
             </div>
             {% endif %}
         </div>
         {% endif %}
 
-        <div style="text-align:center;">
-            <a href="/" class="back-link">&larr; Back to TrueFans DISPATCH</a>
+                <a href="/" class="crumbs back-link">&larr; Back to TrueFans DISPATCH</a>
+            </div>
         </div>
-    </div>
+    </section>
+</main>
+
+{% include "partials/site_footer.html" %}
 </body>
 </html>

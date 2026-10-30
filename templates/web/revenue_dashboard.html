@@ -16,13 +16,13 @@
 #}
 {% set net_color = '#2d8a2d' if net_monthly_dollars >= 0 else '#b00' %}
 <div class="card" style="margin-bottom:2rem;padding:0;overflow:hidden;border-left:4px solid {{ net_color }};">
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;background:rgba(255,255,255,0.02);">
-        <div style="padding:1.25rem 1.5rem;border-right:1px solid var(--border,rgba(255,255,255,0.08));">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;background:var(--bg-card-hover);">
+        <div style="padding:1.25rem 1.5rem;border-right:1px solid var(--border,var(--border));">
             <div style="font-size:.72em;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);">Monthly revenue</div>
-            <div style="font-size:2rem;font-weight:700;color:#5cb85c;margin-top:.35rem;line-height:1;">${{ "%.0f"|format(monthly_revenue_dollars) }}</div>
+            <div style="font-size:2rem;font-weight:700;color:var(--green);margin-top:.35rem;line-height:1;">${{ "%.0f"|format(monthly_revenue_dollars) }}</div>
             <div style="font-size:.8em;color:var(--text-dim);margin-top:.4rem;">${{ "%.0f"|format(annualized_mrr) }} ARR · {{ summary.tier.active_subs }} paid subs</div>
         </div>
-        <div style="padding:1.25rem 1.5rem;border-right:1px solid var(--border,rgba(255,255,255,0.08));">
+        <div style="padding:1.25rem 1.5rem;border-right:1px solid var(--border,var(--border));">
             <div style="font-size:.72em;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);">Monthly cost</div>
             <div style="font-size:2rem;font-weight:700;color:#f0ad4e;margin-top:.35rem;line-height:1;">${{ "%.0f"|format(costs.total_monthly) }}</div>
             <div style="font-size:.8em;color:var(--text-dim);margin-top:.4rem;">{{ costs.issues_per_month }} issues/mo · ${{ "%.2f"|format(cost_per_issue) }} per issue</div>
@@ -37,25 +37,25 @@
         </div>
     </div>
 
-    <div style="padding:1rem 1.5rem;border-top:1px solid var(--border,rgba(255,255,255,0.08));">
+    <div style="padding:1rem 1.5rem;border-top:1px solid var(--border,var(--border));">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem;">
             <h3 style="margin:0;font-size:1rem;">Monthly P&amp;L</h3>
             <div style="font-size:.75em;color:var(--text-dim);">Tier MRR − estimated production + delivery cost. <a href="/admin/cost-dashboard" style="color:var(--text-dim);">Cost model →</a></div>
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.5rem;">
-            <div style="padding:.6rem .75rem;background:rgba(255,255,255,0.03);border-radius:6px;">
+            <div style="padding:.6rem .75rem;background:var(--bg-card-hover);border-radius:6px;">
                 <div style="font-size:.72em;color:var(--text-dim);">ARPU (monthly)</div>
                 <div style="font-size:1.05rem;font-weight:600;">${{ "%.2f"|format(arpu_monthly) }}</div>
             </div>
-            <div style="padding:.6rem .75rem;background:rgba(255,255,255,0.03);border-radius:6px;">
+            <div style="padding:.6rem .75rem;background:var(--bg-card-hover);border-radius:6px;">
                 <div style="font-size:.72em;color:var(--text-dim);">Cost / subscriber</div>
                 <div style="font-size:1.05rem;font-weight:600;">${{ "%.3f"|format(cost_per_sub) }}</div>
             </div>
-            <div style="padding:.6rem .75rem;background:rgba(255,255,255,0.03);border-radius:6px;">
+            <div style="padding:.6rem .75rem;background:var(--bg-card-hover);border-radius:6px;">
                 <div style="font-size:.72em;color:var(--text-dim);">Subscriber reach</div>
                 <div style="font-size:1.05rem;font-weight:600;">{{ "{:,}".format(costs.total_subscribers_reach) }}</div>
             </div>
-            <div style="padding:.6rem .75rem;background:rgba(255,255,255,0.03);border-radius:6px;">
+            <div style="padding:.6rem .75rem;background:var(--bg-card-hover);border-radius:6px;">
                 <div style="font-size:.72em;color:var(--text-dim);">Lifetime revenue</div>
                 <div style="font-size:1.05rem;font-weight:600;">${{ "%.0f"|format(lifetime_revenue_dollars) }}</div>
             </div>
@@ -66,17 +66,17 @@
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.75rem;margin-top:.6rem;">
                 <div>
                     <div style="font-size:.75em;">LLM generation</div>
-                    <div style="color:var(--text,#f0f0f5);font-weight:600;">${{ "%.2f"|format(costs.llm_monthly) }}</div>
+                    <div style="color:var(--text,var(--text));font-weight:600;">${{ "%.2f"|format(costs.llm_monthly) }}</div>
                     <div style="font-size:.75em;">{{ costs.issues_per_month }} issues/mo</div>
                 </div>
                 <div>
                     <div style="font-size:.75em;">Infra (Railway + Postgres)</div>
-                    <div style="color:var(--text,#f0f0f5);font-weight:600;">${{ "%.2f"|format(costs.infra_monthly) }}</div>
+                    <div style="color:var(--text,var(--text));font-weight:600;">${{ "%.2f"|format(costs.infra_monthly) }}</div>
                     <div style="font-size:.75em;">flat monthly</div>
                 </div>
                 <div>
                     <div style="font-size:.75em;">Email delivery</div>
-                    <div style="color:var(--text,#f0f0f5);font-weight:600;">${{ "%.2f"|format(costs.email_monthly) }}</div>
+                    <div style="color:var(--text,var(--text));font-weight:600;">${{ "%.2f"|format(costs.email_monthly) }}</div>
                     <div style="font-size:.75em;">$0.80 / 1k sends</div>
                 </div>
             </div>
@@ -105,7 +105,7 @@
     </div>
     <div class="card" style="text-align:center;padding:1.5rem">
         <div style="font-size:0.85em;color:var(--text-dim);margin-bottom:0.5rem">Tier MRR</div>
-        <div style="font-size:2rem;font-weight:700;color:#5cb85c">${{ "%.2f"|format(summary.tier.mrr_cents / 100) }}</div>
+        <div style="font-size:2rem;font-weight:700;color:var(--green)">${{ "%.2f"|format(summary.tier.mrr_cents / 100) }}</div>
         <div style="font-size:0.8em;color:var(--text-dim);margin-top:0.25rem">{{ summary.tier.active_subs }} active subscribers</div>
     </div>
 </div>

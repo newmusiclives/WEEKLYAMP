@@ -24,7 +24,7 @@
                 {% if slot.configured %}
                 <span style="color:#059669;font-size:12px;font-weight:600">Active</span>
                 {% else %}
-                <span style="color:#9ca3af;font-size:12px">Not set</span>
+                <span style="color:var(--text-muted);font-size:12px">Not set</span>
                 {% endif %}
             </div>
 
@@ -34,7 +34,7 @@
                 {{ slot.label }}
                 <span style="float:right;font-weight:600;color:{{ ed.color }}">{{ slot_sections | length }} sections</span>
             </div>
-            <div style="font-family:var(--font-mono);font-size:10px;color:#6b7280;word-break:break-word;max-height:60px;overflow:hidden">
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);word-break:break-word;max-height:60px;overflow:hidden">
                 {% for sec in slot_sections %}
                 <span style="display:inline-block;background:#f3f4f6;padding:1px 4px;border-radius:3px;margin:1px">{{ sec | trim }}</span>
                 {% endfor %}
@@ -47,7 +47,7 @@
                         style="font-size:11px;padding:2px 8px">Remove</button>
             </div>
             {% else %}
-            <div style="color:#9ca3af;font-size:12px;font-style:italic">
+            <div style="color:var(--text-muted);font-size:12px;font-style:italic">
                 Click "Set Up All 9 Slots" or add manually below
             </div>
             {% endif %}
@@ -85,7 +85,7 @@
                     <td>{{ i.issue_number }}</td>
                     <td>
                         {% if i.edition_slug %}
-                        {% set colors = {'fan': '#e8645a', 'artist': '#7c5cfc', 'industry': '#f59e0b'} %}
+                        {% set colors = {'fan': 'var(--ed-fan)', 'artist': 'var(--ed-artist)', 'industry': 'var(--ed-industry)'} %}
                         <span class="badge" style="background:{{ colors.get(i.edition_slug, '#6b7280') }};color:#fff;font-size:11px">
                             {{ i.edition_slug | replace('_', ' ') | title }}
                         </span>

@@ -33,7 +33,7 @@
         </label>
         <div style="margin-bottom:12px;">
             <label for="position" style="display:block;margin-bottom:6px;font-weight:600;">Position</label>
-            <select name="position" id="position" style="padding:8px;border-radius:6px;background:#1a1a1a;color:#eee;border:1px solid #444;">
+            <select name="position" id="position" style="padding:8px;border-radius:6px;background:#1a1a1a;color:var(--text-dim);border:1px solid var(--border);">
                 {% for p in ["top", "mid", "bottom"] %}
                 <option value="{{ p }}" {% if cfg.position == p %}selected{% endif %}>{{ p }}</option>
                 {% endfor %}
@@ -41,7 +41,7 @@
         </div>
         <div>
             <label for="default_target" style="display:block;margin-bottom:6px;font-weight:600;">Default target (unmapped editions)</label>
-            <select name="default_target" id="default_target" style="padding:8px;border-radius:6px;background:#1a1a1a;color:#eee;border:1px solid #444;">
+            <select name="default_target" id="default_target" style="padding:8px;border-radius:6px;background:#1a1a1a;color:var(--text-dim);border:1px solid var(--border);">
                 {% for k in target_keys %}
                 <option value="{{ k }}" {% if cfg.default_target == k %}selected{% endif %}>{{ k }}</option>
                 {% endfor %}
@@ -51,11 +51,11 @@
 
     <div class="card" style="margin-bottom:20px;padding:20px;">
         <h3 style="margin-top:0;">Routing</h3>
-        <p style="color:#888;font-size:13px;margin-top:0;">Which target each edition points at. A target with an empty URL falls back to the default.</p>
+        <p style="color:var(--text-muted);font-size:13px;margin-top:0;">Which target each edition points at. A target with an empty URL falls back to the default.</p>
         {% for ed in route_editions %}
         <div style="margin-bottom:12px;">
             <label for="route_{{ ed }}" style="display:inline-block;width:120px;font-weight:600;text-transform:capitalize;">{{ ed }}</label>
-            <select name="route_{{ ed }}" id="route_{{ ed }}" style="padding:8px;border-radius:6px;background:#1a1a1a;color:#eee;border:1px solid #444;">
+            <select name="route_{{ ed }}" id="route_{{ ed }}" style="padding:8px;border-radius:6px;background:#1a1a1a;color:var(--text-dim);border:1px solid var(--border);">
                 {% for k in target_keys %}
                 <option value="{{ k }}" {% if cfg.routing.get(ed) == k %}selected{% endif %}>{{ k }}</option>
                 {% endfor %}
@@ -71,23 +71,23 @@
         </h3>
         <div style="margin-bottom:12px;">
             <label style="display:block;margin-bottom:4px;font-weight:600;">Eyebrow label</label>
-            <input type="text" name="{{ key }}_label" value="{{ t.label }}" style="width:100%;padding:8px;border-radius:6px;background:#1a1a1a;color:#eee;border:1px solid #444;">
+            <input type="text" name="{{ key }}_label" value="{{ t.label }}" style="width:100%;padding:8px;border-radius:6px;background:#1a1a1a;color:var(--text-dim);border:1px solid var(--border);">
         </div>
         <div style="margin-bottom:12px;">
             <label style="display:block;margin-bottom:4px;font-weight:600;">Headline</label>
-            <input type="text" name="{{ key }}_headline" value="{{ t.headline }}" style="width:100%;padding:8px;border-radius:6px;background:#1a1a1a;color:#eee;border:1px solid #444;">
+            <input type="text" name="{{ key }}_headline" value="{{ t.headline }}" style="width:100%;padding:8px;border-radius:6px;background:#1a1a1a;color:var(--text-dim);border:1px solid var(--border);">
         </div>
         <div style="margin-bottom:12px;">
             <label style="display:block;margin-bottom:4px;font-weight:600;">Body</label>
-            <textarea name="{{ key }}_body" rows="3" style="width:100%;padding:8px;border-radius:6px;background:#1a1a1a;color:#eee;border:1px solid #444;">{{ t.body_html }}</textarea>
+            <textarea name="{{ key }}_body" rows="3" style="width:100%;padding:8px;border-radius:6px;background:#1a1a1a;color:var(--text-dim);border:1px solid var(--border);">{{ t.body_html }}</textarea>
         </div>
         <div style="margin-bottom:12px;">
             <label style="display:block;margin-bottom:4px;font-weight:600;">CTA text</label>
-            <input type="text" name="{{ key }}_cta" value="{{ t.cta_text }}" style="width:100%;padding:8px;border-radius:6px;background:#1a1a1a;color:#eee;border:1px solid #444;">
+            <input type="text" name="{{ key }}_cta" value="{{ t.cta_text }}" style="width:100%;padding:8px;border-radius:6px;background:#1a1a1a;color:var(--text-dim);border:1px solid var(--border);">
         </div>
         <div>
             <label style="display:block;margin-bottom:4px;font-weight:600;">Destination URL</label>
-            <input type="url" name="{{ key }}_url" value="{{ t.url }}" placeholder="https://…" style="width:100%;padding:8px;border-radius:6px;background:#1a1a1a;color:#eee;border:1px solid #444;">
+            <input type="url" name="{{ key }}_url" value="{{ t.url }}" placeholder="https://…" style="width:100%;padding:8px;border-radius:6px;background:#1a1a1a;color:var(--text-dim);border:1px solid var(--border);">
         </div>
     </div>
     {% endfor %}
@@ -100,7 +100,7 @@
     {% if performance %}
     <table style="width:100%;border-collapse:collapse;font-size:14px;">
         <thead>
-            <tr style="text-align:left;color:#888;border-bottom:1px solid #333;">
+            <tr style="text-align:left;color:var(--text-muted);border-bottom:1px solid var(--border);">
                 <th style="padding:8px 6px;">Target</th>
                 <th style="padding:8px 6px;">Edition</th>
                 <th style="padding:8px 6px;text-align:right;">Clicks</th>
@@ -117,7 +117,7 @@
         </tbody>
     </table>
     {% else %}
-    <p style="color:#888;margin:0;">No promo clicks recorded yet.</p>
+    <p style="color:var(--text-muted);margin:0;">No promo clicks recorded yet.</p>
     {% endif %}
 </div>
 {% endblock %}

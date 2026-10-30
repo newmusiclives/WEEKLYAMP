@@ -14,7 +14,7 @@
     <strong>Automation is ACTIVE</strong> — Marketing jobs are running on schedule. The AI CMO is working.
 </div>
 {% else %}
-<div class="alert" style="margin-bottom:20px;background:#fef3c7;border:1px solid #f59e0b;color:#92400e;padding:16px;border-radius:8px;">
+<div class="alert" style="margin-bottom:20px;background:#fef3c7;border:1px solid var(--gold);color:#92400e;padding:16px;border-radius:8px;">
     <strong>Automation is OFF</strong> — Set <code>agents.default_autonomy: "autonomous"</code> in config and <code>WEEKLYAMP_WORKERS_ENABLED=true</code> to enable scheduled automation. Use the manual triggers below to run tasks on-demand.
 </div>
 {% endif %}
@@ -150,8 +150,8 @@
                 <td>{{ task.task_type }}</td>
                 <td>
                     {% if task.state == 'complete' %}<span class="badge badge-success">complete</span>
-                    {% elif task.state == 'working' %}<span class="badge" style="background:#3b82f6;color:#fff;">working</span>
-                    {% elif task.state == 'failed' %}<span class="badge" style="background:#ef4444;color:#fff;">failed</span>
+                    {% elif task.state == 'working' %}<span class="badge" style="background:var(--blue);color:#fff;">working</span>
+                    {% elif task.state == 'failed' %}<span class="badge" style="background:var(--red);color:#fff;">failed</span>
                     {% else %}<span class="badge badge-muted">{{ task.state }}</span>{% endif %}
                 </td>
                 <td>{{ task.created_at }}</td>

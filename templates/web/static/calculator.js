@@ -71,16 +71,16 @@ function calculate() {
     var maxRev = Math.max(sponsorRevenue, tierMRR, affiliateRevenue, licenseFees + licenseShare, 1);
     var barsHtml = '';
     var items = [
-        {label: 'Sponsors', value: sponsorRevenue, color: '#e8645a'},
-        {label: 'Paid Tiers', value: tierMRR, color: '#7c5cfc'},
-        {label: 'Affiliates', value: affiliateRevenue, color: '#10b981'},
-        {label: 'Licensing', value: licenseFees + licenseShare, color: '#f59e0b'},
+        {label: 'Sponsors', value: sponsorRevenue, color: 'var(--accent)'},
+        {label: 'Paid Tiers', value: tierMRR, color: 'var(--text)'},
+        {label: 'Affiliates', value: affiliateRevenue, color: 'var(--blue)'},
+        {label: 'Licensing', value: licenseFees + licenseShare, color: 'var(--gold)'},
     ];
     for (var i = 0; i < items.length; i++) {
         var pct = (items[i].value / maxRev) * 100;
         barsHtml += '<div style="margin-bottom:12px;">';
         barsHtml += '<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span>' + items[i].label + '</span><span style="font-weight:700;">' + fmt(Math.round(items[i].value)) + '</span></div>';
-        barsHtml += '<div style="background:#e5e7eb;border-radius:8px;height:12px;overflow:hidden;"><div style="background:' + items[i].color + ';height:100%;width:' + pct + '%;border-radius:8px;transition:width 0.3s;"></div></div>';
+        barsHtml += '<div style="background:var(--bg-secondary);border-radius:999px;height:12px;overflow:hidden;"><div style="background:' + items[i].color + ';height:100%;width:' + pct + '%;border-radius:999px;transition:width 0.3s;"></div></div>';
         barsHtml += '</div>';
     }
     document.getElementById('revenue-bars').innerHTML = barsHtml;

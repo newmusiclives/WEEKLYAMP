@@ -65,15 +65,15 @@
                 <td>{{ send.scheduled_at }}</td>
                 <td>
                     {% if send.status == 'pending' %}
-                    <span class="badge" style="background:#f59e0b;color:#fff">Pending</span>
+                    <span class="badge" style="background:var(--gold);color:#fff">Pending</span>
                     {% elif send.status == 'processing' %}
-                    <span class="badge" style="background:#3b82f6;color:#fff">Processing</span>
+                    <span class="badge" style="background:var(--blue);color:#fff">Processing</span>
                     {% elif send.status == 'sent' %}
                     <span class="badge badge-success">Sent</span>
                     {% elif send.status == 'cancelled' %}
                     <span class="badge badge-muted">Cancelled</span>
                     {% elif send.status == 'failed' %}
-                    <span class="badge" style="background:#ef4444;color:#fff">Failed</span>
+                    <span class="badge" style="background:var(--red);color:#fff">Failed</span>
                     {% else %}
                     <span class="badge">{{ send.status }}</span>
                     {% endif %}

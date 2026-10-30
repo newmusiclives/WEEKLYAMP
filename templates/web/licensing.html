@@ -15,7 +15,7 @@
         <div style="font-size:0.85rem;color:var(--muted)">Total Licensees</div>
     </div>
     <div class="card" style="flex:1;min-width:180px;text-align:center;padding:1.25rem">
-        <div style="font-size:2rem;font-weight:700;color:#22c55e">{{ licensees|selectattr('status','equalto','active')|list|length }}</div>
+        <div style="font-size:2rem;font-weight:700;color:var(--green)">{{ licensees|selectattr('status','equalto','active')|list|length }}</div>
         <div style="font-size:0.85rem;color:var(--muted)">Active</div>
     </div>
     <div class="card" style="flex:1;min-width:180px;text-align:center;padding:1.25rem">

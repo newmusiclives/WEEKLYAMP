@@ -6,276 +6,132 @@
     <title>You're Subscribed! — TrueFans DISPATCH</title>
     <meta name="description" content="Welcome to TrueFans DISPATCH. Your subscription is confirmed.">
     <meta name="robots" content="noindex">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+{% include "partials/site_head.html" %}
     <style>
-        :root {
-            --bg: #0a0a12;
-            --bg-card: #13131f;
-            --border: rgba(255,255,255,0.08);
-            --text: #f0f0f5;
-            --text-dim: #9ca3af;
-            --accent: #e8645a;
-            --accent-hover: #f07a70;
-            --purple: #7c5cfc;
-            --gold: #f59e0b;
-            --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: var(--font);
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.6;
-        }
-
-        /* Nav */
-        nav {
-            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-            padding: 20px 40px;
-            display: flex; justify-content: space-between; align-items: center;
-            background: rgba(10, 10, 18, 0.8);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border);
-        }
-        .nav-brand { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; color: var(--text); text-decoration: none; }
-        .nav-brand span { color: var(--accent); }
-        .nav-link {
-            color: var(--text-dim); text-decoration: none; font-size: 14px; font-weight: 500;
-            padding: 8px 20px; border-radius: 8px; border: 1px solid var(--border); transition: all 0.2s;
-        }
-        .nav-link:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
-        .nav-link-cta { background: var(--accent); color: #fff; border-color: var(--accent); }
-        .nav-link-cta:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: #fff; }
-
-        /* Confirmation */
-        .confirm-page {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 160px 24px 80px;
-            text-align: center;
-        }
-        .checkmark {
-            width: 80px; height: 80px; border-radius: 50%;
-            background: linear-gradient(135deg, var(--accent), var(--purple));
-            display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 32px;
-        }
-        .confirm-page h1 {
-            font-size: 36px; font-weight: 900; letter-spacing: -1px; margin-bottom: 16px;
-        }
-        .confirm-page .subtitle {
-            font-size: 18px; color: var(--text-dim); margin-bottom: 40px; line-height: 1.7;
-        }
-
-        /* Selected editions list */
-        .selected-editions {
-            display: flex; flex-direction: column; gap: 12px;
-            margin-bottom: 40px; text-align: left;
-        }
-        .selected-edition {
-            display: flex; align-items: center; gap: 14px;
-            background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: 12px; padding: 16px 20px;
-        }
-        .selected-dot {
-            width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
-        }
-        .selected-edition strong { font-size: 15px; }
-
-        /* What to expect */
-        .what-to-expect {
-            background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: 14px; padding: 28px; text-align: left; margin-bottom: 40px;
-        }
-        .what-to-expect h3 {
-            font-size: 16px; font-weight: 700; margin-bottom: 12px;
-        }
-        .what-to-expect p {
-            font-size: 14px; color: var(--text-dim); line-height: 1.8;
-        }
-
-        /* Buttons */
-        .btn {
-            display: inline-flex; align-items: center; gap: 8px;
-            padding: 14px 32px; border-radius: 10px; font-size: 16px;
-            font-weight: 600; text-decoration: none; transition: all 0.2s;
-        }
-        .btn-outline {
-            background: transparent; color: var(--text);
-            border: 1px solid var(--border);
-        }
-        .btn-outline:hover {
-            background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.2);
-        }
-
-        /* Footer */
-        footer {
-            padding: 40px 24px; text-align: center;
-            border-top: 1px solid var(--border); color: var(--text-dim); font-size: 14px;
-        }
-        .footer-links { display: flex; gap: 24px; justify-content: center; margin-bottom: 16px; }
-        .footer-links a { color: var(--text-dim); text-decoration: none; font-size: 13px; }
-        .footer-links a:hover { color: var(--text); }
-
-        @media (max-width: 768px) {
-            nav { padding: 16px 20px; }
-            .confirm-page h1 { font-size: 28px; }
-        }
+        .picked-list { display: grid; gap: 10px; }
+        .picked-list .edition { flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 16px; padding: 20px 22px 16px; }
+        .picked-list strong { font: 800 1.45rem/1 var(--display); text-transform: uppercase; }
+        .picked-list .days { font: 500 .74rem var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+        /* Copy-a-link row: a read-only input and its button. */
+        .copy-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .copy-row input { flex: 1 1 220px; min-width: 0; font: 400 .9rem var(--mono); }
+        .share-row { display: flex; flex-wrap: wrap; gap: 10px; }
+        .share-row svg { flex: none; }
+        /* Reward tiers: the threshold in gold display figures. */
+        .tiers { list-style: none; margin: 0; padding: 0; display: grid; }
+        .tiers li { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 14px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); }
+        .tiers li:last-child { border-bottom: 0; }
+        .tiers .n { font: 900 2.2rem/1 var(--display); color: var(--gold-text); font-variant-numeric: tabular-nums; }
+        .tiers b { display: block; font-size: .98rem; }
+        .tiers span { color: var(--muted); font-size: .9rem; }
+        /* A progress meter: gold fill on a quiet track. */
+        .meter { height: 10px; border-radius: 999px; background: var(--bg-2); border: 1px solid var(--line); overflow: hidden; }
+        .meter > div { height: 100%; background: var(--gold); border-radius: 999px; }
     </style>
 {% include "partials/analytics.html" %}
 </head>
 <body>
-    {% include "partials/public_nav.html" %}
+{% include "partials/site_nav.html" %}
 
-    <div class="confirm-page">
-        <div class="checkmark">
-            <svg width="36" height="36" viewBox="0 0 36 36" fill="none"><path d="M8 18l7 7L28 11" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
-        <h1>You're subscribed!</h1>
-        <p class="subtitle">Welcome to TrueFans DISPATCH. Here's what you signed up for:</p>
+<main id="main">
+    <section class="hero">
+        <div class="wrap narrow stack-lg">
+            <div class="section-head" style="margin-bottom:0">
+                <p class="eyebrow">Welcome aboard</p>
+                <h1>You're <em>subscribed!</em></h1>
+                <p class="lede">Welcome to TrueFans DISPATCH. Here's what you signed up for:</p>
+            </div>
 
-        <div class="selected-editions">
-            {% for ed in selected_editions %}
-            <div class="selected-edition">
-                <div class="selected-dot" style="background: {{ ed.color }}"></div>
-                <div style="flex:1">
-                    <strong style="color: {{ ed.color }}">{{ ed.name }}</strong>
+            <div class="picked-list selected-editions">
+                {% for ed in selected_editions %}
+                <div class="card flat edition selected-edition ed-{{ ed.slug }}">
+                    <strong>{{ ed.name }}</strong>
                     {% if ed.selected_days %}
-                    <div style="font-size: 13px; color: var(--text-dim); margin-top: 2px;">{{ ed.selected_days | map('capitalize') | join(', ') }}</div>
+                    <span class="days">{{ ed.selected_days | map('capitalize') | join(', ') }}</span>
                     {% endif %}
                 </div>
+                {% endfor %}
             </div>
-            {% endfor %}
-        </div>
 
-        <div class="what-to-expect">
-            <h3>What to expect</h3>
-            <p>Your first issue will arrive on your chosen delivery days. Each edition is crafted with original content, curated insights, and actionable advice tailored to your interests. Check your spam folder if you don't see it!</p>
-        </div>
-
-        <a href="/newsletters" class="btn btn-outline">Explore All Editions</a>
-
-        <!-- Referral & Sharing Section -->
-        <div style="margin-top: 48px; padding-top: 40px; border-top: 1px solid var(--border);">
-            <div style="width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--purple)); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <div class="panel what-to-expect">
+                <h3>What to expect</h3>
+                <p class="muted">Your first issue will arrive on your chosen delivery days. Each edition is crafted with original content, curated insights, and actionable advice tailored to your interests. Check your spam folder if you don't see it!</p>
             </div>
-            <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 8px;">Share &amp; Earn Rewards</h2>
-            <p style="font-size: 15px; color: var(--text-dim); margin-bottom: 24px; line-height: 1.7;">
-                Know someone who'd love TrueFans DISPATCH? Share your personal referral link and unlock exclusive rewards.
-            </p>
+
+            <div class="actions">
+                <a href="/newsletters" class="btn ghost">Explore All Editions</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Referral & Sharing Section -->
+    <section class="section band">
+        <div class="wrap narrow stack-lg">
+            <div class="section-head" style="margin-bottom:0">
+                <p class="eyebrow">Referrals</p>
+                <h2>Share &amp; Earn <em>Rewards</em></h2>
+                <p class="lede">Know someone who'd love TrueFans DISPATCH? Share your personal referral link and unlock exclusive rewards.</p>
+            </div>
 
             {% if referral_url %}
-            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; text-align: left;">
-                <div style="font-size: 12px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Your Referral Link</div>
-                <div style="display: flex; gap: 8px; align-items: center;">
-                    <input type="text" id="referral-link" value="{{ referral_url }}" readonly
-                           style="flex: 1; padding: 10px 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 13px; font-family: var(--font);">
-                    <button id="copy-btn" onclick="copyReferralLink()"
-                            style="padding: 10px 18px; border: none; border-radius: 8px; background: var(--accent); color: #fff; font-size: 13px; font-weight: 600; font-family: var(--font); cursor: pointer; white-space: nowrap;">
-                        Copy
-                    </button>
+            <div class="panel">
+                <label class="field" for="referral-link">Your Referral Link</label>
+                <div class="copy-row">
+                    <input type="text" id="referral-link" value="{{ referral_url }}" readonly>
+                    <button id="copy-btn" class="btn primary" data-copy="#referral-link">Copy</button>
                 </div>
             </div>
             {% endif %}
 
             <!-- Share Buttons -->
-            <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 28px;">
-                <a href="https://twitter.com/intent/tweet?text=I%20just%20subscribed%20to%20TrueFans%20DISPATCH%20%E2%80%94%20the%20best%20music%20industry%20insights%20delivered%20weekly.%20Check%20it%20out%3A&url={{ referral_url | default('/subscribe') | urlencode }}" target="_blank" rel="noopener"
-                   style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none; border: 1px solid rgba(29,161,242,0.3); color: #1da1f2; transition: all 0.2s;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            <div class="share-row">
+                <a class="btn ghost sm" href="https://twitter.com/intent/tweet?text=I%20just%20subscribed%20to%20TrueFans%20DISPATCH%20%E2%80%94%20the%20best%20music%20industry%20insights%20delivered%20weekly.%20Check%20it%20out%3A&url={{ referral_url | default('/subscribe') | urlencode }}" target="_blank" rel="noopener">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
                     Twitter
                 </a>
-                <a href="https://wa.me/?text=Check%20out%20TrueFans%20DISPATCH%20%E2%80%94%20the%20best%20music%20industry%20insights!%20{{ referral_url | default('/subscribe') | urlencode }}" target="_blank" rel="noopener"
-                   style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none; border: 1px solid rgba(37,211,102,0.3); color: #25d366; transition: all 0.2s;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                <a class="btn ghost sm" href="https://wa.me/?text=Check%20out%20TrueFans%20DISPATCH%20%E2%80%94%20the%20best%20music%20industry%20insights!%20{{ referral_url | default('/subscribe') | urlencode }}" target="_blank" rel="noopener">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
                     WhatsApp
                 </a>
-                <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ referral_url | default('/subscribe') | urlencode }}" target="_blank" rel="noopener"
-                   style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none; border: 1px solid rgba(10,102,194,0.3); color: #0a66c2; transition: all 0.2s;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                <a class="btn ghost sm" href="https://www.linkedin.com/sharing/share-offsite/?url={{ referral_url | default('/subscribe') | urlencode }}" target="_blank" rel="noopener">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
                     LinkedIn
                 </a>
-                <a href="mailto:?subject=You'll%20love%20TrueFans%20DISPATCH&body=I%20just%20subscribed%20to%20TrueFans%20DISPATCH%20and%20I%20think%20you'd%20love%20it%20too.%20The%20best%20music%20industry%20insights%20delivered%20weekly.%0A%0ASubscribe%20here%3A%20{{ referral_url | default('/subscribe') | urlencode }}"
-                   style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none; border: 1px solid rgba(245,158,11,0.3); color: #f59e0b; transition: all 0.2s;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <a class="btn ghost sm" href="mailto:?subject=You'll%20love%20TrueFans%20DISPATCH&body=I%20just%20subscribed%20to%20TrueFans%20DISPATCH%20and%20I%20think%20you'd%20love%20it%20too.%20The%20best%20music%20industry%20insights%20delivered%20weekly.%0A%0ASubscribe%20here%3A%20{{ referral_url | default('/subscribe') | urlencode }}">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                     Email
                 </a>
             </div>
 
-            <!-- Reward Tiers Teaser -->
-            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; text-align: left; margin-bottom: 24px;">
-                <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 16px;">Referral Rewards</h3>
-                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                    <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(232,100,90,0.15); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: var(--accent); flex-shrink: 0;">3</div>
-                    <div>
-                        <div style="font-size: 13px; font-weight: 600;">3 Referrals</div>
-                        <div style="font-size: 12px; color: var(--text-dim);">Exclusive behind-the-scenes content</div>
-                    </div>
+            <div class="grid-2">
+                <!-- Reward Tiers Teaser -->
+                <div class="card">
+                    <h3>Referral Rewards</h3>
+                    <ul class="tiers">
+                        <li><span class="n">3</span><div><b>3 Referrals</b><span>Exclusive behind-the-scenes content</span></div></li>
+                        <li><span class="n">5</span><div><b>5 Referrals</b><span>Early access to new features</span></div></li>
+                        <li><span class="n">10</span><div><b>10 Referrals</b><span>TrueFans VIP badge + shout-out</span></div></li>
+                    </ul>
                 </div>
-                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                    <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(124,92,252,0.15); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: var(--purple); flex-shrink: 0;">5</div>
-                    <div>
-                        <div style="font-size: 13px; font-weight: 600;">5 Referrals</div>
-                        <div style="font-size: 12px; color: var(--text-dim);">Early access to new features</div>
-                    </div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(245,158,11,0.15); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: var(--gold); flex-shrink: 0;">10</div>
-                    <div>
-                        <div style="font-size: 13px; font-weight: 600;">10 Referrals</div>
-                        <div style="font-size: 12px; color: var(--text-dim);">TrueFans VIP badge + shout-out</div>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Progress bar teaser -->
-            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px;">
-                <div style="font-size: 13px; font-weight: 600; margin-bottom: 10px; color: var(--text-dim);">Refer 3 friends to unlock exclusive content</div>
-                <div style="width: 100%; height: 10px; background: rgba(255,255,255,0.06); border-radius: 5px; overflow: hidden;">
-                    <div style="width: 0%; height: 100%; border-radius: 5px; background: linear-gradient(90deg, var(--accent), var(--purple));"></div>
+                <!-- Progress bar teaser -->
+                <div class="card" style="justify-content:center">
+                    <p>Refer 3 friends to unlock exclusive content</p>
+                    <div class="meter"><div style="width: 0%"></div></div>
+                    <p class="fine">0 of 3 referrals</p>
                 </div>
-                <div style="font-size: 12px; color: var(--text-dim); margin-top: 6px;">0 of 3 referrals</div>
             </div>
 
             {% if subscriber_count and subscriber_count > 0 %}
-            <div style="margin-top: 24px; font-size: 14px; color: var(--text-dim);">
-                <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; margin-right: 6px;"></span>
-                Join {{ "{:,}".format(subscriber_count) }}+ music lovers
-            </div>
+            <ul class="ticks">
+                <li>Join {{ "{:,}".format(subscriber_count) }}+ music lovers</li>
+            </ul>
             {% endif %}
         </div>
-    </div>
+    </section>
+</main>
 
-    {% include "partials/public_footer.html" %}
+{% include "partials/site_footer.html" %}
 
-    <script>
-    function copyReferralLink() {
-        var input = document.getElementById('referral-link');
-        var btn = document.getElementById('copy-btn');
-        if (!input) return;
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(input.value).then(function() {
-                btn.textContent = 'Copied!';
-                btn.style.background = '#22c55e';
-                setTimeout(function() {
-                    btn.textContent = 'Copy';
-                    btn.style.background = '';
-                }, 2000);
-            });
-        } else {
-            input.select();
-            document.execCommand('copy');
-            btn.textContent = 'Copied!';
-            btn.style.background = '#22c55e';
-            setTimeout(function() {
-                btn.textContent = 'Copy';
-                btn.style.background = '';
-            }, 2000);
-        }
-    }
-    </script>
 </body>
 </html>

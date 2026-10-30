@@ -4,51 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>404 — Not Found</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="preload" href="/static/fonts/big-shoulders-display-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/static/fonts/schibsted-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="/static/dispatch.css">
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <meta name="theme-color" content="#F1F0EC" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0E0F0C" media="(prefers-color-scheme: dark)">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #0f0f14;
-            color: #e0e0e6;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            text-align: center;
-        }
-        .error-page { max-width: 440px; padding: 40px 24px; }
-        .error-code {
-            font-size: 96px;
-            font-weight: 800;
-            color: #e8645a;
-            line-height: 1;
-            margin-bottom: 12px;
-        }
-        h1 { font-size: 22px; font-weight: 600; margin-bottom: 12px; }
-        p { color: #888; font-size: 15px; line-height: 1.6; margin-bottom: 28px; }
-        a {
-            display: inline-block;
-            padding: 10px 24px;
-            background: #e8645a;
-            color: #fff;
-            text-decoration: none;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 14px;
-            transition: background 0.15s;
-        }
-        a:hover { background: #d4524a; }
+        .error-code { font: 900 clamp(6rem, 30vw, 11rem)/.85 var(--display); color: var(--gold-text); font-variant-numeric: tabular-nums; }
     </style>
 </head>
 <body>
-    <div class="error-page">
-        <div class="error-code">404</div>
-        <h1>Page not found</h1>
-        <p>The page you're looking for doesn't exist or has been moved.</p>
-        <a href="/">Back to home</a>
-    </div>
+    <main class="solo" id="main">
+        <div class="solo-inner centred">
+            <a href="/" class="brand"><span>True<em>Fans</em> Dispatch</span></a>
+            <div class="error-code">404</div>
+            <h1>Page not <em>found</em></h1>
+            <p class="lede">The page you're looking for doesn't exist or has been moved.</p>
+            <div class="actions"><a href="/" class="btn primary lg">Back to home</a></div>
+        </div>
+    </main>
 </body>
 </html>

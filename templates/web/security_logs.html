@@ -9,7 +9,7 @@
 </div>
 
 <form method="get" action="/admin/security-log" style="margin-bottom:16px;display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
-    <label style="display:flex;flex-direction:column;font-size:13px;color:#666;">
+    <label style="display:flex;flex-direction:column;font-size:13px;color:var(--text-dim);">
         Event type
         <select name="event_type" style="min-width:220px;padding:6px;">
             <option value="">(any)</option>
@@ -18,7 +18,7 @@
             {% endfor %}
         </select>
     </label>
-    <label style="display:flex;flex-direction:column;font-size:13px;color:#666;">
+    <label style="display:flex;flex-direction:column;font-size:13px;color:var(--text-dim);">
         Limit
         <input type="number" name="limit" value="{{ limit }}" min="10" max="500" style="width:80px;padding:6px;">
     </label>
@@ -51,7 +51,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="5" style="text-align:center;color:#888;padding:24px;">No events match this filter</td>
+                    <td colspan="5" style="text-align:center;color:var(--text-muted);padding:24px;">No events match this filter</td>
                 </tr>
                 {% endfor %}
             </tbody>

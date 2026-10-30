@@ -6,351 +6,89 @@
     <title>License a City Edition — TrueFans DISPATCH</title>
     <meta name="description" content="Run your own city music newsletter. License a TrueFans city edition — powered by AI, ready to publish. Nashville, LA, NYC, Atlanta, and 30+ markets available.">
     <meta property="og:title" content="Run Your Own City Music Newsletter — TrueFans">
-    <meta property="og:description" content="License a TrueFans city edition. AI-powered content, built-in monetization, full support. Plans from $50/month.">
+    <meta property="og:description" content="License a TrueFans city edition. AI-powered content, built-in monetization, full support. Plans from $100/month.">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+{% include "partials/site_head.html" %}
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
     <style>
-        :root {
-            --bg: #0a0a12;
-            --bg-card: #13131f;
-            --bg-card-hover: #1a1a2e;
-            --border: rgba(255,255,255,0.08);
-            --text: #f0f0f5;
-            --text-dim: #9ca3af;
-            --accent: #7c5cfc;
-            --accent-hover: #9178fd;
-            --accent-glow: rgba(124, 92, 252, 0.3);
-            --accent-light: #c4b5fd;
-            --accent-bg: rgba(124, 92, 252, 0.12);
-            --accent-border: rgba(124, 92, 252, 0.25);
-            --green: #10b981;
-            --green-bg: rgba(16, 185, 129, 0.12);
-            --green-border: rgba(16, 185, 129, 0.25);
-            --gold: #f59e0b;
-            --gold-bg: rgba(245, 158, 11, 0.12);
-            --coral: #e8645a;
-            --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.6; overflow-x: hidden; }
-
-        /* Nav */
-        nav {
-            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-            padding: 20px 40px; display: flex; justify-content: space-between; align-items: center;
-            background: rgba(10, 10, 18, 0.8); backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border);
-        }
-        .nav-brand { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; color: var(--text); text-decoration: none; }
-        .nav-brand span { color: var(--coral); }
-        .nav-links { display: flex; gap: 12px; align-items: center; }
-        .nav-link {
-            color: var(--text-dim); text-decoration: none; font-size: 14px; font-weight: 500;
-            padding: 8px 20px; border-radius: 8px; border: 1px solid var(--border); transition: all 0.2s;
-        }
-        .nav-link:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
-        .nav-link-cta { background: var(--accent); color: #fff; border-color: var(--accent); }
-        .nav-link-cta:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: #fff; }
-
-        /* Container */
-        .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
-
-        /* Hero */
-        .hero {
-            position: relative; min-height: 90vh;
-            display: flex; align-items: center; justify-content: center;
-            text-align: center; padding: 120px 24px 80px;
-        }
-        .hero::before {
-            content: ''; position: absolute; inset: 0;
-            background:
-                radial-gradient(ellipse 80% 60% at 50% 0%, rgba(124, 92, 252, 0.18) 0%, transparent 70%),
-                radial-gradient(ellipse 60% 50% at 80% 20%, rgba(124, 92, 252, 0.08) 0%, transparent 60%);
-            pointer-events: none;
-        }
-        .hero-content { position: relative; max-width: 800px; }
-        .hero-badge {
-            display: inline-flex; align-items: center; gap: 8px;
-            background: var(--accent-bg); border: 1px solid var(--accent-border);
-            color: var(--accent-light); padding: 6px 16px; border-radius: 100px;
-            font-size: 13px; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 32px;
-        }
-        .hero h1 {
-            font-size: clamp(36px, 5.5vw, 58px); font-weight: 900;
-            line-height: 1.08; letter-spacing: -2px; margin-bottom: 24px;
-        }
-        .hero h1 .highlight {
-            background: linear-gradient(135deg, var(--accent), #a78bfa);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-        }
-        .hero p { font-size: 20px; color: var(--text-dim); max-width: 640px; margin: 0 auto 40px; line-height: 1.7; }
-        .btn {
-            display: inline-flex; align-items: center; gap: 8px;
-            padding: 14px 32px; border-radius: 10px; font-size: 16px;
-            font-weight: 600; text-decoration: none; transition: all 0.2s; cursor: pointer; border: none;
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, var(--accent), #6344e0);
-            color: #fff; box-shadow: 0 4px 20px var(--accent-glow);
-        }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px var(--accent-glow); }
-        .btn-secondary {
-            background: transparent; color: var(--accent-light);
-            border: 1px solid var(--accent-border); padding: 14px 32px;
-        }
-        .btn-secondary:hover { background: var(--accent-bg); }
-        .hero-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
-
-        /* Section styling */
-        section { padding: 80px 0; }
-        .section-header { text-align: center; margin-bottom: 56px; }
-        .section-header h2 { font-size: 36px; font-weight: 800; letter-spacing: -1px; margin-bottom: 16px; }
-        .section-header p { font-size: 18px; color: var(--text-dim); max-width: 600px; margin: 0 auto; }
-        .section-dark { background: var(--bg-card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-
-        /* Revenue breakdown */
-        .revenue-grid {
-            max-width: 700px; margin: 0 auto;
-            background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: 16px; padding: 40px; overflow: hidden;
-        }
-        .revenue-line {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 14px 0; border-bottom: 1px solid var(--border);
-            font-size: 16px;
-        }
-        .revenue-line:last-child { border-bottom: none; }
-        .revenue-line .label { color: var(--text-dim); }
-        .revenue-line .amount { font-weight: 700; color: var(--green); font-size: 18px; }
-        .revenue-total {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 20px 0 0; margin-top: 8px;
-            border-top: 2px solid var(--accent-border); font-size: 20px; font-weight: 800;
-        }
-        .revenue-total .amount { color: var(--accent-light); font-size: 24px; }
-        .revenue-note {
-            text-align: center; margin-top: 24px; padding: 16px;
-            background: var(--green-bg); border: 1px solid var(--green-border);
-            border-radius: 10px; color: var(--green); font-weight: 600; font-size: 15px;
-        }
-
-        /* Feature cards */
-        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
-        .feature-card {
-            background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: 16px; padding: 32px; transition: all 0.3s;
-        }
-        .feature-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.3); border-color: var(--accent-border); }
-        .feature-icon {
-            width: 48px; height: 48px; border-radius: 12px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 24px; margin-bottom: 20px; background: var(--accent-bg);
-        }
-        .feature-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
-        .feature-card p { color: var(--text-dim); font-size: 15px; line-height: 1.7; }
-
-        /* Steps */
-        .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 32px; max-width: 1000px; margin: 0 auto; }
-        .step-card { text-align: center; }
-        .step-number {
-            display: inline-flex; align-items: center; justify-content: center;
-            width: 56px; height: 56px; border-radius: 50%;
-            background: var(--accent-bg); border: 2px solid var(--accent-border);
-            color: var(--accent-light); font-size: 24px; font-weight: 800; margin-bottom: 16px;
-        }
-        .step-card h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
-        .step-card p { color: var(--text-dim); font-size: 14px; line-height: 1.7; }
-
-        /* Pricing */
-        .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; max-width: 900px; margin: 0 auto; }
-        .pricing-card {
-            background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: 16px; padding: 36px; text-align: center; position: relative;
-        }
-        .pricing-card.popular { border-color: var(--accent); box-shadow: 0 0 40px var(--accent-glow); }
-        .pricing-card.popular::before {
-            content: 'Best Value'; position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-            background: var(--accent); color: #fff; font-size: 12px; font-weight: 700;
-            padding: 4px 16px; border-radius: 100px; text-transform: uppercase; letter-spacing: 0.5px;
-        }
-        .pricing-card h3 { font-size: 20px; font-weight: 700; margin-bottom: 12px; }
-        .pricing-price { font-size: 40px; font-weight: 900; margin-bottom: 4px; }
-        .pricing-period { color: var(--text-dim); font-size: 14px; margin-bottom: 8px; }
-        .pricing-detail { color: var(--text-dim); font-size: 13px; margin-bottom: 24px; }
-        .pricing-features { list-style: none; text-align: left; margin-bottom: 28px; }
-        .pricing-features li { padding: 8px 0; font-size: 14px; color: var(--text-dim); border-bottom: 1px solid var(--border); }
-        .pricing-features li::before { content: '\2713'; color: var(--green); font-weight: 700; margin-right: 10px; }
-        .pricing-detail strong { color: var(--accent-light); font-weight: 800; }
-
-        /* Billing toggle */
-        .billing-toggle {
-            display: flex; justify-content: center; align-items: center;
-            gap: 14px; margin-bottom: 44px; flex-wrap: wrap;
-        }
-        .billing-toggle .bill-label { font-size: 15px; font-weight: 600; color: var(--text-dim); transition: color 0.2s; }
-        .billing-toggle .bill-label.active { color: var(--text); }
-        .toggle-switch {
-            position: relative; width: 52px; height: 28px; flex-shrink: 0;
-            background: var(--accent-bg); border: 1px solid var(--accent-border);
-            border-radius: 100px; cursor: pointer; transition: all 0.2s;
-        }
-        .toggle-switch::after {
-            content: ''; position: absolute; top: 2px; left: 2px;
-            width: 22px; height: 22px; border-radius: 50%;
-            background: var(--accent); transition: transform 0.2s;
-        }
-        .toggle-switch.annual::after { transform: translateX(24px); }
-        .save-badge {
-            background: var(--green-bg); border: 1px solid var(--green-border);
-            color: var(--green); font-size: 12px; font-weight: 700;
-            padding: 3px 12px; border-radius: 100px;
-        }
-
-        /* City grid */
-        .city-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; max-width: 900px; margin: 0 auto; }
-        .city-tag {
-            padding: 12px 16px; border-radius: 10px; text-align: center;
-            background: var(--bg-card); border: 1px solid var(--border);
-            font-size: 14px; font-weight: 600; transition: all 0.2s;
-        }
-        .city-tag:hover { border-color: var(--accent-border); background: var(--accent-bg); }
-
-        /* Form */
-        .apply-form {
-            background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: 16px; padding: 40px; max-width: 700px; margin: 0 auto;
-        }
-        .form-row { margin-bottom: 20px; }
-        .form-row label {
-            display: block; font-size: 0.85rem; font-weight: 600;
-            margin-bottom: 6px; color: var(--text-dim);
-        }
-        .form-row input, .form-row select, .form-row textarea {
-            width: 100%; padding: 12px 16px; border-radius: 8px;
-            border: 1px solid var(--border); background: var(--bg);
-            color: var(--text); font-family: var(--font); font-size: 0.95rem;
-        }
-        .form-row input:focus, .form-row select:focus, .form-row textarea:focus {
-            outline: none; border-color: var(--accent);
-        }
-        .form-row textarea { min-height: 100px; resize: vertical; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .btn-submit {
-            background: linear-gradient(135deg, var(--accent), #6344e0);
-            color: #fff; border: none;
-            padding: 14px 40px; border-radius: 10px; font-size: 1rem;
-            font-weight: 700; cursor: pointer; width: 100%;
-            transition: all 0.2s; box-shadow: 0 4px 20px var(--accent-glow);
-        }
-        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 30px var(--accent-glow); }
-
-        /* Testimonial */
-        .testimonial { padding: 80px 24px; max-width: 700px; margin: 0 auto; text-align: center; }
-        .testimonial blockquote {
-            font-size: 22px; font-weight: 500; line-height: 1.6; font-style: italic;
-            color: var(--text); margin-bottom: 20px;
-        }
-        .testimonial cite { font-size: 15px; color: var(--text-dim); font-style: normal; }
-
-        /* FAQ */
-        .faq { padding: 80px 24px; max-width: 700px; margin: 0 auto; }
-        .faq h2 { text-align: center; font-size: 32px; font-weight: 800; letter-spacing: -1px; margin-bottom: 40px; }
-        .faq-item { border-bottom: 1px solid var(--border); padding: 24px 0; }
-        .faq-item h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
-        .faq-item p { color: var(--text-dim); font-size: 15px; line-height: 1.7; }
-
-        /* Bottom CTA */
-        .bottom-cta {
-            padding: 80px 24px; text-align: center;
-            background: var(--bg-card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
-        }
-        .bottom-cta h2 { font-size: 32px; font-weight: 800; letter-spacing: -1px; margin-bottom: 16px; }
-        .bottom-cta p { font-size: 16px; color: var(--text-dim); margin-bottom: 32px; max-width: 500px; margin-left: auto; margin-right: auto; }
-
-        /* Footer */
-        footer {
-            padding: 40px 24px; text-align: center;
-            border-top: 1px solid var(--border); color: var(--text-dim); font-size: 14px;
-        }
-        .footer-links { display: flex; gap: 24px; justify-content: center; margin-bottom: 16px; }
-        .footer-links a { color: var(--text-dim); text-decoration: none; font-size: 13px; }
-        .footer-links a:hover { color: var(--text); }
-
-        @media (max-width: 768px) {
-            nav { padding: 12px 16px; }
-            .nav-links { gap: 6px; }
-            .nav-link { font-size: 12px; padding: 6px 12px; }
-            .features-grid { grid-template-columns: 1fr; }
-            .steps-grid { grid-template-columns: 1fr; }
-            .pricing-grid { grid-template-columns: 1fr; }
-            .form-grid { grid-template-columns: 1fr; }
-            .city-grid { grid-template-columns: repeat(2, 1fr); }
-            .hero-buttons { flex-direction: column; align-items: center; }
-            .hero h1 { font-size: 32px; }
-            .hero p { font-size: 16px; }
-            .container { padding: 0 16px; }
-            .revenue-grid { padding: 24px 16px; }
-            .apply-form { padding: 24px 16px; }
-            .section-header h2 { font-size: 26px; }
-        }
-        @media (max-width: 480px) {
-            .hero h1 { font-size: 26px; }
-            .steps-grid { grid-template-columns: 1fr; gap: 20px; }
-            .city-grid { grid-template-columns: 1fr; }
-            .nav-brand { font-size: 16px; }
-        }
+        .lic-hero h1 { max-width: 15ch; }
+        .revenue-grid { padding: 8px 26px; gap: 0; }
+        .revenue-line .label { font-weight: 500; }
+        .revenue-line .amount { font: 900 1.7rem/1 var(--display); font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
+        .revenue-total { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 16px 0 14px; border-top: 2px solid var(--text); font-weight: 700; }
+        .revenue-total .amount { font: 900 clamp(2rem, 4vw, 2.6rem)/1 var(--display); color: var(--accent); white-space: nowrap; font-variant-numeric: tabular-nums; }
+        .revenue-note { color: var(--muted); font-size: .95rem; max-width: 72ch; margin-top: 20px; }
+        .billing-toggle { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 12px; margin-bottom: 28px; }
+        .bill-label { font: 500 .78rem var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+        .bill-label.active { color: var(--text); }
+        .toggle-switch { position: relative; width: 48px; height: 26px; border-radius: 999px; background: var(--bg-2); border: 1.5px solid var(--line); cursor: pointer; flex: none; }
+        .toggle-switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 19px; height: 19px; border-radius: 50%; background: var(--text); transition: transform .15s; }
+        .toggle-switch.annual { background: var(--accent); border-color: var(--accent); }
+        .toggle-switch.annual::after { transform: translateX(22px); background: var(--on-accent); }
+        .pricing-card { gap: 12px; }
+        .pricing-card .top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .pricing-price { font: 900 clamp(3rem, 6vw, 3.8rem)/.9 var(--display); font-variant-numeric: tabular-nums; }
+        .pricing-period { font: 500 .78rem var(--mono); letter-spacing: .06em; color: var(--muted); }
+        .pricing-detail { padding: 10px 0; border-block: 1px solid var(--line); }
+        .pricing-features { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 8px; font-size: .95rem; }
+        .pricing-features li { padding-left: 18px; position: relative; }
+        .pricing-features li::before { content: ""; position: absolute; left: 0; top: .55em; width: 7px; height: 7px; border-radius: 50%; background: var(--good); }
+        .pricing-card .btn { margin-top: auto; }
+        .city-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+        .city-grid .tag { font-size: .8rem; padding: 9px 14px; background: var(--surface); border: 1px solid var(--line); color: var(--text); }
+        .quote { margin: 0; display: flex; flex-direction: column; gap: 16px; border-left: 4px solid var(--gold); padding-left: 24px; max-width: 820px; }
+        .quote blockquote { margin: 0; font: 500 clamp(1.15rem, 2.2vw, 1.45rem)/1.45 var(--font); }
+        .quote cite { font: 500 .76rem/1.3 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-style: normal; }
+        .apply-form { display: grid; gap: 18px; }
+        .apply-form .form-row { display: grid; gap: 6px; }
+        .apply-form .form-row > label { font: 500 .74rem var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+        #apply-result:empty { display: none; }
     </style>
 {% include "partials/analytics.html" %}
 </head>
 <body>
-    <nav>
-        <a href="/" class="nav-brand">True<span>Fans</span> DISPATCH</a>
-        <div class="nav-links">
-            <a href="/for-fans" class="nav-link">For Fans</a>
-            <a href="/for-artists" class="nav-link">For Artists</a>
-            <a href="/artist-newsletters" class="nav-link">Artist Newsletters</a>
-            <a href="#apply" class="nav-link nav-link-cta">Apply Now</a>
-        </div>
-    </nav>
+{% set nav_current = 'license' %}
+{% include "partials/site_nav.html" %}
 
+<main id="main">
     <!-- Hero -->
-    <section class="hero">
-        <div class="hero-content">
-            <div class="hero-badge">City Editions &middot; 30+ Markets &middot; AI-Powered</div>
-            <h1>Run Your Own<br><span class="highlight">City Music Newsletter</span></h1>
-            <p>License a TrueFans city edition &mdash; powered by AI, ready to publish. Nashville, LA, NYC, Atlanta, and 30+ markets available.</p>
-            <div class="hero-buttons">
-                <a href="#apply" class="btn btn-primary">Apply for a License</a>
-                <a href="#revenue" class="btn btn-secondary">See the Numbers</a>
+    <section class="hero lic-hero">
+        <div class="wrap">
+            <div class="hero-content">
+                <p class="eyebrow">City Editions &middot; 30+ Markets &middot; AI-Powered</p>
+                <h1>Run Your Own <em>City</em> Music Newsletter</h1>
+                <p class="lede">License a TrueFans city edition &mdash; powered by AI, ready to publish. Nashville, LA, NYC, Atlanta, and 30+ markets available.</p>
+                <div class="actions">
+                    <a href="#apply" class="btn primary lg">Apply for a License</a>
+                    <a href="#revenue" class="btn lg">See the Numbers</a>
+                </div>
             </div>
         </div>
     </section>
 
     <!-- Revenue Section -->
-    <section class="section-dark" id="revenue">
-        <div class="container">
-            <div class="section-header">
-                <h2>What You'll Earn</h2>
-                <p>What a city edition with 2,500 subscribers can sell, and what it depends on. Every issue gives you fixed inventory: <strong>12 sponsor positions</strong> (4 editions &times; 3 issues) and <strong>36 ad slots</strong> a month. What you earn is how much of it you sell.</p>
+    <section class="section band" id="revenue">
+        <div class="wrap">
+            <div class="section-head">
+                <p class="eyebrow">The numbers</p>
+                <h2>What You'll <em>Earn</em></h2>
+                <p class="lede">What a city edition with 2,500 subscribers can sell, and what it depends on. Every issue gives you fixed inventory: <strong>12 sponsor positions</strong> (4 editions &times; 3 issues) and <strong>36 ad slots</strong> a month. What you earn is how much of it you sell.</p>
             </div>
-            <div class="revenue-grid">
-                <div class="revenue-line">
+            <div class="card revenue-grid">
+                <div class="plan revenue-line">
                     <span class="label">Getting started &mdash; 1 sponsor, 3 ad slots</span>
                     <span class="amount">~$300/mo</span>
                 </div>
-                <div class="revenue-line">
+                <div class="plan revenue-line">
                     <span class="label">Established &mdash; 3 sponsors, 8 ad slots</span>
                     <span class="amount">~$1,000/mo</span>
                 </div>
-                <div class="revenue-line">
+                <div class="plan revenue-line">
                     <span class="label">Well sold &mdash; 5 sponsors, 14 ad slots</span>
                     <span class="amount">~$1,950/mo</span>
                 </div>
-                <div class="revenue-line">
+                <div class="plan revenue-line">
                     <span class="label">Affiliate commissions &amp; paid tiers (optional, on top)</span>
                     <span class="amount">$100 - $600/mo</span>
                 </div>
@@ -359,51 +97,46 @@
                     <span class="amount">$400 - $2,400</span>
                 </div>
             </div>
-            <div class="revenue-note">
+            <p class="revenue-note">
                 Assumes $175 per sponsor position and $60 per ad slot &mdash; rates a local venue,
                 studio or gear shop pays for a genuinely local audience, and which rise with your
                 list. That works out to roughly $0.40&ndash;$0.95 per subscriber per month, the band
                 local newsletters actually land in. Selling is the work; the writing is ours.
-                Keep up to 75% of it. Plans from $50/month.
-            </div>
+                Keep up to 75% of it. Plans from $100/month.
+            </p>
         </div>
     </section>
 
     <!-- What You Get -->
-    <section>
-        <div class="container">
-            <div class="section-header">
-                <h2>What You Get</h2>
-                <p>Everything you need to run a profitable city music newsletter.</p>
+    <section class="section">
+        <div class="wrap">
+            <div class="section-head">
+                <p class="eyebrow">The license</p>
+                <h2>What You <em>Get</em></h2>
+                <p class="lede">Everything you need to run a profitable city music newsletter.</p>
             </div>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">&#129302;</div>
+            <div class="grid-3">
+                <div class="card">
                     <h3>AI-Powered Content</h3>
                     <p>29 AI staff writers generate articles covering every angle of the local music scene. You edit and approve &mdash; never start from a blank page.</p>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">&#128240;</div>
+                <div class="card">
                     <h3>3 Editions Per City</h3>
                     <p>Fan, Artist, and Industry editions for your market. Three audiences, three revenue streams, one platform.</p>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">&#128176;</div>
+                <div class="card">
                     <h3>Built-In Monetization</h3>
                     <p>Sponsor slots, affiliate links, and paid tiers are all pre-configured. Start earning from day one.</p>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">&#128200;</div>
+                <div class="card">
                     <h3>Subscriber Tools</h3>
                     <p>Referral system, welcome sequences, and growth automation to build your audience on autopilot.</p>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">&#127912;</div>
+                <div class="card">
                     <h3>Your Brand</h3>
                     <p>White-label portal with your branding and domain. Your audience sees your brand, not ours.</p>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">&#128736;</div>
+                <div class="card">
                     <h3>Full Support</h3>
                     <p>Platform handles tech, email delivery, and analytics. You focus on content and building relationships in your city.</p>
                 </div>
@@ -412,56 +145,42 @@
     </section>
 
     <!-- How It Works -->
-    <section class="section-dark">
-        <div class="container">
-            <div class="section-header">
-                <h2>How It Works</h2>
-                <p>From application to revenue in four steps.</p>
+    <section class="section band">
+        <div class="wrap">
+            <div class="section-head">
+                <p class="eyebrow">How it works</p>
+                <h2>How It <em>Works</em></h2>
+                <p class="lede">From application to revenue in four steps.</p>
             </div>
-            <div class="steps-grid">
-                <div class="step-card">
-                    <div class="step-number">1</div>
-                    <h3>Apply</h3>
-                    <p>Submit your application. We review your background, market interest, and local knowledge.</p>
-                </div>
-                <div class="step-card">
-                    <div class="step-number">2</div>
-                    <h3>Set Up</h3>
-                    <p>Choose your city, customize branding, configure sponsors and local content preferences.</p>
-                </div>
-                <div class="step-card">
-                    <div class="step-number">3</div>
-                    <h3>Publish</h3>
-                    <p>AI generates content for every issue. You review, edit, approve, and hit send.</p>
-                </div>
-                <div class="step-card">
-                    <div class="step-number">4</div>
-                    <h3>Grow</h3>
-                    <p>Build subscribers, sell sponsors, earn revenue. Scale as fast as your market allows.</p>
-                </div>
-            </div>
+            <ol class="steps">
+                <li><b>Apply</b><span>Submit your application. We review your background, market interest, and local knowledge.</span></li>
+                <li><b>Set Up</b><span>Choose your city, customize branding, configure sponsors and local content preferences.</span></li>
+                <li><b>Publish</b><span>AI generates content for every issue. You review, edit, approve, and hit send.</span></li>
+                <li><b>Grow</b><span>Build subscribers, sell sponsors, earn revenue. Scale as fast as your market allows.</span></li>
+            </ol>
         </div>
     </section>
 
     <!-- Pricing -->
-    <section id="pricing">
-        <div class="container">
-            <div class="section-header">
-                <h2>Simple Pricing</h2>
-                <p>Pick your tier &mdash; the more you invest, the more revenue you keep. Start with a 30-day free trial.</p>
+    <section class="section" id="pricing">
+        <div class="wrap">
+            <div class="section-head centred">
+                <p class="eyebrow">Pricing</p>
+                <h2>Simple <em>Pricing</em></h2>
+                <p class="lede">Pick your tier &mdash; the more you invest, the more revenue you keep. Start with a 30-day free trial.</p>
             </div>
             <div class="billing-toggle">
                 <span class="bill-label active" id="labelMonthly">Monthly</span>
                 <div class="toggle-switch" id="billingToggle" role="switch" aria-checked="false" tabindex="0" aria-label="Toggle annual billing"></div>
                 <span class="bill-label" id="labelAnnual">Annual</span>
-                <span class="save-badge">2 months free</span>
+                <span class="tag gold save-badge">2 months free</span>
             </div>
-            <div class="pricing-grid">
-                <div class="pricing-card">
+            <div class="grid-3 pricing-grid">
+                <div class="card pricing-card">
                     <h3>Starter</h3>
-                    <div class="pricing-price"><span class="price-amount" data-monthly="$50" data-annual="$500">$50</span></div>
+                    <div class="pricing-price"><span class="price-amount" data-monthly="$100" data-annual="$1,000">$100</span></div>
                     <div class="pricing-period"><span class="price-period" data-monthly="per month" data-annual="per year &middot; 2 months free">per month</span></div>
-                    <div class="pricing-detail">Keep <strong>25%</strong> of revenue</div>
+                    <div class="pricing-detail">Keep <strong>25%</strong> of ad revenue</div>
                     <ul class="pricing-features">
                         <li>All 4 editions (Fan, Artist, Venue, Industry)</li>
                         <li>AI content generation</li>
@@ -470,13 +189,13 @@
                         <li>Analytics dashboard</li>
                         <li>30-day free trial</li>
                     </ul>
-                    <a href="#apply" class="btn btn-primary" style="width:100%;justify-content:center;">Apply Now</a>
+                    <a href="#apply" class="btn primary block">Apply Now</a>
                 </div>
-                <div class="pricing-card popular">
+                <div class="card pricing-card picked popular">
                     <h3>Growth</h3>
-                    <div class="pricing-price"><span class="price-amount" data-monthly="$100" data-annual="$1,000">$100</span></div>
+                    <div class="pricing-price"><span class="price-amount" data-monthly="$300" data-annual="$3,000">$300</span></div>
                     <div class="pricing-period"><span class="price-period" data-monthly="per month" data-annual="per year &middot; 2 months free">per month</span></div>
-                    <div class="pricing-detail">Keep <strong>50%</strong> of revenue</div>
+                    <div class="pricing-detail">Keep <strong>50%</strong> of ad revenue</div>
                     <ul class="pricing-features">
                         <li>Everything in Starter</li>
                         <li><strong>6,000</strong> email sends/mo included</li>
@@ -486,13 +205,13 @@
                         <li>Priority support</li>
                         <li>30-day free trial</li>
                     </ul>
-                    <a href="#apply" class="btn btn-primary" style="width:100%;justify-content:center;">Apply Now</a>
+                    <a href="#apply" class="btn primary block">Apply Now</a>
                 </div>
-                <div class="pricing-card">
+                <div class="card pricing-card">
                     <h3>Pro</h3>
-                    <div class="pricing-price"><span class="price-amount" data-monthly="$199" data-annual="$1,990">$199</span></div>
+                    <div class="pricing-price"><span class="price-amount" data-monthly="$500" data-annual="$5,000">$500</span></div>
                     <div class="pricing-period"><span class="price-period" data-monthly="per month" data-annual="per year &middot; 2 months free">per month</span></div>
-                    <div class="pricing-detail">Keep <strong>75%</strong> of revenue</div>
+                    <div class="pricing-detail">Keep <strong>75%</strong> of ad revenue</div>
                     <ul class="pricing-features">
                         <li>Everything in Growth</li>
                         <li><strong>12,000</strong> email sends/mo included</li>
@@ -502,97 +221,78 @@
                         <li>Early access to new features</li>
                         <li>30-day free trial</li>
                     </ul>
-                    <a href="#apply" class="btn btn-primary" style="width:100%;justify-content:center;">Apply Now</a>
+                    <a href="#apply" class="btn primary block">Apply Now</a>
                 </div>
             </div>
-            <p style="text-align:center;margin-top:20px;font-size:14px;opacity:.75;max-width:640px;margin-left:auto;margin-right:auto;">
+            <p class="muted small" style="text-align:center;margin:24px auto 0;max-width:640px">
                 A send is one email to one subscriber. Sends beyond your plan's allowance are
                 <strong>$15 per 1,000 per month</strong>, billed only on what you use &mdash; so a
                 growing list never leaves you on the wrong plan.
             </p>
-            <script>
-                (function () {
-                    var toggle = document.getElementById('billingToggle');
-                    var labelMonthly = document.getElementById('labelMonthly');
-                    var labelAnnual = document.getElementById('labelAnnual');
-                    function setBilling(annual) {
-                        toggle.classList.toggle('annual', annual);
-                        toggle.setAttribute('aria-checked', annual ? 'true' : 'false');
-                        labelMonthly.classList.toggle('active', !annual);
-                        labelAnnual.classList.toggle('active', annual);
-                        var key = annual ? 'annual' : 'monthly';
-                        document.querySelectorAll('.price-amount, .price-period').forEach(function (el) {
-                            el.innerHTML = el.getAttribute('data-' + key);
-                        });
-                    }
-                    toggle.addEventListener('click', function () {
-                        setBilling(!toggle.classList.contains('annual'));
-                    });
-                    toggle.addEventListener('keydown', function (e) {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            setBilling(!toggle.classList.contains('annual'));
-                        }
-                    });
-                })();
-            </script>
+            <script src="/static/license.js" defer></script>
         </div>
     </section>
 
     <!-- Available Cities -->
-    <section class="section-dark" id="cities">
-        <div class="container">
-            <div class="section-header">
-                <h2>Available Cities</h2>
-                <p>License a city edition and own the music newsletter for your market.</p>
+    <section class="section band" id="cities">
+        <div class="wrap">
+            <div class="section-head">
+                <p class="eyebrow">Markets</p>
+                <h2>Available <em>Cities</em></h2>
+                <p class="lede">License a city edition and own the music newsletter for your market.</p>
             </div>
             <div class="city-grid">
                 {% if cities %}
                     {% for city in cities %}
-                    <div class="city-tag">{{ city.market_name }}</div>
+                    <div class="tag city-tag">{{ city.market_name }}</div>
                     {% endfor %}
                 {% else %}
-                    <div class="city-tag">Nashville</div>
-                    <div class="city-tag">Los Angeles</div>
-                    <div class="city-tag">New York</div>
-                    <div class="city-tag">Atlanta</div>
-                    <div class="city-tag">London</div>
-                    <div class="city-tag">Austin</div>
-                    <div class="city-tag">Miami</div>
-                    <div class="city-tag">Chicago</div>
-                    <div class="city-tag">Detroit</div>
-                    <div class="city-tag">Memphis</div>
-                    <div class="city-tag">Seattle</div>
-                    <div class="city-tag">Toronto</div>
-                    <div class="city-tag">Berlin</div>
-                    <div class="city-tag">Lagos</div>
-                    <div class="city-tag">Tokyo</div>
-                    <div class="city-tag">Seoul</div>
-                    <div class="city-tag">Paris</div>
-                    <div class="city-tag">Sao Paulo</div>
-                    <div class="city-tag">Mumbai</div>
-                    <div class="city-tag">Kingston</div>
+                    <div class="tag city-tag">Nashville</div>
+                    <div class="tag city-tag">Los Angeles</div>
+                    <div class="tag city-tag">New York</div>
+                    <div class="tag city-tag">Atlanta</div>
+                    <div class="tag city-tag">London</div>
+                    <div class="tag city-tag">Austin</div>
+                    <div class="tag city-tag">Miami</div>
+                    <div class="tag city-tag">Chicago</div>
+                    <div class="tag city-tag">Detroit</div>
+                    <div class="tag city-tag">Memphis</div>
+                    <div class="tag city-tag">Seattle</div>
+                    <div class="tag city-tag">Toronto</div>
+                    <div class="tag city-tag">Berlin</div>
+                    <div class="tag city-tag">Lagos</div>
+                    <div class="tag city-tag">Tokyo</div>
+                    <div class="tag city-tag">Seoul</div>
+                    <div class="tag city-tag">Paris</div>
+                    <div class="tag city-tag">Sao Paulo</div>
+                    <div class="tag city-tag">Mumbai</div>
+                    <div class="tag city-tag">Kingston</div>
                 {% endif %}
             </div>
-            <p style="text-align:center;color:var(--text-dim);margin-top:32px;font-size:15px;">Your city not listed? Apply anyway &mdash; we're expanding to new markets every month.</p>
+            <p class="muted" style="margin-top:28px">Your city not listed? Apply anyway &mdash; we're expanding to new markets every month.</p>
         </div>
     </section>
 
     <!-- Testimonial -->
-    <section class="testimonial">
-        <blockquote>"I spent years building newsletters from scratch &mdash; wrestling with the tech, chasing content week after week, and guessing at what actually grows an audience. DISPATCH is everything I wish I'd had on day one: a proven system that already knows how to grow readers and turn them into revenue. Why spend two years reinventing the wheel when you can license one that's already rolling?"</blockquote>
-        <cite>&mdash; Paul Saunders, Founder, TrueFans DISPATCH</cite>
+    <section class="section">
+        <div class="wrap">
+            <figure class="quote testimonial">
+                <blockquote>"I spent years building newsletters from scratch &mdash; wrestling with the tech, chasing content week after week, and guessing at what actually grows an audience. DISPATCH is everything I wish I'd had on day one: a proven system that already knows how to grow readers and turn them into revenue. Why spend two years reinventing the wheel when you can license one that's already rolling?"</blockquote>
+                <cite>&mdash; Paul Saunders, Founder, TrueFans DISPATCH</cite>
+            </figure>
+        </div>
     </section>
 
     <!-- Application Form -->
-    <section class="section-dark" id="apply">
-        <div class="container">
-            <div class="section-header">
-                <h2>Apply for a License</h2>
-                <p>Tell us about yourself and which city you want to cover. We'll review and respond within 48 hours.</p>
+    <section class="section band" id="apply">
+        <div class="wrap narrow">
+            <div class="section-head">
+                <p class="eyebrow">Apply</p>
+                <h2>Apply for a <em>License</em></h2>
+                <p class="lede">Tell us about yourself and which city you want to cover. We'll review and respond within 48 hours.</p>
             </div>
-            <form class="apply-form" hx-post="/license/apply" hx-target="#apply-result" hx-swap="innerHTML">
-                <div class="form-grid">
+            <form class="panel apply-form" hx-post="/license/apply" hx-target="#apply-result" hx-swap="innerHTML">
+                <div class="grid-2 form-grid">
                     <div class="form-row">
                         <label for="company_name">Company Name *</label>
                         <input type="text" id="company_name" name="company_name" required placeholder="Your company or business name">
@@ -602,7 +302,7 @@
                         <input type="text" id="contact_name" name="contact_name" required placeholder="Your full name">
                     </div>
                 </div>
-                <div class="form-grid">
+                <div class="grid-2 form-grid">
                     <div class="form-row">
                         <label for="email">Email *</label>
                         <input type="email" id="email" name="email" required placeholder="you@company.com">
@@ -643,53 +343,59 @@
                     <label for="message">Tell Us About Yourself</label>
                     <textarea id="message" name="message" placeholder="Your background in music or media, why you're interested in this city, any existing audience or connections..."></textarea>
                 </div>
-                <button type="submit" class="btn-submit">Submit Application</button>
-                <div id="apply-result" style="margin-top:1rem"></div>
+                <button type="submit" class="btn primary lg btn-submit">Submit Application</button>
+                <div id="apply-result"></div>
             </form>
         </div>
     </section>
 
     <!-- FAQ -->
-    <section class="faq" id="faq">
-        <h2>Frequently Asked Questions</h2>
-        <div class="faq-item">
-            <h3>What's included in the license?</h3>
-            <p>You get full access to the TrueFans platform for your city: AI content generation across 29 writer personas, 3 newsletter editions (Fan, Artist, Industry), subscriber management tools, sponsor slot management, analytics dashboard, email delivery, and ongoing platform updates. You also get a white-label portal with your branding.</p>
-        </div>
-        <div class="faq-item">
-            <h3>How does revenue sharing work?</h3>
-            <p>Your revenue share is set by your plan: keep 25% on Starter ($50/mo), 50% on Growth ($100/mo), or 75% on Pro ($199/mo) &mdash; across subscriber revenue, sponsor payments, affiliate commissions, and paid tier upgrades. The platform share covers infrastructure, AI content generation, email delivery, and ongoing development. Each plan includes a monthly send allowance (2,500 / 6,000 / 12,000); beyond it, delivery is $15 per 1,000 sends per month. Choose annual billing on any tier and get 2 months free.</p>
-        </div>
-        <div class="faq-item">
-            <h3>Can I choose any city?</h3>
-            <p>We currently have 20+ city markets available, with more launching regularly. If your city isn't listed, apply anyway &mdash; we evaluate new markets based on demand and local music scene activity. Each city is exclusive to one licensee.</p>
-        </div>
-        <div class="faq-item">
-            <h3>Do I need technical skills?</h3>
-            <p>No. The platform handles all the technical work: email delivery, subscriber management, analytics, and content generation. Your job is to review AI-generated content, build local relationships with sponsors, and grow your subscriber base.</p>
-        </div>
-        <div class="faq-item">
-            <h3>What if I want to cancel?</h3>
-            <p>Monthly licenses can be cancelled anytime. Annual licenses are non-refundable but can be cancelled at renewal. Your subscriber list remains yours. We offer a 30-day free trial so you can evaluate the platform before committing.</p>
+    <section class="section" id="faq">
+        <div class="wrap narrow">
+            <div class="section-head">
+                <p class="eyebrow">FAQ</p>
+                <h2>Frequently Asked <em>Questions</em></h2>
+            </div>
+            <div class="faq">
+                <details open>
+                    <summary>What's included in the license?</summary>
+                    <p>You get full access to the TrueFans platform for your city: AI content generation across 29 writer personas, 3 newsletter editions (Fan, Artist, Industry), subscriber management tools, sponsor slot management, analytics dashboard, email delivery, and ongoing platform updates. You also get a white-label portal with your branding.</p>
+                </details>
+                <details>
+                    <summary>How does revenue sharing work?</summary>
+                    <p>Your revenue share is set by your plan: keep 25% on Starter ($100/mo), 50% on Growth ($300/mo), or 75% on Pro ($500/mo) &mdash; across subscriber revenue, sponsor payments, affiliate commissions, and paid tier upgrades. The platform share covers infrastructure, AI content generation, email delivery, and ongoing development. Each plan includes a monthly send allowance (2,500 / 6,000 / 12,000); beyond it, delivery is $15 per 1,000 sends per month. Choose annual billing on any tier and get 2 months free.</p>
+                </details>
+                <details>
+                    <summary>Can I choose any city?</summary>
+                    <p>We currently have 20+ city markets available, with more launching regularly. If your city isn't listed, apply anyway &mdash; we evaluate new markets based on demand and local music scene activity. Each city is exclusive to one licensee.</p>
+                </details>
+                <details>
+                    <summary>Do I need technical skills?</summary>
+                    <p>No. The platform handles all the technical work: email delivery, subscriber management, analytics, and content generation. Your job is to review AI-generated content, build local relationships with sponsors, and grow your subscriber base.</p>
+                </details>
+                <details>
+                    <summary>What if I want to cancel?</summary>
+                    <p>Monthly licenses can be cancelled anytime. Annual licenses are non-refundable but can be cancelled at renewal. Your subscriber list remains yours. We offer a 30-day free trial so you can evaluate the platform before committing.</p>
+                </details>
+            </div>
         </div>
     </section>
 
     <!-- Bottom CTA -->
-    <section class="bottom-cta">
-        <h2>Ready to Own Your City?</h2>
-        <p>Own the music newsletter for your city. We write it three times a week; you sell it and keep up to 75%.</p>
-        <a href="#apply" class="btn btn-primary">Apply for a License</a>
-    </section>
-
-    <footer>
-        <div class="footer-links">
-            <a href="/">Home</a>
-            <a href="/for-fans">Fan Edition</a>
-            <a href="/for-artists">Artist Edition</a>
-            <a href="/artist-newsletters">Artist Newsletters</a>
-            <a href="/newsletters">Archive</a>
+    <section class="section" style="padding-top:0">
+        <div class="wrap">
+            <div class="stage">
+                <p class="eyebrow">City editions</p>
+                <h2>Ready to Own Your <em>City?</em></h2>
+                <p class="lede">Own the music newsletter for your city. We write it three times a week; you sell it and keep up to 75%.</p>
+                <div class="actions">
+                    <a href="#apply" class="btn gold lg">Apply for a License</a>
+                </div>
+            </div>
         </div>
-        <p>&copy; 2026 TrueFans DISPATCH. All rights reserved.</p>
-    </footer>
+    </section>
+</main>
+
+{% include "partials/site_footer.html" %}
 </body>
 </html>

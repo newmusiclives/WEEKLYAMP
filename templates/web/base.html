@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}TrueFans DISPATCH{% endblock %}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="preload" href="/static/fonts/big-shoulders-display-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/static/fonts/schibsted-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/static/style.css">
     <link rel="stylesheet" href="/static/mobile.css">
@@ -22,7 +22,7 @@
         <div class="sidebar-overlay" id="sidebar-overlay"></div>
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-brand">
-                <h1>TrueFans DISPATCH</h1>
+                <h1><span>True<em>Fans</em> Dispatch</span></h1>
                 <div class="tagline">for Industry Professionals, Music Artists and Fans</div>
             </div>
             <nav>

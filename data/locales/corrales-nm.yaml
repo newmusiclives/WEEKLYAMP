@@ -2,7 +2,7 @@ locale:
   name: Corrales
   state: NM
   metro: Albuquerque
-  last_full_review: 2026-05-07
+  last_full_review: 2026-10-30
 
 venues:
   - name: Sandia Bar
@@ -18,13 +18,20 @@ venues:
       ownership after Steve Chavez's death, with Lane McIntyre as general manager.
       Renovation nearly doubled the interior and added a patio and rooftop, keeping
       the adobe walls, "truth windows" and vintage Budweiser and Schlitz signs.
-      Free live music Saturdays and Sundays 2-5pm on the patio, family-friendly.
-      Artists pitch through a web form, not a named buyer. Phone (505) 835-5983.
-      Bar Sun-Tues 11a-10p, Wed-Thur 11a-11p, Fri-Sat 11a-12a; restaurant
-      Sun-Thur 11a-9p, Fri-Sat 11a-10p. Capacity, PA spec, pay and set length are
-      all unpublished - ask before pitching.
+      Free live music Saturdays and Sundays 2-5pm on the patio, family-friendly
+      (Visit Albuquerque listing, still live 2026-10-30, no end date - whether it
+      runs through winter is unconfirmed). Artists pitch through a web form, not a
+      named buyer. Phone (505) 835-5983 (Yelp; no longer printed on sandiabar.com).
+      As of 2026-10-30 sandiabar.com lists BAR "Sun-Thur 11a-10p, Fri-Sat 11a-12p"
+      (12p presumably midnight) and RESTAURANT "Sun-Thur 11a-9p, Fri-Sat 11a-10p".
+      STALE: the Aug 2026 bar hours (Sun-Tues 11a-10p, Wed-Thur 11a-11p) are gone.
+      Lane McIntyre as GM rests on the Sept 2024 article only - not reconfirmed
+      2026-10-30 (site names no GM; footer "Sandia Bar LLC"). Events page shows
+      live music, trivia and game day tiles with no dates. Capacity, PA spec, pay
+      and set length are all unpublished - ask before pitching.
     source_url: https://corralescomment.com/2024/09/12/new-ownership-brings-new-life-to-the-sandia-bar/
-    verified_on: 2026-08-12
+    hours_source_url: https://sandiabar.com/
+    verified_on: 2026-10-30
 
   - name: Casa Vieja
     type: brewery
@@ -34,9 +41,16 @@ venues:
     capacity: null
     books_original_music: yes
     booking_contact: null
-    notes: Historic 1770 adobe building. Books local musicians nearly daily, plus food trucks. Public calendar.
-    source_url: https://oldcasanm.com/calendar/
-    verified_on: 2026-05-07
+    notes: >-
+      Historic 1770 adobe building. Site says "We feature local musicians and food
+      trucks almost every day"; music on the patio, or inside in bad weather.
+      Homepage hours (2026-10-30) Mon-Tue closed, Wed 4-9:30p, Thu 4-9p, Fri
+      4-10:30p, Sat 3-10:30p, Sun 3-9p (the /brewery page shows slightly different
+      weekend hours). The /calendar page showed no dated events when checked.
+      The storefront at 4436 Corrales Rd Suite A1 was "formerly occupied by Casa
+      Vieja" (now Corrales Arts Center) - the brewery at 4541 is still operating.
+    source_url: https://oldcasanm.com/
+    verified_on: 2026-10-30
 
   - name: Indigo Crow Cafe
     type: bar
@@ -46,9 +60,11 @@ venues:
     capacity: null
     books_original_music: sometimes
     booking_contact: null
-    notes: Contemporary American restaurant, 25+ years in Corrales. Live music on the patio, mostly summer evenings. Closed Mondays. Phone (505) 898-7000.
+    notes: Contemporary American restaurant, 25+ years in Corrales. Live music on the patio, mostly summer evenings (seasonal - do not pitch as a November/winter room). Closed Mondays. Phone (505) 898-7000.
     source_url: https://www.indigocrowcafe.net/
     verified_on: 2026-05-07
+    # 2026-10-30: own site returned 403; OpenTable (https://www.opentable.com/restaurant/profile/11080)
+    # still lists it at 4515 Corrales Rd, phone 505-898-7000. Music details not re-verified.
 
   - name: Historic Old San Ysidro Church
     type: concert_hall
@@ -58,9 +74,16 @@ venues:
     capacity: 150
     books_original_music: yes
     booking_contact: null
-    notes: Home of the Music in Corrales concert series (39th season in 2026), curated by the Corrales Historical Society. Listening-room atmosphere, open seating. Books singer-songwriters, classical, and roots acts.
-    source_url: https://www.corraleshistory.org/mic.html
-    verified_on: 2026-05-07
+    notes: >-
+      Main home of the Music in Corrales concert series, now in its 40th-anniversary
+      2026-27 season. The series is presented by the all-volunteer Corrales
+      Cultural Arts Council (created it in 1986), not the Historical Society -
+      STALE wording corrected 2026-10-30. Listening-room atmosphere, open seating.
+      2026-27 lineup is classical/jazz/Irish/guitar touring acts; no artist
+      submission process is published. Capacity 150 is from the May 2026 check,
+      not re-verified.
+    source_url: https://www.musicincorrales.org/
+    verified_on: 2026-10-30
 
   - name: Outpost Performance Space
     type: listening_room
@@ -70,9 +93,19 @@ venues:
     capacity: 160
     books_original_music: yes
     booking_contact: null
-    notes: Non-profit, member-supported, smoke and alcohol free listening room. Most shows Thursday-Sunday. As of January 3, 2026, merged with the New Mexico Jazz Workshop. Strong jazz/world/contemporary-classical/songwriter focus.
-    source_url: https://outpostspace.org/
-    verified_on: 2026-05-07
+    notes: >-
+      Non-profit, member-supported, smoke and alcohol free listening room. Strong
+      jazz/world/contemporary-classical/songwriter focus. Artists pitch by mailing
+      a publicity packet to Outpost Productions, PO Box 4543, Albuquerque, NM 87196,
+      or emailing director Tom Guralnick (booking page). On 2026-10-19 launched a
+      $5.2M campaign ($2.5M raised) for a building renovation, the Kaman Music
+      Education Center, a courtyard expansion and a Tom Guralnick Legacy Endowment;
+      no construction dates announced. Merger with the NM Jazz Workshop: the
+      homepage now shows joint "Outpost & NM Jazz Workshop" branding but no longer
+      states the Jan 3, 2026 date (see scene_facts).
+    source_url: https://outpostspace.org/2026/10/19/outpost-launches-5-2m-campaign/
+    booking_url: https://outpostspace.org/booking-at-outpost/
+    verified_on: 2026-10-30
 
   - name: Sister Bar
     type: bar
@@ -84,7 +117,7 @@ venues:
     booking_contact: events@sisterthebar.com
     notes: Downtown ABQ. Diverse curated calendar — national touring acts, local bands, dance nights. 37 beers on draught. Live music + bar + restaurant + pinball.
     source_url: https://sisterthebar.com/
-    verified_on: 2026-05-07
+    verified_on: 2026-10-30
 
   - name: Launchpad
     type: concert_hall
@@ -94,9 +127,9 @@ venues:
     capacity: 300
     books_original_music: yes
     booking_contact: null
-    notes: Music hall on Central Ave, downtown ABQ. Mon-Fri 5pm-2am, Sat 7pm-2am, closed Sundays. National acts and locals.
+    notes: Music hall on Central Ave, downtown ABQ. National acts and locals. STALE (2026-10-30) - the May hours incl. "closed Sundays" are dropped; Ticketmaster lists a Sunday Nov 22, 2026 show. Do not print fixed hours.
     source_url: https://www.ticketmaster.com/launchpad-tickets-albuquerque/venue/246020
-    verified_on: 2026-05-07
+    verified_on: 2026-10-30
 
   - name: Tractor Brewing Wells Park
     type: brewery
@@ -106,32 +139,33 @@ venues:
     capacity: null
     books_original_music: yes
     booking_contact: null
-    notes: Original Tractor taproom. Hosts live music, karaoke, art shows, community events. Phone (505) 243-6752. Patio.
+    notes: Original Tractor taproom. Hosts live music, karaoke, art shows, community events. Phone (505) 243-6752. Patio. Open daily (Mon from 4pm, Tue-Fri from 2pm, Sat-Sun from 1pm per site, 2026-10-30). No open mic listed.
     source_url: https://getplowed.com/wells-park/
-    verified_on: 2026-05-07
+    verified_on: 2026-10-30
 
   - name: Tumbleroot Pottery Pub
     type: bar
-    address: 135 W Palace Ave, Santa Fe, NM 87501
+    address: 135 W Palace Ave, Suite 100, Santa Fe, NM 87501
     city: Santa Fe
     drive_minutes_from_locale: 60
     capacity: null
     books_original_music: yes
     booking_contact: null
-    notes: Off the Plaza in Santa Fe. Open Mic every Wednesday 7-10pm. Free patio music every night through summer. Sister venue to Tumbleroot Brewery & Distillery.
+    notes: Off the Plaza in Santa Fe. Open daily 11am-9pm. Sister venue to Tumbleroot Brewery & Distillery. STALE (2026-10-30) - the "Open Mic every Wednesday 7-10pm" and "free patio music every night through summer" claims are no longer on the site and could not be re-confirmed; do not print them.
     source_url: https://www.tumblerootpotterypub.com/
-    verified_on: 2026-05-07
+    verified_on: 2026-10-30
 
 studios:
   - name: Frogville Studios
-    address: Santa Fe, NM
+    address: 111 Calle Nopal, Santa Fe, NM
     city: Santa Fe
     drive_minutes_from_locale: 60
     focus: music
     notable_clients: []   # founder name and detailed credit list not yet re-verified — leave empty rather than guess
     rate_range: null
     source_url: https://frogvilleplanet.com/recording-studio/
-    verified_on: 2026-05-07
+    verified_on: 2026-10-30
+    # 2026-10-30: page describes tracking rooms (Control Room, Amp Room, Isolation Booth, Big Room); mixing/mastering not stated.
 
   - name: The Kitchen Sink
     address: 528 Jose St, Santa Fe, NM
@@ -141,9 +175,13 @@ studios:
     notable_clients:
       - John Popper (Blues Traveler)
       - Crystal Bowersox
+      - KT Tunstall
+      - Terry Allen
+      - Robert Mirabal
     rate_range: null
     source_url: https://www.thekitchensinkstudio.com/
-    verified_on: 2026-05-07
+    verified_on: 2026-10-30
+    # Own site gives no street address; 528 Jose St comes from Stepbridge's page ("The Kitchen Sink Studios Building").
 
   - name: Stepbridge Studios
     address: 528 Jose St, Santa Fe, NM
@@ -153,7 +191,7 @@ studios:
     notable_clients: []
     rate_range: null
     source_url: https://stepbridge.com/
-    verified_on: 2026-05-07
+    verified_on: 2026-10-30
     # NOTE: Stepbridge is post-production / ADR / VO / audiobook — not for tracking bands. Writer must not pitch this as a music studio.
 
 festivals:
@@ -165,15 +203,45 @@ festivals:
     verified_on: 2026-05-07
     # Specific 2026 dates and host venue not confirmed — re-verify before any
     # issue that names a date or address.
+    # 2026-10-30: still no 2026 edition found. Most recent confirmed: Sept 20, 2025
+    # at Albuquerque Civic Plaza (https://digitalrepository.unm.edu/laii_events/470). Next one would be
+    # Sept 2027 at the earliest - not a pitch target for a November issue.
+
+  - name: Music in Corrales
+    when: Concert season September-April (2026-27 is the 40th anniversary season)
+    location: Historic Old San Ysidro Church, Corrales (plus some off-site dates)
+    paid_slots: unknown
+    source_url: https://www.musicincorrales.org/
+    verified_on: 2026-10-30
+    # Presented by the Corrales Cultural Arts Council. 2026-27 dates on the
+    # series' ticket page: Rachel Barton Pine Sat Nov 14 2026 6pm; Natasha
+    # Paremski Sat Jan 23 2027 6pm; Berta Rojas Sat Apr 10 2027 6pm + Sun Apr 11
+    # 3pm. Corrales Historical Society page also lists Kenari Quartet Wed Dec 16
+    # 2026 (SOLD OUT), Connie Han Sat Feb 20 2027, Goitse Fri Mar 19 (SOLD OUT).
+    # CONFLICT: the Nov 14 venue is "Rio Rancho High School, 301 Loma Colorado
+    # Blvd NE" on musicincorrales.org/tickets but "Cibola High School Performing
+    # Arts Center" on corraleshistory.org/mic.html and Visit Albuquerque. Do not
+    # print a venue for Nov 14 without flagging the conflict.
 
 scene_facts:
-  - claim: Music in Corrales is in its 39th season in 2026, hosted at the Historic Old San Ysidro Church (966 Old Church Rd) under the Corrales Historical Society.
-    source_url: https://www.corraleshistory.org/mic.html
-    verified_on: 2026-05-07
+  # STALE 2026-10-30: replaced. Was "Music in Corrales is in its 39th season in
+  # 2026 ... under the Corrales Historical Society" - the 2026-27 season is the
+  # 40th anniversary, and the presenter is the Corrales Cultural Arts Council.
+  - claim: Music in Corrales was created in 1986 by the all-volunteer Corrales Cultural Arts Council; its 2026-27 season (from Sept 19, 2026) is billed as the series' 40th anniversary.
+    source_url: https://www.visitalbuquerque.org/event/40th-anniversary-of-music-in-corrales/63711/
+    verified_on: 2026-10-30
 
   - claim: Outpost Performance Space and the New Mexico Jazz Workshop (founded 1976) merged on January 3, 2026, with both operating under the Outpost banner.
     source_url: https://outpostspace.org/
     verified_on: 2026-05-07
+    # 2026-10-30: the homepage no longer carries the dated merger text (it shows
+    # joint "Outpost & NM Jazz Workshop" branding only). A May 26, 2026 listing
+    # calls it "the newly merged New Mexico Jazz Workshop". Treat the exact date
+    # as unconfirmed until a current source restates it.
+
+  - claim: On Oct 19, 2026 Outpost Performance Space launched a $5.2M campaign, with $2.5M already raised, to renovate its Yale Blvd building, build the Kaman Music Education Center, expand its outdoor courtyard (funded by SUNNY505) and create the Tom Guralnick Legacy Endowment.
+    source_url: https://outpostspace.org/2026/10/19/outpost-launches-5-2m-campaign/
+    verified_on: 2026-10-30
 
   - claim: Casa Vieja occupies an adobe building constructed in 1770 in the village of Corrales.
     source_url: https://oldcasanm.com/
@@ -191,6 +259,7 @@ scene_facts:
     source_url: https://www.visitalbuquerque.org/event/weekend-live-music-at-sandia-bar/64066/
     verified_on: 2026-08-12
 
+  # SUPERSEDED 2026-10-30 by the Oct 27 draft facts below; kept as history.
   - claim: As of April 2026 the Village of Corrales has not adopted a new noise ordinance; Mayor Fred Hashimoto said it would be at least a few months, and the village contracted sound engineer Joshua Leasure of Colorado Analytics through Complete Safety Supply to make recommendations.
     source_url: https://corralescomment.com/2026/04/01/the-sound-of-silence-corrales-council-takes-next-step-in-drafting-noise-ordinance/
     verified_on: 2026-08-12
@@ -198,6 +267,30 @@ scene_facts:
   - claim: Corrales Village Attorney Randy Autio has said the existing noise ordinance, which bars "excessive or unusually loud noise", may not be enforceable because of its vagueness.
     source_url: https://corralescomment.com/2025/07/21/corrales-seeks-public-input-on-noise-ordinance-revision/
     verified_on: 2026-08-12
+
+  - claim: On Oct 27, 2026 the Corrales council discussed "Draft Noise Ordinance v4" (not adopted). Officials intend to bring a revised version back for publication, then a formal public hearing before a final vote, aiming to have rules in place before the spring patio-music season. No hearing date has been set. A new ordinance would most likely take effect 30 days after passage.
+    source_url: https://corralescomment.com/2026/10/28/corrales-noise-ordinance/
+    verified_on: 2026-10-30
+
+  - claim: Draft Noise Ordinance v4 sets limits measured on the receiving property - residential zones A-1, A-2 and H 55 dBA Leq day / 45 night (60/50 dBC); zones C, O and M 65 dBA day / 55 night (70/60 dBC). Daytime is 7am-10pm Fri-Sat and 7am-9pm Sun-Thu. Live-music measurements run at least five minutes. Plainly audible amplified sound beyond the property line at night can be a violation without a meter reading. Exemptions include officially sanctioned Village events; there is no Corrales Road commercial exemption in v4.
+    source_url: https://www.corrales-nm.org/AgendaCenter/ViewFile/Agenda/_10272026-251
+    verified_on: 2026-10-30
+
+  - claim: The Corrales Comment reports a municipal judge declared the current noise rule unenforceable after an establishment (not named) was cited for a noise violation; Councilor Zachary Burkett called the v4 draft well written and expects modifications.
+    source_url: https://corralescomment.com/2026/10/28/corrales-noise-ordinance/
+    verified_on: 2026-10-30
+
+  - claim: The Corrales Arts Center has moved into 4436 Corrales Rd, Suite A1 (a storefront formerly occupied by Casa Vieja), with a members-only opening Nov 13 and a public open house Sun Nov 15, 2026, 1-5pm; president Charlene Spiegel. Membership is open to non-residents and non-artists. No performance or music programming was mentioned.
+    source_url: https://corralescomment.com/2026/10/29/corrales-arts-center/
+    verified_on: 2026-10-30
+
+  - claim: The 23rd Annual Corrales Starlight Parade, sponsored by Corrales MainStreet, is set for Dec 5, 2026, from Wagner's parking lot south on Corrales Road, with Corrales Road closed 5:15-6:30pm between Tenorio Rd and Coronado Rd (Resolution 26-66, Oct 27 consent agenda).
+    source_url: https://www.corrales-nm.org/AgendaCenter/ViewFile/Agenda/_10272026-251
+    verified_on: 2026-10-30
+
+  - claim: New Mexico Arts FY28 grants are a fixed $5,000 each (up to ~200 awards) for nonprofits, government units, schools and tribal entities - or groups using a 501(c)(3) fiscal agent; individual artists may not apply. Final online deadline 11:59pm MT Dec 18, 2026 (the guidelines also print Dec 8 in one checklist line). The advance-review deadline for new applicants was Oct 23, 2026.
+    source_url: https://nmarts.org/wp-content/uploads/2026/09/FY28-Funding-Guidelines.pdf
+    verified_on: 2026-10-30
 
   - claim: At a July 2025 Corrales work study on noise, Casa Vieja's Dan O'Brien proposed the test "If those folks at that first table can't talk, then it's too loud."
     source_url: https://corralescomment.com/2025/07/31/all-abuzz-about-noise/

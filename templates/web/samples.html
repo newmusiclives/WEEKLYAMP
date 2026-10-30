@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrueFans DISPATCH &mdash; Sample Editions</title>
+    <meta name="description" content="Read real sample issues of every TrueFans DISPATCH edition: Fan, Artist, Venue, Industry, local and artist-specific editions, and the Single Daily Action.">
+{% include "partials/site_head.html" %}
+    <style>
+        .sample { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 20px; align-items: center; color: inherit; }
+        .sample h3 { font-size: 1.7rem; }
+        .sample p { grid-column: 1; }
+        .sample .go { grid-column: 2; grid-row: 1 / span 2; font: 500 .74rem var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); white-space: nowrap; }
+    </style>
+{% include "partials/analytics.html" %}
+</head>
+<body>
+{% set nav_current = 'samples' %}
+{% include "partials/site_nav.html" %}
+
+<main id="main">
+    <section class="hero">
+        <div class="wrap">
+            <div class="section-head" style="margin-bottom:0">
+                <p class="eyebrow">Sample editions</p>
+                <h1>Read it <em>before</em> you subscribe</h1>
+                <p class="lede">{{ cards|length }} samples: the four audience editions, local editions, an artist-specific edition and the daily one-action email for artists. Every fact is sourced. Click through to read.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section band">
+        <div class="wrap">
+            <div class="grid-2">
+                {% for c in cards %}
+                <a href="/sample/{{ c.slug }}" class="card lift edition sample {{ c.css }}">
+                    <h3>{{ c.title }}</h3>
+                    <p>{{ c.blurb|safe }}</p>
+                    <span class="go">Read &rarr;</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="wrap">
+            <div class="stage">
+                <p class="eyebrow">Free, three times a week</p>
+                <h2>Like what you <em>read?</em></h2>
+                <div class="actions">
+                    <a href="/subscribe" class="btn gold lg">Subscribe free</a>
+                    <a href="/#editions" class="btn lg">Compare the editions</a>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+{% include "partials/site_footer.html" %}
+</body>
+</html>

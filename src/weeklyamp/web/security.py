@@ -944,49 +944,27 @@ def render_coming_soon_page(message: str = "", error: str = "", email: str = "")
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
 <title>TrueFans DISPATCH &mdash; Coming Soon</title>
-<style>
-  html,body{{margin:0;height:100%}}
-  body{{font-family:Georgia,'Times New Roman',serif;background:#111;color:#f4f4f4;
-       display:flex;align-items:center;justify-content:center;text-align:center;padding:24px}}
-  .wrap{{max-width:560px;width:100%}}
-  .kicker{{letter-spacing:.28em;text-transform:uppercase;font-size:12px;color:#b09a3a;
-          font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;margin:0 0 18px}}
-  h1{{font-size:40px;line-height:1.1;margin:0 0 18px;font-weight:700}}
-  p.lede{{font-size:17px;line-height:1.6;color:#c9c9c9;margin:0 auto;max-width:440px}}
-  .rule{{width:48px;height:3px;background:#b09a3a;margin:28px auto;border-radius:2px}}
-  form.cap{{display:flex;gap:10px;max-width:420px;margin:28px auto 0;flex-wrap:wrap;
-           justify-content:center}}
-  form.cap input[type=email]{{flex:1 1 220px;min-width:0;padding:13px 15px;font-size:15px;
-           font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;border:1px solid #3a3a3a;
-           border-radius:8px;background:#1b1b1b;color:#f4f4f4}}
-  form.cap input[type=email]:focus{{outline:none;border-color:#b09a3a}}
-  form.cap button{{padding:13px 22px;font-size:15px;font-weight:600;cursor:pointer;
-           font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;border:0;border-radius:8px;
-           background:#b09a3a;color:#111}}
-  form.cap button:hover{{background:#c4ab43}}
-  .note{{font-size:14px;margin:16px auto 0;max-width:420px;
-        font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif}}
-  .note.ok{{color:#7ed98a}}
-  .note.err{{color:#e88}}
-  .foot{{margin-top:40px;font-size:12px;color:#777;
-        font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;letter-spacing:.04em}}
-</style>
+<link rel="preload" href="/static/fonts/big-shoulders-display-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/static/dispatch.css">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 </head>
 <body>
-  <div class="wrap">
-    <p class="kicker">TrueFans DISPATCH</p>
-    <h1>Something good is on its way.</h1>
-    <div class="rule"></div>
-    <p class="lede">A newsletter built for artists, fans, and the people who move the
-       music business. Leave your email and we'll tell you the moment it's live.</p>
-    <form class="cap" method="post" action="/coming-soon/notify">
-      <input type="email" name="email" placeholder="you@email.com" value="{safe_email}"
-             required autocomplete="email" aria-label="Email address">
-      <button type="submit">Notify me</button>
-    </form>
-    {banner}
-    <p class="foot">&copy; 2026 TrueFans DISPATCH</p>
-  </div>
+  <main class="solo">
+    <div class="solo-inner centred">
+      <span class="brand"><span>True<em>Fans</em> Dispatch</span></span>
+      <p class="eyebrow centred">Fan &middot; Artist &middot; Venue &middot; Industry</p>
+      <h1>Something good is <em>on its way</em></h1>
+      <p class="lede">A newsletter built for artists, fans, the rooms they play and the people
+         who move the music business. Leave your email and we'll tell you the moment it's live.</p>
+      <form class="capture" method="post" action="/coming-soon/notify">
+        <input type="email" name="email" placeholder="you@email.com" value="{safe_email}"
+               required autocomplete="email" aria-label="Email address">
+        <button class="btn primary" type="submit">Notify me</button>
+      </form>
+      {banner}
+      <p class="fine">&copy; 2026 TrueFans DISPATCH</p>
+    </div>
+  </main>
 </body>
 </html>"""
 

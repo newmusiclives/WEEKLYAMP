@@ -18,78 +18,41 @@
     <meta name="twitter:title" content="{{ newsletter_name }} — Issue #{{ issue_number }}">
     <meta name="twitter:description" content="{% if issue_title %}{{ issue_title }} — {% endif %}Read this edition online.">
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+{% include "partials/site_head.html" %}
     {% include "partials/analytics.html" %}
     <style>
-        :root {
-            --bg: #0a0a12;
-            --bg-card: #13131f;
-            --border: rgba(255,255,255,0.08);
-            --text: #f0f0f5;
-            --text-dim: #9ca3af;
-            --accent: #e8645a;
-            --accent-hover: #f07a70;
-            --gold: #b09a3a;
-            --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: var(--font);
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.6;
-        }
-        .top-bar {
-            position: sticky; top: 0; z-index: 100;
-            padding: 14px 24px;
-            display: flex; justify-content: space-between; align-items: center;
-            background: rgba(10, 10, 18, 0.92);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border);
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        .top-bar-left {
-            display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-        }
-        .top-bar-brand {
-            font-size: 16px; font-weight: 800; letter-spacing: -0.5px;
-            color: var(--text); text-decoration: none;
-        }
-        .top-bar-brand span { color: var(--accent); }
-        .top-bar-issue {
-            font-size: 13px; color: var(--text-dim); font-weight: 500;
-            padding: 4px 10px; border-radius: 6px;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid var(--border);
-        }
-        .badge-updated {
-            display: inline-flex; align-items: center; gap: 4px;
-            font-size: 12px; font-weight: 600;
-            padding: 4px 10px; border-radius: 6px;
-            background: rgba(176, 154, 58, 0.15);
-            border: 1px solid rgba(176, 154, 58, 0.3);
-            color: var(--gold);
-        }
-        .badge-updated::before { content: "\2022"; font-size: 16px; }
-        .btn-subscribe {
-            display: inline-block;
-            padding: 8px 20px; border-radius: 8px;
-            background: var(--accent); color: #fff;
-            font-size: 13px; font-weight: 700;
-            text-decoration: none; transition: all 0.2s;
-            white-space: nowrap;
-        }
-        .btn-subscribe:hover {
-            background: var(--accent-hover);
-            transform: translateY(-1px);
-        }
+        /* The embedded issue carries its own global <style> (body, .section,
+           .footer, with !important dark-mode rules). Keep the site chrome ours. */
+        html body { background: var(--bg) !important; color: var(--text); font-family: var(--font); }
+        body > footer.footer { background: var(--bg-2) !important; color: var(--text) !important; text-align: left; padding: 40px 0 48px; margin-top: 0; font-size: inherit; border-top: 1px solid var(--line); }
+        .page-pad { padding-block: clamp(32px, 6vw, 64px) var(--section); }
+        /* And keep dispatch.css's poster type out of the issue: zero-specificity
+           wrapper so the issue's own rules still win. */
+        :where(.edition-content) :is(h1, h2, h3, h4, h5, h6) { font-family: inherit; text-transform: none; letter-spacing: normal; line-height: 1.25; text-wrap: wrap; font-size: revert; font-weight: revert; margin: revert; color: inherit; }
+        :where(.edition-content) :is(p, ul, ol, blockquote) { margin: revert; }
+        :where(.edition-content) :is(p, li) a { color: revert; }
+        body > footer.footer .brand { color: var(--text); }
+        :where(.edition-content) .footer { background: transparent; }
+        .issue-bar { border-bottom: 1px solid var(--line); background: var(--bg-2); }
+        .issue-bar .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding-block: 12px; }
+        .top-bar-issue { font: 500 .74rem var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+        .badge-updated::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+        .issue-bar .btn { margin-left: auto; }
+        /* The edition is email HTML written for a white page: give it one,
+           whatever the site theme. The rules on img/table/td below are the
+           page's long-standing responsive fixes for that HTML; keep them. */
+        .edition-wrap { padding-block: clamp(24px, 5vw, 48px); }
         .edition-content {
-            max-width: 720px;
+            max-width: 640px;
             margin: 0 auto;
-            padding: 40px 20px 60px;
+            background: #fff;
+            color: #2d2d2d;
+            font-family: Georgia, "Times New Roman", serif;
+            line-height: 1.6;
+            border: 1px solid var(--line);
+            border-radius: var(--r);
+            box-shadow: var(--shadow);
+            overflow: hidden;
         }
         .edition-content img {
             max-width: 100%;
@@ -102,108 +65,59 @@
         .edition-content td {
             word-break: break-word;
         }
-        .subscribe-cta {
-            max-width: 720px;
-            margin: 0 auto 40px;
-            padding: 32px 24px;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            text-align: center;
-        }
-        .subscribe-cta h3 {
-            font-size: 20px; font-weight: 800;
-            margin-bottom: 8px; letter-spacing: -0.5px;
-        }
-        .subscribe-cta p {
-            font-size: 15px; color: var(--text-dim);
-            margin-bottom: 20px;
-        }
-        .subscribe-cta .btn-subscribe {
-            padding: 12px 28px; font-size: 15px;
-        }
-        .edition-footer {
-            max-width: 720px;
-            margin: 0 auto;
-            padding: 32px 20px 60px;
-            border-top: 1px solid var(--border);
-            text-align: center;
-        }
-        .share-buttons {
-            display: flex; gap: 12px; justify-content: center;
-            margin-bottom: 24px; flex-wrap: wrap;
-        }
-        .share-btn {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 8px 16px; border-radius: 8px;
-            border: 1px solid var(--border);
-            color: var(--text-dim); font-size: 13px; font-weight: 500;
-            text-decoration: none; transition: all 0.2s;
-            background: transparent;
-        }
-        .share-btn:hover {
-            color: var(--text); border-color: rgba(255,255,255,0.2);
-            background: rgba(255,255,255,0.04);
-        }
-        .footer-links {
-            display: flex; gap: 24px; justify-content: center;
-            margin-bottom: 16px; flex-wrap: wrap;
-        }
-        .footer-links a {
-            color: var(--text-dim); text-decoration: none; font-size: 13px;
-        }
-        .footer-links a:hover { color: var(--text); }
-        .footer-copy {
-            font-size: 12px; color: rgba(255,255,255,0.3);
-        }
-        @media (max-width: 640px) {
-            .top-bar { padding: 12px 16px; }
-            .top-bar-brand { font-size: 14px; }
-            .edition-content { padding: 24px 16px 40px; }
-        }
+        .share-buttons { justify-content: center; }
+        .share-row { padding-block: 8px 24px; }
     </style>
 </head>
 <body>
-    <div class="top-bar">
-        <div class="top-bar-left">
-            <a href="/" class="top-bar-brand">True<span>Fans</span> DISPATCH</a>
+{% include "partials/site_nav.html" %}
+
+<main id="main">
+    <div class="issue-bar top-bar">
+        <div class="wrap top-bar-left">
             <span class="top-bar-issue">Issue #{{ issue_number }}</span>
             {% if web_updates_count > 0 %}
-            <span class="badge-updated">Updated since originally sent</span>
+            <span class="tag gold badge-updated">Updated since originally sent</span>
             {% endif %}
+            <a href="/subscribe" class="btn primary sm btn-subscribe">Subscribe Free</a>
         </div>
-        <a href="/subscribe" class="btn-subscribe">Subscribe Free</a>
     </div>
 
-    <div class="edition-content">
-        {{ web_html | safe }}
+    <div class="wrap edition-wrap">
+        <div class="edition-content">
+            {{ web_html | safe }}
+        </div>
     </div>
 
-    <div class="subscribe-cta">
-        <h3>Subscribe to get this in your inbox</h3>
-        <p>Get TrueFans DISPATCH delivered to your inbox every week — free. Join the community of fans, artists, and industry pros.</p>
-        <a href="/subscribe" class="btn-subscribe">Subscribe Free</a>
-    </div>
+    <section class="share-row">
+        <div class="wrap">
+            <div class="actions share-buttons">
+                <a href="https://twitter.com/intent/tweet?url={{ site_domain }}/edition/{{ assembled_id }}&text=Check%20out%20this%20edition%20of%20{{ newsletter_name | urlencode }}" target="_blank" rel="noopener" class="btn ghost sm share-btn">
+                    Share on X
+                </a>
+                <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ site_domain }}/edition/{{ assembled_id }}" target="_blank" rel="noopener" class="btn ghost sm share-btn">
+                    Share on LinkedIn
+                </a>
+                <a href="mailto:?subject={{ newsletter_name }} Issue %23{{ issue_number }}&body=Check%20out%20this%20edition%3A%20{{ site_domain }}/edition/{{ assembled_id }}" class="btn ghost sm share-btn">
+                    Email to a friend
+                </a>
+            </div>
+        </div>
+    </section>
 
-    <div class="edition-footer">
-        <div class="share-buttons">
-            <a href="https://twitter.com/intent/tweet?url={{ site_domain }}/edition/{{ assembled_id }}&text=Check%20out%20this%20edition%20of%20{{ newsletter_name | urlencode }}" target="_blank" rel="noopener" class="share-btn">
-                Share on X
-            </a>
-            <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ site_domain }}/edition/{{ assembled_id }}" target="_blank" rel="noopener" class="share-btn">
-                Share on LinkedIn
-            </a>
-            <a href="mailto:?subject={{ newsletter_name }} Issue %23{{ issue_number }}&body=Check%20out%20this%20edition%3A%20{{ site_domain }}/edition/{{ assembled_id }}" class="share-btn">
-                Email to a friend
-            </a>
+    <section class="page-pad" style="padding-top:16px">
+        <div class="wrap">
+            <div class="stage subscribe-cta">
+                <h2>Subscribe to get this in your <em>inbox</em></h2>
+                <p class="lede">Get TrueFans DISPATCH delivered to your inbox every week — free. Join the community of fans, artists, and industry pros.</p>
+                <div class="actions">
+                    <a href="/subscribe" class="btn gold lg btn-subscribe">Subscribe Free</a>
+                </div>
+            </div>
         </div>
-        <div class="footer-links">
-            <a href="/">Home</a>
-            <a href="/newsletters">Newsletters</a>
-            <a href="/subscribe">Subscribe</a>
-            <a href="/newsletters/archive">Archive</a>
-        </div>
-        <p class="footer-copy">&copy; 2026 TrueFans DISPATCH. Built for independent artists, powered by AI.</p>
-    </div>
+    </section>
+</main>
+
+{% include "partials/site_footer.html" %}
 </body>
 </html>

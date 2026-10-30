@@ -6,13 +6,13 @@ artist:
   genre: Americana / blues / folk / country / jam (self-described as "Cosmic Cowgirl")
   current_status: active
   current_label: independent
-  last_full_review: 2026-05-07
+  last_full_review: 2026-10-30
 
 members:
   - name: Ashley Beth
     role: lead vocals
     era: current (founding)
-    notes: Co-founder. Met Dave in Texas; the band emerged from her singing background vocals on his earlier project.
+    notes: Co-founder. Met Dave in Arlington, Texas in 1999 (The Wilson Post, 2015-10-28, https://mainstreetmediatn.com/articles/thewilsonpost/sugar-lime-blue-goes-back-to-the-future/); the band emerged from her singing background vocals on his earlier project. Couple moved to Wilson County, TN in 2004. Ashley + Dave tour as the "SLB Acoustic Duo" — the majority of 2026 dates (https://www.reverbnation.com/sugarlimeblue/events, checked 2026-10-30).
   - name: Dave Beth
     role: lead guitar
     era: current (founding)
@@ -20,11 +20,11 @@ members:
   - name: Matt Fox
     role: bass
     era: current
-    notes: Listed as the current bassist on Bandsintown.
+    notes: Listed as the current bassist on Bandsintown (checked 2026-05-07). NOT re-verified 2026-10-30 — Bandsintown returned 403 and no second source names him. Treat as last-confirmed May 2026.
   - name: Ikaika Pekelo
     role: drums and percussion
     era: current
-    notes: Listed as the current drummer on Bandsintown.
+    notes: Listed as the current drummer on Bandsintown (checked 2026-05-07). NOT re-verified 2026-10-30 — Bandsintown returned 403 and no second source names him. Treat as last-confirmed May 2026.
   - name: Russ Dean
     role: bass
     era: 2010-2020 (passed away 2020)
@@ -44,20 +44,20 @@ albums:
     notes: Debut album.
 
   - title: Move That Earth
-    year: null   # Sophomore album; specific release year not yet re-verified.
+    year: 2015
     studio: null
     label: independent
-    source_url: https://sugarlimeblue.com/bio
-    verified_on: 2026-05-07
-    notes: Sophomore release.
+    source_url: https://sugarlimeblue.bandcamp.com/album/move-that-earth
+    verified_on: 2026-10-30
+    notes: Sophomore release, 7 tracks. Bandcamp "released August 1, 2015". The Wilson Post (2015-10-28) reported the CD came out in July 2015 and a 300-copy vinyl run was ~90% fan-funded via Kickstarter (https://mainstreetmediatn.com/articles/thewilsonpost/sugar-lime-blue-goes-back-to-the-future/).
 
   - title: Narcoluptuous
-    year: null   # Year not yet re-verified.
-    studio: Bluebird (the band's home studio just outside Nashville)
+    year: 2019
+    studio: Bluebird (the band's home studio, Lebanon, TN)
     label: independent
-    source_url: https://indiebandguru.com/sugar-lime-blue-narcoluptuous/
-    verified_on: 2026-05-07
-    notes: Third studio album. 12 tracks. Recorded at the band's home studio "Bluebird" outside Nashville.
+    source_url: https://sugarlimeblue.bandcamp.com/album/narcoluptuous
+    verified_on: 2026-10-30
+    notes: Third studio album. 12 tracks. Bandcamp "released May 15, 2019"; credits "Recorded at Bluebird Studios, Lebanon TN" and "Mastered by Jim Haydon Complex One". Also reviewed by Indie Band Guru 2019-10-16 (https://indiebandguru.com/sugar-lime-blue-narcoluptuous/).
 
   - title: The Blackbird Sessions
     year: 2022
@@ -65,7 +65,7 @@ albums:
     label: independent
     source_url: https://sugarlimeblue.com/album/2238676/the-blackbird-sessions
     verified_on: 2026-05-07
-    notes: Latest release. 9 tracks. Recorded at the iconic Blackbird Studio in Nashville. Picked up by 100+ FM radio stations. Standout tracks include "Burn It" and "Didn't Mean To Kill You" per Indie Band Guru.
+    notes: Latest release (no newer single/EP/album found as of 2026-10-30). 9 tracks. Recorded at the iconic Blackbird Studio in Nashville. Picked up by 100+ FM radio stations. Standout tracks include "Burn It" and "Didn't Mean To Kill You" per Indie Band Guru.
 
 # Notable venues the band is known to play. Used to keep the writer from
 # inventing made-up tour stops.
@@ -80,7 +80,8 @@ venues:
     booking_contact: null
     notes: Nashville Americana / blues / soul listening room. Sugar Lime Blue is a recurring booking.
     source_url: https://www.3rdandlindsley.com/tm-attraction/sugar-lime-blue/
-    verified_on: 2026-05-07
+    verified_on: 2026-10-30
+    # 2026-10-30: artist page reads "There are currently no upcoming events."
 
   - name: Wildwood Resort and Marina
     type: bar
@@ -126,9 +127,9 @@ venues:
     capacity: null
     books_original_music: yes
     booking_contact: null
-    notes: Sugar Lime Blue played a fundraiser for the Bryan Symphony Orchestra on May 6, 2026 at 6:00pm. (Yesterday relative to last_full_review.)
-    source_url: https://www.bandsintown.com/a/1156877-sugar-lime-blue
-    verified_on: 2026-05-07
+    notes: Sugar Lime Blue (SLB Acoustic Duo) fundraiser for the Bryan Symphony Orchestra, Wednesday May 13, 2026 at 6:00pm, 123 W Broad St, Cookeville. STALE/CORRECTED 2026-10-30 — this entry previously said May 6, 2026; current listings (Apple Music concerts / ReverbNation) both say May 13.
+    source_url: https://music.apple.com/ng/concerts/ce.9bcb0235-ae1c-4d45-b140-99cdf74fd946
+    verified_on: 2026-10-30
 
   - name: Little Toad Creek Brewery & Distillery
     type: brewery
@@ -138,7 +139,7 @@ venues:
     capacity: null
     books_original_music: yes
     booking_contact: null
-    notes: Next confirmed upcoming Sugar Lime Blue show as of 2026-05-07 &mdash; June 21, 2026 in Silver City, NM. Free admission per the Bandsintown listing.
+    notes: PAST — played June 21, 2026 in Silver City, NM (Summer '26 run; was the next upcoming show as of 2026-05-07). Free admission per the Bandsintown listing. Do not present as upcoming.
     source_url: https://www.bandsintown.com/e/108048127-sugar-lime-blue-at-little-toad-creek-brewery-and-distillery
     verified_on: 2026-05-07
 
@@ -189,6 +190,19 @@ scene_facts:
   - claim: Sugar Lime Blue (and a Sugar Lime Blue Acoustic Duo configuration) is on a Summer '26 Tour as of May 2026, with confirmed shows announced through Bandsintown.
     source_url: https://www.bandsintown.com/a/1156877-sugar-lime-blue
     verified_on: 2026-05-07
+    # STALE as of 2026-10-30 — the Summer '26 run is over. Past tense only.
+
+  - claim: As of 2026-10-30 no Sugar Lime Blue show dated after 2026-11-02 is posted on sugarlimeblue.com/tickets (latest listing Dec 2, 2025), ReverbNation (latest Sept 26, 2026, The Gaslight, Huntingburg IN), Songkick (0 upcoming), JamBase (none), or 3rd and Lindsley (none). Bandsintown could not be checked (403).
+    source_url: https://www.reverbnation.com/sugarlimeblue/events
+    verified_on: 2026-10-30
+
+  - claim: The December 18 (Chattanooga, TN) and December 19 (Dahlonega, GA) duo dates that surface in search without a year are December 2025 dates (Canopy and the Roots lists Dec 19, 2025).
+    source_url: https://canopyandtheroots.com/event/sugar-lime-blue-multi-genre-country-blues-live-in-the-roots
+    verified_on: 2026-10-30
+
+  - claim: The band's own site says the "Burn It" official video has passed 100K YouTube plays and "Hello October" has featured in over 60K Instagram reels (band's own figures, not independently verified).
+    source_url: https://sugarlimeblue.com/tickets
+    verified_on: 2026-10-30
 
 do_not_mention:
   - name: Cyndi Robbins

@@ -96,8 +96,8 @@
                     <td>
                         {% if a.edition_slug %}
                         <span class="badge" style="
-                            {% if a.edition_slug == 'fan' %}background:#fef5f4;color:#e8645a{% endif %}
-                            {% if a.edition_slug == 'artist' %}background:#f5f3ff;color:#7c5cfc{% endif %}
+                            {% if a.edition_slug == 'fan' %}background:#fef5f4;color:var(--accent){% endif %}
+                            {% if a.edition_slug == 'artist' %}background:#f5f3ff;color:var(--accent){% endif %}
                             {% if a.edition_slug == 'industry' %}background:#fffbeb;color:#d97706{% endif %}
                         ">{{ a.edition_slug }}</span>
                         {% else %}

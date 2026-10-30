@@ -17,45 +17,50 @@
     {"@context":"https://schema.org","@type":"Article","headline":"{{ issue.title or ('Issue #' + issue.issue_number|string) }}","datePublished":"{{ issue.publish_date or '' }}","publisher":{"@type":"Organization","name":"TrueFans DISPATCH"}}
     </script>
     {% endif %}
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+{% include "partials/site_head.html" %}
     <style>
-        :root { --bg:#0a0a12; --bg-card:#13131f; --border:rgba(255,255,255,0.08); --text:#f0f0f5; --text-dim:#9ca3af; --accent:#e8645a; --font:'Inter',-apple-system,sans-serif; }
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:var(--font); background:var(--bg); color:var(--text); line-height:1.6; }
-        nav { position:fixed; top:0; left:0; right:0; z-index:100; padding:20px 40px; display:flex; justify-content:space-between; align-items:center; background:rgba(10,10,18,0.8); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); }
-        .nav-brand { font-size:20px; font-weight:800; letter-spacing:-0.5px; color:var(--text); text-decoration:none; }
-        .nav-brand span { color:var(--accent); }
-        .nav-link { color:var(--text-dim); text-decoration:none; font-size:14px; font-weight:500; padding:8px 20px; border-radius:8px; border:1px solid var(--border); transition:all 0.2s; }
-        .nav-link:hover { color:var(--text); border-color:rgba(255,255,255,0.2); }
-        .nav-link-cta { background:var(--accent); color:#fff; border-color:var(--accent); }
-        .container { max-width:800px; margin:0 auto; padding:120px 24px 40px; }
-        .back-link { display:inline-flex; align-items:center; gap:6px; color:var(--text-dim); text-decoration:none; font-size:14px; margin-bottom:24px; }
-        .back-link:hover { color:var(--text); }
-        .issue-header { margin-bottom:32px; }
-        .issue-header h1 { font-size:28px; font-weight:800; letter-spacing:-0.5px; margin-bottom:8px; }
-        .issue-header .date { font-size:14px; color:var(--text-dim); }
-        .issue-content { background:#fff; border-radius:12px; padding:32px; color:#1a1a1a; overflow:hidden; }
-        .issue-content img { max-width:100%; height:auto; }
-        footer { padding:40px 24px; text-align:center; border-top:1px solid var(--border); color:var(--text-dim); font-size:14px; }
-        .footer-links { display:flex; gap:24px; justify-content:center; margin-bottom:16px; }
-        .footer-links a { color:var(--text-dim); text-decoration:none; font-size:13px; }
+        /* The embedded issue carries its own global <style> (body, .section,
+           .footer, with !important dark-mode rules). Keep the site chrome ours. */
+        html body { background: var(--bg) !important; color: var(--text); font-family: var(--font); }
+        body > footer.footer { background: var(--bg-2) !important; color: var(--text) !important; text-align: left; padding: 40px 0 48px; margin-top: 0; font-size: inherit; border-top: 1px solid var(--line); }
+        .page-pad { padding-block: clamp(32px, 6vw, 64px) var(--section); }
+        /* And keep dispatch.css's poster type out of the issue: zero-specificity
+           wrapper so the issue's own rules still win. */
+        :where(.issue-content) :is(h1, h2, h3, h4, h5, h6) { font-family: inherit; text-transform: none; letter-spacing: normal; line-height: 1.25; text-wrap: wrap; font-size: revert; font-weight: revert; margin: revert; color: inherit; }
+        :where(.issue-content) :is(p, ul, ol, blockquote) { margin: revert; }
+        :where(.issue-content) :is(p, li) a { color: revert; }
+        body > footer.footer .brand { color: var(--text); }
+        :where(.issue-content) .footer { background: transparent; }
+        .issue-header { display: flex; flex-direction: column; gap: 14px; margin-bottom: 28px; }
+        .issue-header h1 { font-size: clamp(2.2rem, 5.4vw, 3.8rem); }
+        .issue-header .date { font: 500 .76rem var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+        /* The issue itself is email HTML written for a white page: give it one,
+           whatever the site theme, and leave its own styles alone. */
+        .issue-content { max-width: 640px; margin-inline: auto; background: #fff; color: #2d2d2d; font-family: Georgia, "Times New Roman", serif; line-height: 1.6; border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; overflow-wrap: anywhere; box-shadow: var(--shadow); }
+        .issue-content img { max-width: 100%; height: auto; }
+        .issue-content table { max-width: 100%; }
     </style>
 </head>
 <body>
-    {% include "partials/public_nav.html" %}
-    <div class="container">
-        <a href="/newsletters/archive" class="back-link">← Back to Archive</a>
-        <div class="issue-header">
-            <h1>Issue #{{ issue.issue_number }}{% if issue.title %} — {{ issue.title }}{% endif %}</h1>
-            <div class="date">{{ issue.publish_date or issue.created_at }}</div>
+{% set nav_current = 'archive' %}
+{% include "partials/site_nav.html" %}
+
+<main id="main">
+    <section class="page-pad">
+        <div class="wrap narrow">
+            <div class="issue-header">
+                <a href="/newsletters/archive" class="crumbs back-link">← Back to Archive</a>
+                <h1>Issue #{{ issue.issue_number }}{% if issue.title %} — {{ issue.title }}{% endif %}</h1>
+                <div class="date">{{ issue.publish_date or issue.created_at }}</div>
+            </div>
+            {% include "partials/audio_player.html" %}
+            <div class="issue-content">
+                {{ content | safe }}
+            </div>
         </div>
-        {% include "partials/audio_player.html" %}
-        <div class="issue-content">
-            {{ content | safe }}
-        </div>
-    </div>
-    {% include "partials/public_footer.html" %}
+    </section>
+</main>
+
+{% include "partials/site_footer.html" %}
 </body>
 </html>

@@ -15,9 +15,9 @@
 </div>
 
 <!-- Overview -->
-<div class="card" style="margin-bottom:24px;background:linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);padding:28px;">
+<div class="card" style="margin-bottom:24px;background:var(--text);padding:28px;">
     <h3 style="color:#fff;margin-bottom:16px;">The Autonomous Newsroom</h3>
-    <p style="color:#d1d5db;line-height:1.8;">TrueFans DISPATCH runs on a team of AI agents, each with a specialized role. Together they research, write, edit, review, and promote 3 newsletter editions (Fan, Artist, Industry) across 3 send days per week — producing <strong style="color:#e8645a;">9 complete issues every week</strong> with minimal human oversight.</p>
+    <p style="color:var(--text-dim);line-height:1.8;">TrueFans DISPATCH runs on a team of AI agents, each with a specialized role. Together they research, write, edit, review, and promote 3 newsletter editions (Fan, Artist, Industry) across 3 send days per week — producing <strong style="color:var(--accent);">9 complete issues every week</strong> with minimal human oversight.</p>
 </div>
 
 <!-- Agent Roles -->
@@ -27,25 +27,25 @@
         <thead><tr><th style="width:180px;">Agent</th><th>Role</th><th>Key Tasks</th><th>Runs</th></tr></thead>
         <tbody>
             <tr>
-                <td style="font-weight:700;color:#f59e0b;">Editor-in-Chief</td>
+                <td style="font-weight:700;color:var(--gold-text);">Editor-in-Chief</td>
                 <td>Plans issues, assigns sections to writers, reviews all drafts for quality</td>
                 <td>plan_issue, assign_sections, review_drafts, approve_issue</td>
                 <td>Per issue</td>
             </tr>
             <tr>
-                <td style="font-weight:700;color:#7c5cfc;">Research Analyst</td>
+                <td style="font-weight:700;color:var(--accent);">Research Analyst</td>
                 <td>Discovers content from 150+ sources, scores relevance, compiles research briefs</td>
                 <td>discover_content, compile_brief, find_guest_candidates</td>
                 <td>Every 6 hours</td>
             </tr>
             <tr>
-                <td style="font-weight:700;color:#10b981;">Staff Writers (29)</td>
+                <td style="font-weight:700;color:var(--green);">Staff Writers (29)</td>
                 <td>Specialist writers — one per section. Each has a unique persona, tone, and expertise area</td>
                 <td>write_section, rewrite, adapt_tone</td>
                 <td>Per section</td>
             </tr>
             <tr>
-                <td style="font-weight:700;color:#e8645a;">Sales Director</td>
+                <td style="font-weight:700;color:var(--accent);">Sales Director</td>
                 <td>Identifies sponsor prospects, drafts outreach emails, manages the sales pipeline</td>
                 <td>identify_prospects, draft_outreach, update_pipeline</td>
                 <td>Weekly</td>
@@ -63,7 +63,7 @@
                 <td>Daily</td>
             </tr>
             <tr>
-                <td style="font-weight:700;color:#8b5cf6;">Promotion Agent</td>
+                <td style="font-weight:700;color:var(--purple);">Promotion Agent</td>
                 <td>Cross-promotion between editions, external partnerships, audience expansion</td>
                 <td>cross_promote, partnership_outreach, audience_analysis</td>
                 <td>Weekly</td>
@@ -77,22 +77,22 @@
     <h3 style="margin-bottom:20px;">The Production Cycle — 5 Steps</h3>
     <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px;">
         <div style="text-align:center;padding:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;">
-            <div style="font-size:28px;font-weight:900;color:#7c5cfc;margin-bottom:8px;">1</div>
+            <div style="font-size:28px;font-weight:900;color:var(--accent);margin-bottom:8px;">1</div>
             <div style="font-weight:700;margin-bottom:8px;">Research</div>
             <div style="font-size:13px;color:var(--text-dim);">Researcher fetches content from 150+ RSS feeds and web sources. Scores relevance. Tags by section.</div>
         </div>
         <div style="text-align:center;padding:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;">
-            <div style="font-size:28px;font-weight:900;color:#f59e0b;margin-bottom:8px;">2</div>
+            <div style="font-size:28px;font-weight:900;color:var(--gold-text);margin-bottom:8px;">2</div>
             <div style="font-weight:700;margin-bottom:8px;">Plan</div>
             <div style="font-size:13px;color:var(--text-dim);">Editor-in-Chief selects sections, assigns writers, creates editorial calendar.</div>
         </div>
         <div style="text-align:center;padding:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;">
-            <div style="font-size:28px;font-weight:900;color:#10b981;margin-bottom:8px;">3</div>
+            <div style="font-size:28px;font-weight:900;color:var(--green);margin-bottom:8px;">3</div>
             <div style="font-weight:700;margin-bottom:8px;">Write</div>
             <div style="font-size:13px;color:var(--text-dim);">29 specialist writers generate drafts using section-specific prompts and research data.</div>
         </div>
         <div style="text-align:center;padding:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;">
-            <div style="font-size:28px;font-weight:900;color:#e8645a;margin-bottom:8px;">4</div>
+            <div style="font-size:28px;font-weight:900;color:var(--accent);margin-bottom:8px;">4</div>
             <div style="font-weight:700;margin-bottom:8px;">Review</div>
             <div style="font-size:13px;color:var(--text-dim);">Editor reviews each draft. Human checkpoint for approval, rewrite requests, or tone adjustments.</div>
         </div>
@@ -112,17 +112,17 @@
         <thead><tr><th>Level</th><th>Behavior</th><th>Human Involvement</th></tr></thead>
         <tbody>
             <tr>
-                <td style="font-weight:700;color:#e8645a;">Supervised</td>
+                <td style="font-weight:700;color:var(--accent);">Supervised</td>
                 <td>Agents generate content but all output requires human approval before publishing</td>
                 <td>Review every draft, approve/reject/rewrite</td>
             </tr>
             <tr>
-                <td style="font-weight:700;color:#f59e0b;">Semi-Autonomous</td>
+                <td style="font-weight:700;color:var(--gold-text);">Semi-Autonomous</td>
                 <td>Agents can auto-approve content that scores above quality thresholds</td>
                 <td>Spot-check flagged items, handle exceptions</td>
             </tr>
             <tr>
-                <td style="font-weight:700;color:#10b981;">Autonomous</td>
+                <td style="font-weight:700;color:var(--green);">Autonomous</td>
                 <td>Full auto-pilot — research, write, review, publish without human intervention</td>
                 <td>Monitor dashboards, adjust strategy</td>
             </tr>
@@ -160,15 +160,15 @@
     <h3 style="margin-bottom:16px;">AI Cost Efficiency</h3>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
         <div style="text-align:center;padding:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;">
-            <div style="font-size:24px;font-weight:900;color:#10b981;">~$0.40</div>
+            <div style="font-size:24px;font-weight:900;color:var(--green);">~$0.40</div>
             <div style="font-size:13px;color:var(--text-dim);margin-top:4px;">Cost per edition (Claude Sonnet)</div>
         </div>
         <div style="text-align:center;padding:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;">
-            <div style="font-size:24px;font-weight:900;color:#10b981;">~$15-25</div>
+            <div style="font-size:24px;font-weight:900;color:var(--green);">~$15-25</div>
             <div style="font-size:13px;color:var(--text-dim);margin-top:4px;">Monthly AI cost (9 issues/week)</div>
         </div>
         <div style="text-align:center;padding:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;">
-            <div style="font-size:24px;font-weight:900;color:#10b981;">25-30</div>
+            <div style="font-size:24px;font-weight:900;color:var(--green);">25-30</div>
             <div style="font-size:13px;color:var(--text-dim);margin-top:4px;">API calls per edition</div>
         </div>
     </div>

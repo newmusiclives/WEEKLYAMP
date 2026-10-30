@@ -7,10 +7,10 @@
 <div id="sections-table">
 <style>
     .stabs input[type="radio"] { display: none; }
-    .stabs .stab-labels { display: flex; border-bottom: 2px solid var(--border, #e5e7eb); margin: 0; padding: 0; }
+    .stabs .stab-labels { display: flex; border-bottom: 2px solid var(--border, var(--border)); margin: 0; padding: 0; }
     .stabs .stab-labels label {
         padding: 12px 22px; cursor: pointer; font-weight: 600; font-size: 14px;
-        color: var(--text-muted, #9ca3af); border-bottom: 3px solid transparent; margin-bottom: -2px;
+        color: var(--text-muted, var(--text-muted)); border-bottom: 3px solid transparent; margin-bottom: -2px;
         transition: color 0.15s, border-color 0.15s; user-select: none;
     }
     .stabs .stab-labels label:hover { color: var(--text, #111); }
@@ -22,7 +22,7 @@
     .stabs #stab-{{ ed.slug }}:checked ~ .stab-labels label[for="stab-{{ ed.slug }}"] { color: {{ ed.color }}; border-bottom-color: {{ ed.color }}; }
     {% endif %}{% endfor %}
     .stabs #stab-shared:checked ~ .stab-panel-shared { display: block; }
-    .stabs #stab-shared:checked ~ .stab-labels label[for="stab-shared"] { color: var(--text, #111); border-bottom-color: var(--text-muted, #9ca3af); }
+    .stabs #stab-shared:checked ~ .stab-labels label[for="stab-shared"] { color: var(--text, #111); border-bottom-color: var(--text-muted, var(--border)); }
 </style>
 
 <div class="card stabs" style="padding:0;overflow:hidden">

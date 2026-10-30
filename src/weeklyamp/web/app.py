@@ -405,40 +405,20 @@ def create_app() -> FastAPI:
         return HTMLResponse(sample_path.read_text())
 
     @app.get("/samples", response_class=HTMLResponse)
-    def samples_index():
+    def samples_index(request: Request):
         """Index page listing all sample editions — share this URL."""
-        cards = []
-        for slug, (fname, title, blurb) in _SAMPLE_FILES.items():
-            if not (_TEMPLATES_DIR.parent / fname).exists():
-                continue
-            cards.append(
-                f'<a href="/sample/{slug}" style="display:block;padding:20px;border:1px solid #e5e7eb;'
-                f'border-radius:8px;text-decoration:none;color:#1a1a1a;background:#fff;'
-                f'transition:border-color 0.15s;" '
-                f"onmouseover=\"this.style.borderColor='#b09a3a'\" "
-                f"onmouseout=\"this.style.borderColor='#e5e7eb'\">"
-                f'<div style="font-size:18px;font-weight:700;margin-bottom:6px;">{title}</div>'
-                f'<div style="font-size:14px;color:#6b7280;">{blurb}</div>'
-                f'</a>'
-            )
-        body = (
-            '<!DOCTYPE html><html lang="en"><head>'
-            '<meta charset="UTF-8">'
-            '<meta name="viewport" content="width=device-width, initial-scale=1.0">'
-            '<title>TrueFans DISPATCH &mdash; Sample Editions</title></head>'
-            '<body style="font-family:Georgia,serif;background:#f9f9f9;margin:0;padding:40px 20px;">'
-            '<div style="max-width:640px;margin:0 auto;">'
-            '<h1 style="font-size:28px;margin:0 0 8px;color:#1a1a1a;">TrueFans DISPATCH &mdash; Sample Editions</h1>'
-            '<p style="color:#6b7280;font-size:15px;margin:0 0 28px;">'
-            'Seven samples. Three top-line editions, two local editions, one artist-specific edition, '
-            'and the daily one-action email for artists. '
-            'Every fact is sourced &mdash; click through to read.</p>'
-            f'<div style="display:flex;flex-direction:column;gap:12px;">{"".join(cards)}</div>'
-            '<p style="color:#9ca3af;font-size:12px;margin:32px 0 0;text-align:center;">'
-            '&copy; 2026 TrueFans DISPATCH</p>'
-            '</div></body></html>'
-        )
-        return HTMLResponse(body)
+        from weeklyamp.web.security import is_authenticated
+        from jinja2 import Environment, FileSystemLoader
+        # The audience editions carry their edition's stripe; the rest take the default.
+        stripe = {"fan": "ed-fan", "artist": "ed-artist", "venue": "ed-venue", "industry": "ed-industry"}
+        cards = [
+            {"slug": slug, "title": title, "blurb": blurb, "css": stripe.get(slug, "")}
+            for slug, (fname, title, blurb) in _SAMPLE_FILES.items()
+            if (_TEMPLATES_DIR.parent / fname).exists()
+        ]
+        env = Environment(loader=FileSystemLoader(str(_TEMPLATES_DIR / "web")), autoescape=True)
+        tpl = env.get_template("samples.html")
+        return HTMLResponse(tpl.render(cards=cards, authenticated=is_authenticated(request)))
 
     # Pre-launch waitlist capture — posted from the "coming soon" holding
     # page. Reachable while the gate is closed via the ComingSoonMiddleware

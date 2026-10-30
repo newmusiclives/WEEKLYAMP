@@ -62,16 +62,16 @@ def test_annual_is_ten_months(lic):
 def test_public_page_prices_match_config(lic):
     """The page is the promise; config is what actually bills."""
     by_slug = {t.slug: t for t in lic.tiers}
-    assert by_slug["starter"].monthly_fee_cents == 5000
-    assert by_slug["growth"].monthly_fee_cents == 10000
-    assert by_slug["pro"].monthly_fee_cents == 19900
+    assert by_slug["starter"].monthly_fee_cents == 10000
+    assert by_slug["growth"].monthly_fee_cents == 30000
+    assert by_slug["pro"].monthly_fee_cents == 50000
 
 
 # --- tier lookup ------------------------------------------------------
 
 
 def test_tier_lookup_by_slug(lic):
-    assert lic.tier("pro").monthly_fee_cents == 19900
+    assert lic.tier("pro").monthly_fee_cents == 50000
 
 
 def test_unknown_tier_falls_back_to_default(lic):
@@ -139,5 +139,5 @@ def test_shipped_yaml_loads_the_tiers():
     """config/default.yaml must parse into the same ladder."""
     cfg = load_config()
     assert [t.slug for t in cfg.licensing.tiers] == ["starter", "growth", "pro"]
-    assert cfg.licensing.tier("pro").monthly_fee_cents == 19900
+    assert cfg.licensing.tier("pro").monthly_fee_cents == 50000
     assert cfg.licensing.overage_per_1k_cents == 1500
