@@ -53,6 +53,59 @@ class RateCardEngine:
 
         return rates
 
+    # Worked examples on /advertise. These are illustrative list sizes, not
+    # DISPATCH's audience, and the funnel uses the same default assumptions
+    # as the page's estimator, so the page never states a measured result.
+    EXAMPLE_LIST_SIZES = (1000, 2500, 10000)
+    EXAMPLE_ASSUMPTIONS = {"open_pct": 40.0, "click_pct": 5.0, "conv_pct": 3.0, "value": 100.0}
+
+    def example_scenarios(self, sizes: tuple[int, ...] = EXAMPLE_LIST_SIZES) -> list[dict]:
+        """Price every placement and package at example list sizes, and
+        run a Premium Top weekly campaign through the example funnel."""
+        weekly_discount = self.config.weekly_discount
+        monthly_discount = self.config.monthly_discount
+        a = self.EXAMPLE_ASSUMPTIONS
+
+        scenarios = []
+        for size in sizes:
+            thousands = size / 1000.0
+            rows = []
+            for pos in self.POSITIONS:
+                cpm = round(self.config.base_cpm * self.POSITION_MULTIPLIERS[pos], 2)
+                per_issue = round(cpm * thousands, 2)
+                rows.append({
+                    "position": pos,
+                    "label": self.POSITION_LABELS[pos],
+                    "cpm": cpm,
+                    "per_issue": per_issue,
+                    "per_week": round(per_issue * 3 * weekly_discount, 2),
+                    "per_month": round(per_issue * 12 * monthly_discount, 2),
+                })
+
+            top = rows[0]
+            sends = size * 3
+            opens = sends * a["open_pct"] / 100
+            clicks = opens * a["click_pct"] / 100
+            customers = clicks * a["conv_pct"] / 100
+            revenue = customers * a["value"]
+            cost = top["per_week"]
+            scenarios.append({
+                "subscribers": size,
+                "rows": rows,
+                "campaign": {
+                    "label": f"{top['label']}, weekly (3 issues)",
+                    "cost": cost,
+                    "sends": sends,
+                    "opens": round(opens),
+                    "clicks": round(clicks),
+                    "cpc": round(cost / clicks + 1e-9, 2) if clicks else None,
+                    "customers": round(customers, 1),
+                    "revenue": round(revenue, 2),
+                    "net": round(revenue - cost, 2),
+                },
+            })
+        return scenarios
+
     def get_available_slots(self, weeks_ahead: int = 4) -> list[dict]:
         """Check upcoming issues for open sponsor slots.
 
@@ -132,6 +185,8 @@ class RateCardEngine:
             "issues_per_week": 3,
             "editions": edition_data,
             "rates": rates,
+            "examples": self.example_scenarios(),
+            "example_assumptions": self.EXAMPLE_ASSUMPTIONS,
             "available_slots": available_slots,
             "available_slot_count": len(available_slots),
         }

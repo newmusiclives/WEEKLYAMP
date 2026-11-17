@@ -36,6 +36,16 @@
     netEl.className = net < 0 ? 'neg' : 'pos';
   }
 
+  // "Try N in the estimator" buttons on the worked examples.
+  document.querySelectorAll('.ex-load').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      $('est-list').value = btn.dataset.list;
+      $('est-cpm').selectedIndex = 0;
+      $('est-package').value = '3';
+      update();
+    });
+  });
+
   root.addEventListener('input', update);
   root.addEventListener('change', update);
   update();

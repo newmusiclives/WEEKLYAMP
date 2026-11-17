@@ -38,6 +38,12 @@
         .receipt .neg { color: var(--bad); }
         .receipt .pos { color: var(--good); }
         .est-assume { gap: 12px; }
+        .example { display: grid; gap: 14px; align-content: start; }
+        .example .big-num { font-size: clamp(2.6rem, 5vw, 3.4rem); }
+        .ex-table { font-size: .86rem; }
+        .ex-table th, .ex-table td { padding: 8px 6px; white-space: nowrap; }
+        .ex-table td + td, .ex-table th + th { text-align: right; }
+        .ex-k { margin: 4px 0 0; font: 500 .72rem var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
     </style>
 </head>
 <body>
@@ -156,6 +162,57 @@
                 </div>
                 {% endfor %}
             </div>
+        </div>
+    </section>
+
+    <!-- Worked examples: the rate card at three illustrative list sizes -->
+    <section class="section" id="examples">
+        <div class="wrap">
+            <div class="section-head">
+                <p class="eyebrow">Worked examples</p>
+                <h2>The numbers at <em>1,000</em>, <em>2,500</em> and <em>10,000</em> subscribers</h2>
+                <p class="lede">Prices follow the CPM card, so they scale with the list. These list sizes are examples, not our current audience. The campaign figures use the starting assumptions from the estimator below ({{ "%g"|format(media_kit.example_assumptions.open_pct) }}% open, {{ "%g"|format(media_kit.example_assumptions.click_pct) }}% of opens click, {{ "%g"|format(media_kit.example_assumptions.conv_pct) }}% of clicks buy, ${{ "%g"|format(media_kit.example_assumptions.value) }} per customer). They are not measured DISPATCH results.</p>
+            </div>
+            {% macro usd(v) %}${{ "{:,.0f}".format(v) if v == v|round(0) else "{:,.2f}".format(v) }}{% endmacro %}
+            <div class="grid-3 examples">
+                {% for ex in media_kit.examples %}
+                <div class="card flat example">
+                    <div class="numcard-head"><span>Example list</span><span>{{ loop.index }} of {{ loop.length }}</span></div>
+                    <div class="big-num">{{ "{:,}".format(ex.subscribers) }}<small>subs</small></div>
+                    <div class="table-scroll">
+                        <table class="data ex-table">
+                            <thead>
+                                <tr><th>Placement</th><th>Issue</th><th>Week</th><th>Month</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for r in ex.rows %}
+                                <tr>
+                                    <td>{{ r.label }}</td>
+                                    <td>{{ usd(r.per_issue) }}</td>
+                                    <td>{{ usd(r.per_week) }}</td>
+                                    <td>{{ usd(r.per_month) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% set c = ex.campaign %}
+                    <div class="k ex-k">{{ c.label }}</div>
+                    <ul class="receipt">
+                        <li class="total"><span>You pay</span><span>${{ "{:,.2f}".format(c.cost) }}</span></li>
+                        <li><span>Emails delivered</span><span>{{ "{:,}".format(c.sends) }}</span></li>
+                        <li><span>Estimated opens</span><span>{{ "{:,}".format(c.opens) }}</span></li>
+                        <li><span>Estimated clicks</span><span>{{ "{:,}".format(c.clicks) }}</span></li>
+                        <li><span>Cost per click</span><span>{% if c.cpc %}${{ "%.2f"|format(c.cpc) }}{% else %}&mdash;{% endif %}</span></li>
+                        <li><span>Estimated customers</span><span>{{ "%g"|format(c.customers) }}</span></li>
+                        <li class="total"><span>Estimated revenue</span><span>${{ "{:,.0f}".format(c.revenue) }}</span></li>
+                        <li class="total"><span>Return after cost</span><span class="{{ 'neg' if c.net < 0 else 'pos' }}">{% if c.net < 0 %}&minus;{% endif %}${{ "{:,.2f}".format(c.net|abs) }}</span></li>
+                    </ul>
+                    <a href="#estimate" class="btn block ex-load" data-list="{{ ex.subscribers }}">Try {{ "{:,}".format(ex.subscribers) }} in the estimator</a>
+                </div>
+                {% endfor %}
+            </div>
+            <p class="fine" style="margin-top:18px">Week = 3 issues (Mon/Wed/Fri) at 10% off. Month = ~12 issues at 20% off. Cost per click stays the same at every list size because the price scales with the list. What changes is the number of clicks and customers you get for it.</p>
         </div>
     </section>
 
