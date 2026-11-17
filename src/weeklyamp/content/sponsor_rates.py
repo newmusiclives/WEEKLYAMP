@@ -12,6 +12,7 @@ class RateCardEngine:
     POSITIONS = ["top", "mid", "bottom"]
     POSITION_LABELS = {"top": "Premium Top", "mid": "Mid-Content", "bottom": "Footer"}
     POSITION_MULTIPLIERS = {"top": 1.5, "mid": 1.0, "bottom": 0.7}
+    MIN_PRICED_LIST = 1000
 
     def __init__(self, repo, config) -> None:
         self.repo = repo
@@ -26,13 +27,13 @@ class RateCardEngine:
         weekly_discount = self.config.weekly_discount
         monthly_discount = self.config.monthly_discount
 
-        # Get subscriber count
+        # Price at the real list size once it passes 1,000. Below that the
+        # card prices per 1,000 subscribers: a near-empty pre-launch list
+        # otherwise shows $0 for every placement. ``priced_at`` tells the
+        # page which size the prices assume.
         sub_count = self.repo.get_subscriber_count()
-        if sub_count < 1:
-            sub_count = 1
-
-        # Estimate per-thousand cost
-        thousands = sub_count / 1000.0
+        priced_at = max(sub_count, self.MIN_PRICED_LIST)
+        thousands = priced_at / 1000.0
 
         rates = {}
         for pos in self.POSITIONS:
@@ -49,6 +50,8 @@ class RateCardEngine:
                 "per_week": per_week,
                 "per_month": per_month,
                 "multiplier": multiplier,
+                "priced_at": priced_at,
+                "per_thousand": priced_at == self.MIN_PRICED_LIST and sub_count < self.MIN_PRICED_LIST,
             }
 
         return rates
@@ -151,17 +154,22 @@ class RateCardEngine:
         edition_descriptions = {
             "fan": "Passionate music fans who discover, share, and support artists",
             "artist": "Independent and emerging artists building their careers",
+            "venue": "Venue owners, bookers and talent buyers running live music rooms",
             "industry": "Music industry professionals, labels, and decision-makers",
         }
 
         edition_data = []
         for ed in editions:
             slug = ed["slug"]
+            # Only the four audience editions sell ad placements; the Single
+            # Daily Action and any other non-audience edition stay off the kit.
+            if slug not in edition_descriptions:
+                continue
             edition_data.append({
                 "slug": slug,
                 "name": ed.get("name", slug.title()),
                 "description": edition_descriptions.get(slug, ""),
-                "subscriber_count": sub_count // max(len(editions), 1),
+                "subscriber_count": sub_count // max(len([e for e in editions if e["slug"] in edition_descriptions]), 1),
             })
 
         # Engagement rates come from measured sends only. Before the first
@@ -185,6 +193,9 @@ class RateCardEngine:
             "issues_per_week": 3,
             "editions": edition_data,
             "rates": rates,
+            "rates_priced_at": next(iter(rates.values()))["priced_at"],
+            "rates_per_thousand": next(iter(rates.values()))["per_thousand"],
+            "edition_count": len(edition_data),
             "examples": self.example_scenarios(),
             "example_assumptions": self.EXAMPLE_ASSUMPTIONS,
             "available_slots": available_slots,
