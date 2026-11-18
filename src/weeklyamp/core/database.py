@@ -1389,44 +1389,18 @@ def seed_editions(db_path: str = "", database_url: str = "", backend: str = "") 
                    VALUES ({p}, {p}, {p}, {p}, {p}, {p}, {p}, {p}, {p})""",
                 (slug, name, tagline, description, audience, color, icon, section_slugs, sort_order),
             )
+            # Commit each edition on its own. On Postgres the rollback in the
+            # except branch undoes the whole open transaction, so with a
+            # single commit at the end, a new edition inserted mid-list was
+            # rolled back by the next edition's "already exists" error. That
+            # kept Venue (sort 3, before Industry) out of prod on every
+            # startup from 2026-08 to 2026-11-17, and left Industry's
+            # sort_order unsynced at 3.
+            conn.commit()
             inserted += 1
         except ierr:
             if backend == "postgres":
                 conn.rollback()
-                exists = conn.execute(
-                    f"SELECT 1 FROM newsletter_editions WHERE slug = {p}", (slug,),
-                ).fetchone()
-                if not exists:
-                    # The insert failed but the slug isn't there, so it was
-                    # the primary key, not the slug, that collided: the id
-                    # sequence is behind the rows (seen after the Railway ->
-                    # Hetzner restore, which left the Venue edition missing).
-                    # Move the sequence past the highest id and retry once.
-                    logger.warning(
-                        "seed_editions: id collision inserting %r; resyncing "
-                        "newsletter_editions id sequence", slug,
-                    )
-                    conn.execute(
-                        "SELECT setval(pg_get_serial_sequence('newsletter_editions', 'id'), "
-                        "(SELECT COALESCE(MAX(id), 1) FROM newsletter_editions))"
-                    )
-                    try:
-                        conn.execute(
-                            f"""INSERT INTO newsletter_editions
-                               (slug, name, tagline, description, audience, color, icon, section_slugs, sort_order)
-                               VALUES ({p}, {p}, {p}, {p}, {p}, {p}, {p}, {p}, {p})""",
-                            (slug, name, tagline, description, audience, color, icon, section_slugs, sort_order),
-                        )
-                        conn.commit()
-                        inserted += 1
-                        continue
-                    except ierr:
-                        conn.rollback()
-                        logger.error(
-                            "seed_editions: could not insert edition %r even "
-                            "after resyncing the id sequence", slug, exc_info=True,
-                        )
-                        continue
             # Edition exists — resync the fields this seed owns. sort_order
             # is included because inserting an edition mid-list (venue at 3)
             # renumbers the ones after it, and nothing else in the app
@@ -1435,6 +1409,7 @@ def seed_editions(db_path: str = "", database_url: str = "", backend: str = "") 
                 f"UPDATE newsletter_editions SET section_slugs = {p}, sort_order = {p} WHERE slug = {p}",
                 (section_slugs, sort_order, slug),
             )
+            conn.commit()
     conn.commit()
     conn.close()
     return inserted
@@ -1860,6 +1835,10 @@ def seed_sections(db_path: str = "", database_url: str = "", backend: str = "") 
                 (slug, display_name, sort_order, section_type, wc_label,
                  target_wc, category, series_type, series_length, description),
             )
+            # Commit each insert on its own: on Postgres the rollback below
+            # (for a row that already exists) would otherwise also undo
+            # every new row inserted earlier in this loop. See seed_editions.
+            conn.commit()
             inserted += 1
         except ierr:
             if backend == "postgres":
