@@ -4484,6 +4484,102 @@ class Repository:
         conn.close()
         return [dict(r) for r in rows]
 
+    # ---- City-license revenue levers (v56; billing/license_extras.py) ----
+
+    def _rows(self, sql: str, params: tuple = ()) -> list[dict]:
+        conn = self._conn()
+        try:
+            return [dict(r) for r in conn.execute(sql, params).fetchall()]
+        finally:
+            conn.close()
+
+    def _insert(self, sql: str, params: tuple) -> int:
+        conn = self._conn()
+        try:
+            cur = conn.execute(sql, params)
+            conn.commit()
+            return cur.lastrowid
+        finally:
+            conn.close()
+
+    def _write(self, sql: str, params: tuple) -> None:
+        conn = self._conn()
+        try:
+            conn.execute(sql, params)
+            conn.commit()
+        finally:
+            conn.close()
+
+    def get_sub_licensees(self, master_id: int) -> list[dict]:
+        return self._rows(
+            "SELECT * FROM licensees WHERE parent_franchise_id = ? ORDER BY id", (master_id,))
+
+    def set_licensee_revenue_options(self, licensee_id: int, *, managed_sales: bool,
+                                     is_master: bool, parent_franchise_id: Optional[int]) -> None:
+        self._write(
+            "UPDATE licensees SET managed_sales = ?, is_master = ?, parent_franchise_id = ? WHERE id = ?",
+            (1 if managed_sales else 0, 1 if is_master else 0, parent_franchise_id, licensee_id))
+
+    def mark_launch_fee_billed(self, licensee_id: int, month: str) -> None:
+        self._write("UPDATE licensees SET launch_fee_billed_month = ? WHERE id = ?", (month, licensee_id))
+
+    def create_network_campaign(self, sponsor_name: str, month: str, amount_cents: int,
+                                licensee_ids: str = "all", headline: str = "",
+                                cta_url: str = "", notes: str = "") -> int:
+        return self._insert(
+            "INSERT INTO network_campaigns (sponsor_name, headline, cta_url, month, amount_cents, licensee_ids, notes) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (sponsor_name, headline, cta_url, month, int(amount_cents), licensee_ids or "all", notes))
+
+    def get_network_campaigns(self, month: str = "") -> list[dict]:
+        if month:
+            return self._rows("SELECT * FROM network_campaigns WHERE month = ? ORDER BY id", (month,))
+        return self._rows("SELECT * FROM network_campaigns ORDER BY month DESC, id DESC")
+
+    def set_network_campaign_status(self, campaign_id: int, status: str) -> None:
+        self._write("UPDATE network_campaigns SET status = ? WHERE id = ?", (status, campaign_id))
+
+    def create_funnel_conversion(self, licensee_id: int, product: str, month: str,
+                                 bounty_cents: int, subscriber_email: str = "",
+                                 source: str = "manual") -> int:
+        return self._insert(
+            "INSERT INTO funnel_conversions (licensee_id, product, subscriber_email, month, bounty_cents, source) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            (licensee_id, product, subscriber_email, month, int(bounty_cents), source))
+
+    def get_funnel_conversions(self, licensee_id: int = 0, month: str = "") -> list[dict]:
+        sql, params = "SELECT * FROM funnel_conversions WHERE 1 = 1", []
+        if licensee_id:
+            sql += " AND licensee_id = ?"; params.append(licensee_id)
+        if month:
+            sql += " AND month = ?"; params.append(month)
+        return self._rows(sql + " ORDER BY id DESC", tuple(params))
+
+    def create_venue_listing(self, licensee_id: int, venue_name: str, monthly_price_cents: int,
+                             start_month: str, contact_email: str = "", notes: str = "") -> int:
+        return self._insert(
+            "INSERT INTO venue_listings (licensee_id, venue_name, contact_email, monthly_price_cents, start_month, notes) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            (licensee_id, venue_name, contact_email, int(monthly_price_cents), start_month, notes))
+
+    def get_venue_listings(self, licensee_id: int = 0) -> list[dict]:
+        if licensee_id:
+            return self._rows("SELECT * FROM venue_listings WHERE licensee_id = ? ORDER BY id", (licensee_id,))
+        return self._rows("SELECT * FROM venue_listings ORDER BY licensee_id, id")
+
+    def set_venue_listing_status(self, listing_id: int, status: str, end_month: str = "") -> None:
+        self._write("UPDATE venue_listings SET status = ?, end_month = ? WHERE id = ?",
+                    (status, end_month, listing_id))
+
+    def get_paid_ticket_registrations(self, licensee_id: int) -> list[dict]:
+        """Paid registrations for a city's events. Month filtering happens in
+        Python on created_at, so no SQL date functions are needed."""
+        return self._rows(
+            "SELECT r.id, r.created_at FROM event_registrations r "
+            "JOIN events e ON e.id = r.event_id "
+            "WHERE e.licensee_id = ? AND r.payment_status = ? AND r.status <> ?",
+            (licensee_id, "paid", "cancelled"))
+
     def create_license_revenue(self, licensee_id: int, month: str, sponsor_cents: int = 0, affiliate_cents: int = 0, subscriber_cents: int = 0, share_pct: float = 20.0) -> int:
         total = sponsor_cents + affiliate_cents + subscriber_cents
         platform_share = int(total * share_pct / 100)

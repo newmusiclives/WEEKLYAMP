@@ -35,6 +35,17 @@ class FeatureFlag:
     ADVERTISERS = "advertisers"
     MARKETPLACE = "marketplace"
 
+    # City-license revenue & profit levers (billing: billing/license_extras.py)
+    NETWORK_ADS = "network_ads"
+    FUNNEL_BOUNTY = "funnel_bounty"
+    LAUNCH_FEE = "launch_fee"
+    MARKET_PRICING = "market_pricing"
+    VENUE_LISTINGS = "venue_listings"
+    MANAGED_SALES = "managed_sales"
+    TICKET_FEE = "ticket_fee"
+    MASTER_LICENSE = "master_license"
+    PLATFORM_MINIMUM = "platform_minimum"
+
     # Content
     AUDIO = "audio"
     PODCAST = "podcast"
@@ -72,6 +83,15 @@ FLAG_METADATA: dict[str, tuple[str, str, str]] = {
     FeatureFlag.FRANCHISE: ("Franchise / city licensing", "Revenue", "Territory-exclusive city licensees"),
     FeatureFlag.ADVERTISERS: ("Advertiser portal", "Revenue", "Self-serve ad buying + ad campaigns"),
     FeatureFlag.MARKETPLACE: ("Marketplace", "Revenue", "Creator marketplace for cross-promotion"),
+    FeatureFlag.NETWORK_ADS: ("Network ad slots", "License revenue", "National sponsors booked across every city; each licensee is credited a cut"),
+    FeatureFlag.FUNNEL_BOUNTY: ("Funnel finder's fee", "License revenue", "Credit licensees a bounty per AMP / EDGE / RISE signup from their city"),
+    FeatureFlag.LAUNCH_FEE: ("City launch fee", "License revenue", "One-time launch fee on a new licensee's first invoice"),
+    FeatureFlag.MARKET_PRICING: ("Market-tier pricing", "License revenue", "License fee multiplier by market size + monthly exclusivity add-on"),
+    FeatureFlag.VENUE_LISTINGS: ("Venue listings", "License revenue", "Paid featured-venue listings per city, split with the licensee"),
+    FeatureFlag.MANAGED_SALES: ("Managed ad sales", "License revenue", "DISPATCH sells a city's ads for a higher platform share"),
+    FeatureFlag.TICKET_FEE: ("Ticket fee", "License revenue", "Per-ticket platform fee on paid registrations for city events"),
+    FeatureFlag.MASTER_LICENSE: ("Regional master license", "License revenue", "Master licensee pays a regional fee and earns an override on sub-cities"),
+    FeatureFlag.PLATFORM_MINIMUM: ("Platform minimum", "License revenue", "Monthly floor on DISPATCH's take once a licensee is past its ramp-up"),
     FeatureFlag.AUDIO: ("Audio newsletter", "Content", "TTS audio version of each edition"),
     FeatureFlag.PODCAST: ("Podcast generation", "Content", "Podcast feed from newsletter content"),
     FeatureFlag.CONTESTS: ("Contests / giveaways", "Content", "Reader contests + entry tracking"),
@@ -110,6 +130,12 @@ FLAG_DEPENDENCIES: dict[str, tuple[str, ...]] = {
     FeatureFlag.MARKETPLACE: (FeatureFlag.ADVERTISERS,),
     FeatureFlag.PODCAST: (FeatureFlag.AUDIO,),
     FeatureFlag.FRANCHISE: (FeatureFlag.WHITE_LABEL,),
+    # Both read licensee territory fields (market_tier, parent_franchise_id)
+    # that only mean something once territories are being sold.
+    FeatureFlag.MARKET_PRICING: (FeatureFlag.FRANCHISE,),
+    FeatureFlag.MASTER_LICENSE: (FeatureFlag.FRANCHISE,),
+    # Ticket fees are charged on event registrations.
+    FeatureFlag.TICKET_FEE: (FeatureFlag.EVENTS,),
 }
 
 

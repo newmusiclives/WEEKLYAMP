@@ -1078,6 +1078,26 @@ def _default_license_tiers() -> list[LicenseTier]:
     ]
 
 
+class LicenseRevenueConfig(BaseModel):
+    """Amounts for the city-license revenue levers. Each lever is switched
+    by its own feature flag; see :mod:`weeklyamp.billing.license_extras`."""
+    network_licensee_cut_pct: float = 20.0
+    funnel_bounties_cents: dict[str, int] = Field(
+        default_factory=lambda: {"amp": 2000, "edge": 1500, "rise": 0})
+    launch_fee_cents: int = 75000
+    market_multipliers: dict[str, float] = Field(
+        default_factory=lambda: {"small": 1.0, "medium": 1.0, "large": 1.5, "major": 2.0})
+    exclusivity_fee_cents: int = 10000
+    venue_listing_price_cents: int = 3900
+    venue_listing_platform_pct: float = 50.0
+    managed_sales_platform_pct: float = 60.0
+    ticket_fee_cents: int = 100
+    master_regional_fee_cents: int = 50000
+    master_override_pct: float = 10.0
+    platform_minimum_cents: int = 10000
+    platform_minimum_after_months: int = 6
+
+
 class LicensingConfig(BaseModel):
     enabled: bool = False
     tiers: list[LicenseTier] = Field(default_factory=_default_license_tiers)
@@ -1184,6 +1204,7 @@ class AppConfig(BaseModel):
     data_product: DataProductConfig = Field(default_factory=DataProductConfig)
     rate_limits: RateLimitConfig = Field(default_factory=RateLimitConfig)
     features: dict[str, bool] = Field(default_factory=dict)
+    license_revenue: LicenseRevenueConfig = Field(default_factory=LicenseRevenueConfig)
     db_path: str = "data/weeklyamp.db"
     db_backend: str = "sqlite"  # "sqlite" or "postgres"
     database_url: str = ""  # PostgreSQL connection string

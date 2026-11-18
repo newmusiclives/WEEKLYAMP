@@ -68,18 +68,36 @@ class InvoiceManager:
                 "amount_cents": platform_share,
             })
 
+        # Revenue levers (each behind its own feature flag; no-ops when off).
+        from weeklyamp.billing.license_extras import LicenseExtras
+        extras = LicenseExtras(self.repo, self.config).compute(
+            licensee, month, base_platform_cents=total_cents,
+            sponsor_revenue_cents=int(month_rev.get("sponsor_revenue_cents", 0)) if month_rev else 0,
+        )
+        line_items.extend(extras.lines)
+        total_cents += extras.total_cents
+        notes = f"City edition license invoice for {month}"
+        if total_cents < 0:
+            # Credits (network ads, finder's fees, master override) exceeded
+            # the charges: bill nothing and record what DISPATCH owes.
+            notes += f". Credit due to licensee: ${-total_cents / 100:,.2f}"
+            total_cents = 0
+
         due_date = (_utcnow() + timedelta(days=30)).strftime("%Y-%m-%d")
         invoice_number = self._next_invoice_number("LIC")
 
-        return self.repo.create_invoice(
+        invoice_id = self.repo.create_invoice(
             invoice_number=invoice_number,
             entity_type="licensee",
             entity_id=licensee_id,
             amount_cents=total_cents,
             line_items_json=json.dumps(line_items),
             due_date=due_date,
-            notes=f"City edition license invoice for {month}",
+            notes=notes,
         )
+        if invoice_id and extras.launch_fee_month:
+            self.repo.mark_launch_fee_billed(licensee_id, extras.launch_fee_month)
+        return invoice_id
 
     # ---- Artist Newsletter Invoices ----
 

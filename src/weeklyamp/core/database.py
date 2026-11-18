@@ -97,8 +97,9 @@ def init_database(db_path: str = "", database_url: str = "", backend: str = "") 
     conn.close()
 
     # Run migrations for existing databases that need schema updates
-    from weeklyamp.db.migrations import run_migrations
+    from weeklyamp.db.migrations import run_migrations, run_sqlite_column_repairs
     run_migrations(path)
+    run_sqlite_column_repairs(path)
 
 
 def get_schema_version(db_path: str = "", database_url: str = "", backend: str = "") -> Optional[int]:

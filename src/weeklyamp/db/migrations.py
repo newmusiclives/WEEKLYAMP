@@ -1938,6 +1938,71 @@ CREATE INDEX IF NOT EXISTS idx_da_done_sub ON daily_action_completions(subscribe
 
 INSERT OR IGNORE INTO schema_version (version) VALUES (55);
 """,
+    56: """
+-- v56: City-license revenue levers (billing/license_extras.py).
+--
+-- Each lever is gated by its own feature flag and adds lines to the
+-- monthly licensee invoice. Months are 'YYYY-MM' TEXT computed in Python,
+-- never with SQL date functions, so SQLite and Postgres agree.
+
+-- Launch fee is one-time: stamp when it was billed so it never repeats.
+ALTER TABLE licensees ADD COLUMN launch_fee_billed_month TEXT DEFAULT '';
+-- Managed ad sales: DISPATCH sells this city's ads for a higher share.
+ALTER TABLE licensees ADD COLUMN managed_sales INTEGER DEFAULT 0;
+-- Regional master licensee (sub-cities point at it via parent_franchise_id).
+ALTER TABLE licensees ADD COLUMN is_master INTEGER DEFAULT 0;
+-- Which city an event belongs to, for the per-ticket fee.
+ALTER TABLE events ADD COLUMN licensee_id INTEGER;
+
+-- National sponsors sold by DISPATCH across the city network. The sold
+-- amount is split evenly across the cities it ran in; each is credited
+-- network_licensee_cut_pct of its share.
+CREATE TABLE IF NOT EXISTS network_campaigns (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    sponsor_name TEXT NOT NULL,
+    headline TEXT DEFAULT '',
+    cta_url TEXT DEFAULT '',
+    month TEXT NOT NULL,
+    amount_cents INTEGER NOT NULL DEFAULT 0,
+    licensee_ids TEXT DEFAULT 'all',
+    status TEXT DEFAULT 'booked' CHECK (status IN ('booked','running','completed','cancelled')),
+    notes TEXT DEFAULT '',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_network_campaigns_month ON network_campaigns(month);
+
+-- Signups to DISPATCH's own paid products (AMP / EDGE / RISE) credited to
+-- the city they came from. The bounty is snapshotted at record time.
+CREATE TABLE IF NOT EXISTS funnel_conversions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    licensee_id INTEGER NOT NULL REFERENCES licensees(id),
+    product TEXT NOT NULL,
+    subscriber_email TEXT DEFAULT '',
+    month TEXT NOT NULL,
+    bounty_cents INTEGER NOT NULL DEFAULT 0,
+    source TEXT DEFAULT 'manual',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_funnel_conversions_lic ON funnel_conversions(licensee_id, month);
+
+-- Paid featured-venue listings sold in a city. The licensee collects;
+-- DISPATCH invoices its venue_listing_platform_pct share.
+CREATE TABLE IF NOT EXISTS venue_listings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    licensee_id INTEGER NOT NULL REFERENCES licensees(id),
+    venue_name TEXT NOT NULL,
+    contact_email TEXT DEFAULT '',
+    monthly_price_cents INTEGER NOT NULL DEFAULT 0,
+    start_month TEXT NOT NULL,
+    end_month TEXT DEFAULT '',
+    status TEXT DEFAULT 'active' CHECK (status IN ('active','paused','cancelled')),
+    notes TEXT DEFAULT '',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_venue_listings_lic ON venue_listings(licensee_id);
+
+INSERT OR IGNORE INTO schema_version (version) VALUES (56);
+""",
 }
 
 
@@ -2256,3 +2321,34 @@ def run_pg_column_repairs(database_url: str) -> list[tuple[str, str]]:
             ", ".join(f"{t}.{c}" for t, c in repaired),
         )
     return repaired
+
+
+def run_sqlite_column_repairs(db_path: str) -> list[tuple[str, str]]:
+    """SQLite twin of :func:`run_pg_column_repairs`.
+
+    schema.sql has the same drift as schema_pg.sql: it stamps versions whose
+    ADD COLUMN statements it never carries (e.g. the v42 franchise fields on
+    licensees, the v41 payment fields on event_registrations), so a fresh
+    SQLite database skipped those migrations and lacked the columns. Add
+    whatever the migrations define but the database lacks.
+    """
+    conn = get_connection(db_path)
+    added: list[tuple[str, str]] = []
+    try:
+        tables = {r["name"].lower() for r in conn.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table'").fetchall()}
+        for (table, column), stmt in PG_COLUMN_REPAIRS.items():
+            if table not in tables:
+                continue
+            cols = {r["name"].lower() for r in conn.execute(f"PRAGMA table_info({table})").fetchall()}
+            if column in cols:
+                continue
+            conn.execute(re.sub(r"ADD COLUMN IF NOT EXISTS", "ADD COLUMN", stmt, flags=re.IGNORECASE))
+            added.append((table, column))
+        conn.commit()
+    finally:
+        conn.close()
+    if added:
+        logger.warning("SQLite schema drift repaired — added %d missing column(s): %s",
+                       len(added), ", ".join(f"{t}.{c}" for t, c in added))
+    return added

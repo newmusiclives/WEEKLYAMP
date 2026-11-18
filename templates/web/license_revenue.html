@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% block title %}License Revenue — TrueFans DISPATCH{% endblock %}
+{% block nav_license_revenue %}active{% endblock %}
+
+{% macro usd(c) %}{% if c < 0 %}&minus;{% endif %}${{ "{:,.2f}".format((c|abs) / 100) }}{% endmacro %}
+
+{% block content %}
+<div class="page-header">
+    <h2>License Revenue Levers</h2>
+    <p class="subtitle">Extra ways each city license makes money. Switch levers on in <a href="/admin/feature-flags">Feature Flags</a>; this page holds the records they bill from and previews each licensee's invoice.</p>
+</div>
+
+<div class="card" style="margin-bottom:1.5rem">
+    <h3>Levers</h3>
+    <table class="data-table" style="margin-top:12px">
+        <thead><tr><th>Lever</th><th>What it does</th><th>Status</th></tr></thead>
+        <tbody>
+        {% for l in levers %}
+        <tr>
+            <td style="font-weight:700">{{ l.label }}</td>
+            <td>{{ l.desc }}</td>
+            <td>{% if l.on %}<span style="color:var(--green);font-weight:700">On</span>{% else %}<span class="text-muted">Off</span>{% endif %}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <p class="text-muted" style="margin-top:10px;font-size:.85rem">
+        Amounts (config <code>license_revenue</code>): launch fee {{ usd(rc.launch_fee_cents) }} &middot;
+        market multipliers {% for k, v in rc.market_multipliers.items() %}{{ k }} &times;{{ "%g"|format(v) }}{% if not loop.last %}, {% endif %}{% endfor %} &middot;
+        exclusivity {{ usd(rc.exclusivity_fee_cents) }}/mo &middot;
+        venue listing {{ usd(rc.venue_listing_price_cents) }}/mo, DISPATCH keeps {{ "%g"|format(rc.venue_listing_platform_pct) }}% &middot;
+        managed sales {{ "%g"|format(rc.managed_sales_platform_pct) }}% platform share &middot;
+        ticket fee {{ usd(rc.ticket_fee_cents) }} &middot;
+        master fee {{ usd(rc.master_regional_fee_cents) }}/mo, override {{ "%g"|format(rc.master_override_pct) }}% &middot;
+        network cut {{ "%g"|format(rc.network_licensee_cut_pct) }}% to the city &middot;
+        finder's fees {% for k, v in rc.funnel_bounties_cents.items() %}{{ k|upper }} {{ usd(v) }}{% if not loop.last %}, {% endif %}{% endfor %} &middot;
+        platform minimum {{ usd(rc.platform_minimum_cents) }}/mo after {{ rc.platform_minimum_after_months }} months.
+    </p>
+</div>
+
+<div class="card" style="margin-bottom:1.5rem">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap">
+        <h3>Invoice preview &middot; {{ month }}</h3>
+        <form method="get" style="display:flex;gap:.5rem;align-items:center">
+            <input type="month" name="month" value="{{ month }}">
+            <button class="btn btn-sm" type="submit">Show</button>
+        </form>
+    </div>
+    {% if preview %}
+    <table class="data-table" style="margin-top:12px">
+        <thead><tr><th>Licensee</th><th>Status</th><th style="text-align:right">License fee</th><th style="text-align:right">Ad share</th><th>Lever lines</th><th style="text-align:right">Invoice</th></tr></thead>
+        <tbody>
+        {% for p in preview %}
+        <tr>
+            <td style="font-weight:700"><a href="/admin/licensing/{{ p.lic.id }}">{{ p.lic.company_name }}</a><br><span class="text-muted" style="font-size:.8rem">{{ p.lic.city_market_slug or 'no market' }} &middot; {{ p.lic.market_tier or 'medium' }}</span></td>
+            <td>{{ p.lic.status }}</td>
+            <td style="text-align:right">{{ usd(p.fee) }}</td>
+            <td style="text-align:right">{{ usd(p.platform) }}</td>
+            <td style="font-size:.85rem">
+                {% for line in p.lines %}<div style="display:flex;justify-content:space-between;gap:1rem"><span>{{ line.description }}</span><span style="white-space:nowrap;{% if line.amount_cents < 0 %}color:var(--green){% endif %}">{{ usd(line.amount_cents) }}</span></div>{% else %}<span class="text-muted">None</span>{% endfor %}
+            </td>
+            <td style="text-align:right;font-weight:700">{% if p.total < 0 %}<span style="color:var(--green)">credit {{ usd(-p.total) }}</span>{% else %}{{ usd(p.total) }}{% endif %}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <p class="text-muted" style="margin-top:8px;font-size:.85rem">Preview only. Invoices are created by the monthly billing job; negative lines are credits owed to the licensee.</p>
+    {% else %}
+    <p class="text-muted" style="margin-top:12px">No licensees yet.</p>
+    {% endif %}
+</div>
+
+{% if licensees %}
+<div class="card" style="margin-bottom:1.5rem">
+    <h3>Licensee options</h3>
+    <p class="text-muted" style="font-size:.85rem">Managed sales: DISPATCH sells this city's ads. Master: a regional licensee; sub-cities point at it. Market tier and exclusivity are set on <a href="/admin/licensing/franchise/territories">Territories</a>.</p>
+    <table class="data-table" style="margin-top:12px">
+        <thead><tr><th>Licensee</th><th>Managed sales</th><th>Master</th><th>Master licensee (parent)</th><th></th></tr></thead>
+        <tbody>
+        {% for l in licensees %}
+        <tr>
+            <td style="font-weight:700">{{ l.company_name }}</td>
+            <td colspan="4">
+                <form hx-post="/admin/license-revenue/options/{{ l.id }}" style="display:flex;gap:1.25rem;align-items:center;flex-wrap:wrap">
+                    <input type="hidden" name="month" value="{{ month }}">
+                    <label><input type="checkbox" name="managed_sales" value="1" {% if l.managed_sales %}checked{% endif %}> Managed</label>
+                    <label><input type="checkbox" name="is_master" value="1" {% if l.is_master %}checked{% endif %}> Master</label>
+                    <select name="parent_franchise_id">
+                        <option value="">No parent</option>
+                        {% for m in licensees if m.is_master and m.id != l.id %}
+                        <option value="{{ m.id }}" {% if l.parent_franchise_id == m.id %}selected{% endif %}>{{ m.company_name }}</option>
+                        {% endfor %}
+                    </select>
+                    <button class="btn btn-sm btn-primary" type="submit">Save</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="card" style="margin-bottom:1.5rem">
+    <h3>Network ad campaigns</h3>
+    <p class="text-muted" style="font-size:.85rem">National sponsors DISPATCH sells across cities. The sold amount is split evenly across the cities it runs in, and each city is credited {{ "%g"|format(rc.network_licensee_cut_pct) }}% of its share.</p>
+    <form hx-post="/admin/license-revenue/campaigns" style="display:flex;flex-wrap:wrap;gap:.75rem;align-items:end;margin-top:12px">
+        <label>Sponsor<br><input name="sponsor_name" required></label>
+        <label>Sold for ($)<br><input name="amount" inputmode="decimal" required style="width:110px"></label>
+        <label>Month<br><input type="month" name="month" value="{{ month }}"></label>
+        <label>Cities (IDs, or all)<br><input name="licensee_ids" value="all" style="width:120px"></label>
+        <label>Headline<br><input name="headline"></label>
+        <label>Link<br><input name="cta_url" type="url" placeholder="https://"></label>
+        <button class="btn btn-primary" type="submit">Book campaign</button>
+    </form>
+    {% if campaigns %}
+    <table class="data-table" style="margin-top:12px">
+        <thead><tr><th>Month</th><th>Sponsor</th><th style="text-align:right">Sold</th><th>Cities</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+        {% for c in campaigns %}
+        <tr>
+            <td>{{ c.month }}</td><td style="font-weight:700">{{ c.sponsor_name }}</td>
+            <td style="text-align:right">{{ usd(c.amount_cents) }}</td><td>{{ c.licensee_ids }}</td><td>{{ c.status }}</td>
+            <td>{% if c.status != 'cancelled' %}<button class="btn btn-sm btn-warning" hx-post="/admin/license-revenue/campaigns/{{ c.id }}/status" hx-vals='{"status":"cancelled","month":"{{ month }}"}'>Cancel</button>{% endif %}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</div>
+
+<div class="card" style="margin-bottom:1.5rem">
+    <h3>Venue listings</h3>
+    <p class="text-muted" style="font-size:.85rem">Featured-venue listings a city sells. The licensee collects; DISPATCH invoices {{ "%g"|format(rc.venue_listing_platform_pct) }}% of each live listing.</p>
+    {% if licensees %}
+    <form hx-post="/admin/license-revenue/listings" style="display:flex;flex-wrap:wrap;gap:.75rem;align-items:end;margin-top:12px">
+        <label>City<br><select name="licensee_id">{% for l in licensees %}<option value="{{ l.id }}">{{ l.company_name }}</option>{% endfor %}</select></label>
+        <label>Venue<br><input name="venue_name" required></label>
+        <label>Monthly price ($)<br><input name="price" placeholder="{{ "%g"|format(rc.venue_listing_price_cents / 100) }}" inputmode="decimal" style="width:110px"></label>
+        <label>Starts<br><input type="month" name="start_month" value="{{ month }}"></label>
+        <label>Contact email<br><input name="contact_email" type="email"></label>
+        <button class="btn btn-primary" type="submit">Add listing</button>
+    </form>
+    {% endif %}
+    {% if listings %}
+    <table class="data-table" style="margin-top:12px">
+        <thead><tr><th>City</th><th>Venue</th><th style="text-align:right">Monthly</th><th>From</th><th>To</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+        {% for v in listings %}
+        <tr>
+            <td>{{ by_id[v.licensee_id].company_name if v.licensee_id in by_id else v.licensee_id }}</td>
+            <td style="font-weight:700">{{ v.venue_name }}</td><td style="text-align:right">{{ usd(v.monthly_price_cents) }}</td>
+            <td>{{ v.start_month }}</td><td>{{ v.end_month or '—' }}</td><td>{{ v.status }}</td>
+            <td>{% if v.status != 'cancelled' %}<button class="btn btn-sm btn-warning" hx-post="/admin/license-revenue/listings/{{ v.id }}/status" hx-vals='{"status":"cancelled","month":"{{ month }}"}'>End</button>{% endif %}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</div>
+
+<div class="card" style="margin-bottom:1.5rem">
+    <h3>Finder's-fee signups &middot; {{ month }}</h3>
+    <p class="text-muted" style="font-size:.85rem">Signups to AMP, EDGE or RISE credited to the city they came from. Recorded by hand for now; the fee is fixed at the rate when recorded.</p>
+    {% if licensees %}
+    <form hx-post="/admin/license-revenue/conversions" style="display:flex;flex-wrap:wrap;gap:.75rem;align-items:end;margin-top:12px">
+        <label>City<br><select name="licensee_id">{% for l in licensees %}<option value="{{ l.id }}">{{ l.company_name }}</option>{% endfor %}</select></label>
+        <label>Product<br><select name="product">{% for p in products %}<option value="{{ p }}">{{ p|upper }} ({{ usd(rc.funnel_bounties_cents.get(p, 0)) }})</option>{% endfor %}</select></label>
+        <label>Month<br><input type="month" name="month" value="{{ month }}"></label>
+        <label>Subscriber email<br><input name="subscriber_email" type="email"></label>
+        <button class="btn btn-primary" type="submit">Record signup</button>
+    </form>
+    {% endif %}
+    {% if conversions %}
+    <table class="data-table" style="margin-top:12px">
+        <thead><tr><th>City</th><th>Product</th><th>Subscriber</th><th style="text-align:right">Fee</th></tr></thead>
+        <tbody>
+        {% for c in conversions %}
+        <tr><td>{{ by_id[c.licensee_id].company_name if c.licensee_id in by_id else c.licensee_id }}</td><td>{{ c.product|upper }}</td><td>{{ c.subscriber_email or '—' }}</td><td style="text-align:right">{{ usd(c.bounty_cents) }}</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</div>
+
+{% if events %}
+<div class="card" style="margin-bottom:1.5rem">
+    <h3>City events</h3>
+    <p class="text-muted" style="font-size:.85rem">Assign events to a city so the ticket fee ({{ usd(rc.ticket_fee_cents) }} per paid ticket) bills to that licensee.</p>
+    <table class="data-table" style="margin-top:12px">
+        <thead><tr><th>Event</th><th style="text-align:right">Ticket</th><th>Status</th><th>City</th></tr></thead>
+        <tbody>
+        {% for e in events %}
+        <tr>
+            <td style="font-weight:700">{{ e.title }}</td><td style="text-align:right">{{ usd(e.ticket_price_cents or 0) }}</td><td>{{ e.status }}</td>
+            <td>
+                <form hx-post="/admin/license-revenue/events/{{ e.id }}" hx-trigger="change" style="margin:0">
+                    <input type="hidden" name="month" value="{{ month }}">
+                    <select name="licensee_id"><option value="">None</option>{% for l in licensees %}<option value="{{ l.id }}" {% if e.licensee_id == l.id %}selected{% endif %}>{{ l.company_name }}</option>{% endfor %}</select>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+{% endblock %}

@@ -902,6 +902,10 @@ def create_app() -> FastAPI:
         licensing_routes.router, prefix="/admin/licensing",
         dependencies=[Depends(require_feature(FeatureFlag.FRANCHISE))],
     )
+    # City-license revenue levers. Not gated by a flag: the page is where an
+    # operator sees which levers are off and keeps their records ready.
+    from weeklyamp.web.routes import license_revenue as license_revenue_routes
+    app.include_router(license_revenue_routes.router, prefix="/admin/license-revenue")
     # Revenue calculator
     app.include_router(pricing_calc_routes.router, prefix="/admin/calculator")
     # v32+ marketing & promotion hub

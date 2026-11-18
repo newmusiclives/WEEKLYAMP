@@ -49,6 +49,17 @@ features:
   franchise: false
   advertisers: false
   marketplace: false
+  # City-license revenue levers — all OFF until Paul turns them on.
+  # Amounts live in the license_revenue: block below.
+  network_ads: false
+  funnel_bounty: false
+  launch_fee: false
+  market_pricing: false
+  venue_listings: false
+  managed_sales: false
+  ticket_fee: false
+  master_license: false
+  platform_minimum: false
   # Content
   audio: false
   podcast: false
@@ -326,6 +337,31 @@ edition_markets:
 artist_newsletters:
   enabled: false
   waitlist_enabled: true
+
+# --- City-license revenue levers (each gated by its feature flag) ---
+# Read by weeklyamp.billing.license_extras and added to the monthly
+# licensee invoice. Amounts are starting points to test, not measured.
+license_revenue:
+  network_licensee_cut_pct: 20.0     # licensee's cut of national network ad sales
+  funnel_bounties_cents:             # finder's fee credited per signup from a city
+    amp: 2000
+    edge: 1500
+    rise: 0
+  launch_fee_cents: 75000            # one-time, first invoice
+  market_multipliers:                # license fee x multiplier by market_tier
+    small: 1.0
+    medium: 1.0
+    large: 1.5
+    major: 2.0
+  exclusivity_fee_cents: 10000       # monthly, territory_exclusive licensees
+  venue_listing_price_cents: 3900    # default monthly price of a featured listing
+  venue_listing_platform_pct: 50.0   # DISPATCH's share of listing revenue
+  managed_sales_platform_pct: 60.0   # DISPATCH's share when it sells the city's ads
+  ticket_fee_cents: 100              # per paid ticket on a city's events
+  master_regional_fee_cents: 50000   # monthly, on the master licensee's invoice
+  master_override_pct: 10.0          # master's credit, % of each sub-city's license fee
+  platform_minimum_cents: 10000      # floor on DISPATCH's monthly take
+  platform_minimum_after_months: 6   # ramp-up months before the floor applies
 
 # --- City edition licensing ---
 licensing:

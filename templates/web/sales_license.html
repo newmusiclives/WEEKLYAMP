@@ -252,6 +252,36 @@
                 growing list never leaves you on the wrong plan.
             </p>
             <script src="/static/license.js" defer></script>
+            {% set rc = config.license_revenue %}
+            {% set earns = ff("network_ads") or ff("funnel_bounty") or ff("venue_listings") or ff("managed_sales") or ff("master_license") %}
+            {% set fees = ff("launch_fee") or ff("market_pricing") or ff("ticket_fee") or ff("platform_minimum") %}
+            {% if earns or fees %}
+            <div class="grid-2 extras" style="margin-top:32px">
+                {% if earns %}
+                <div class="card flat">
+                    <h3>More ways your city earns</h3>
+                    <ul class="pricing-features">
+                        {% if ff("network_ads") %}<li><strong>National sponsors.</strong> We sell network-wide campaigns across every city; you're credited {{ "%g"|format(rc.network_licensee_cut_pct) }}% of your city's share without selling a thing.</li>{% endif %}
+                        {% if ff("funnel_bounty") %}<li><strong>Finder's fees.</strong> {% for k, v in rc.funnel_bounties_cents.items() if v %}${{ "%g"|format(v / 100) }} for each {{ k|upper }} signup{% if not loop.last %}, {% endif %}{% endfor %} that comes from your city.</li>{% endif %}
+                        {% if ff("venue_listings") %}<li><strong>Venue listings.</strong> Sell featured listings to local venues (from ${{ "%g"|format(rc.venue_listing_price_cents / 100) }}/mo); you keep {{ "%g"|format(100 - rc.venue_listing_platform_pct) }}%.</li>{% endif %}
+                        {% if ff("managed_sales") %}<li><strong>We can sell for you.</strong> Prefer to write and not sell? We'll sell your ads for a {{ "%g"|format(rc.managed_sales_platform_pct) }}% platform share.</li>{% endif %}
+                        {% if ff("master_license") %}<li><strong>Regional master license.</strong> Take a whole region for ${{ "{:,.0f}".format(rc.master_regional_fee_cents / 100) }}/mo and earn {{ "%g"|format(rc.master_override_pct) }}% of every sub-city's license fee.</li>{% endif %}
+                    </ul>
+                </div>
+                {% endif %}
+                {% if fees %}
+                <div class="card flat">
+                    <h3>Other fees, in full</h3>
+                    <ul class="pricing-features">
+                        {% if ff("launch_fee") %}<li><strong>${{ "{:,.0f}".format(rc.launch_fee_cents / 100) }} one-time city launch.</strong> Covers building your city's verified local facts, importing your starting list and setting up your first sponsors.</li>{% endif %}
+                        {% if ff("market_pricing") %}<li><strong>Market size.</strong> Plan prices above are for small and mid-size markets. {% for k, v in rc.market_multipliers.items() if v != 1 %}{{ k|capitalize }} markets &times;{{ "%g"|format(v) }}{% if not loop.last %}, {% endif %}{% endfor %}. Territory exclusivity is ${{ "%g"|format(rc.exclusivity_fee_cents / 100) }}/mo.</li>{% endif %}
+                        {% if ff("ticket_fee") %}<li><strong>${{ "%.2f"|format(rc.ticket_fee_cents / 100) }} per paid ticket</strong> sold through your city's events.</li>{% endif %}
+                        {% if ff("platform_minimum") %}<li><strong>Minimum of ${{ "%g"|format(rc.platform_minimum_cents / 100) }}/mo</strong> to us after your first {{ rc.platform_minimum_after_months }} months, counting your plan fee and revenue share.</li>{% endif %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
         </div>
     </section>
 
