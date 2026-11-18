@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Advertise with TrueFans DISPATCH</title>
-    <meta name="description" content="Reach the music industry's most engaged audience. Sponsor TrueFans DISPATCH — 4 editions, 3x weekly, premium placements.">
+    <meta name="description" content="Reach the music industry's most engaged audience. Sponsor TrueFans DISPATCH — 5 editions, 3x weekly, premium placements.">
 {% include "partials/site_head.html" %}
     <style>
         .kit { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0; width: 100%; border-block: 1px solid var(--line); }
@@ -111,7 +111,8 @@
         <div class="wrap">
             <div class="section-head">
                 <p class="eyebrow">The editions</p>
-                <h2>Four Editions, Four <em>Audiences</em></h2>
+                {% set n_word = ["Zero","One","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten"][media_kit.edition_count] if media_kit.edition_count <= 10 else media_kit.edition_count %}
+                <h2>{{ n_word }} Edition{{ "s" if media_kit.edition_count != 1 }}, {{ n_word }} <em>Audience{{ "s" if media_kit.edition_count != 1 }}</em></h2>
                 <p class="lede">Target the exact segment of the music industry you want to reach.</p>
             </div>
             <div class="grid-2">
@@ -289,7 +290,7 @@
                 </div>
                 <div class="gold">
                     <h3>Targeted Placement</h3>
-                    <p>Choose your edition (Fan, Artist, Venue, or Industry) and position (Top, Mid, or Bottom) for maximum relevance.</p>
+                    <p>Choose your edition (Fan, Artist, Venue, Industry, or Single Daily Action) and position (Top, Mid, or Bottom) for maximum relevance.</p>
                 </div>
                 <div>
                     <h3>Performance Reports</h3>

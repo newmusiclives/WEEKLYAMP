@@ -156,20 +156,17 @@ class RateCardEngine:
             "artist": "Independent and emerging artists building their careers",
             "venue": "Venue owners, bookers and talent buyers running live music rooms",
             "industry": "Music industry professionals, labels, and decision-makers",
+            "daily-action": "Independent artists who take one thirty-second action every weekday to build a direct fan base",
         }
 
         edition_data = []
         for ed in editions:
             slug = ed["slug"]
-            # Only the four audience editions sell ad placements; the Single
-            # Daily Action and any other non-audience edition stay off the kit.
-            if slug not in edition_descriptions:
-                continue
             edition_data.append({
                 "slug": slug,
                 "name": ed.get("name", slug.title()),
-                "description": edition_descriptions.get(slug, ""),
-                "subscriber_count": sub_count // max(len([e for e in editions if e["slug"] in edition_descriptions]), 1),
+                "description": edition_descriptions.get(slug) or ed.get("audience") or "",
+                "subscriber_count": sub_count // max(len(editions), 1),
             })
 
         # Engagement rates come from measured sends only. Before the first
