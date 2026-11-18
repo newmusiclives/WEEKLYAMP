@@ -11,7 +11,9 @@ class RateCardEngine:
 
     POSITIONS = ["top", "mid", "bottom"]
     POSITION_LABELS = {"top": "Premium Top", "mid": "Mid-Content", "bottom": "Footer"}
-    POSITION_MULTIPLIERS = {"top": 1.5, "mid": 1.0, "bottom": 0.7}
+    # Mid-Content is the base CPM ($35). Premium Top and Footer are set
+    # relative to it so the card reads $50 / $35 / $20 (2026-11-17 pricing).
+    POSITION_MULTIPLIERS = {"top": 50 / 35, "mid": 1.0, "bottom": 20 / 35}
     MIN_PRICED_LIST = 1000
 
     def __init__(self, repo, config) -> None:
@@ -148,26 +150,35 @@ class RateCardEngine:
 
     def get_media_kit_data(self) -> dict:
         """Compile data for the public media kit / advertise page."""
-        editions = self.repo.get_editions(active_only=True)
         sub_count = self.repo.get_subscriber_count()
+
+        # The media kit lists DISPATCH's five editions from the product
+        # definition in code, not from newsletter_editions: a prod DB that
+        # is missing a row (Venue, 2026-11) must not drop an edition from
+        # what advertisers are told they can buy. Four audience editions go
+        # out 3x a week; the Single Daily Action is a different format.
+        from weeklyamp.core.database import DEFAULT_EDITIONS
 
         edition_descriptions = {
             "fan": "Passionate music fans who discover, share, and support artists",
             "artist": "Independent and emerging artists building their careers",
             "venue": "Venue owners, bookers and talent buyers running live music rooms",
             "industry": "Music industry professionals, labels, and decision-makers",
-            "daily-action": "Independent artists who take one thirty-second action every weekday to build a direct fan base",
+            "daily-action": "Independent artists building a direct fan base, one thirty-second action every weekday",
         }
 
         edition_data = []
-        for ed in editions:
-            slug = ed["slug"]
+        for slug, name, tagline, _desc, audience, *_rest in DEFAULT_EDITIONS:
             edition_data.append({
                 "slug": slug,
-                "name": ed.get("name", slug.title()),
-                "description": edition_descriptions.get(slug) or ed.get("audience") or "",
-                "subscriber_count": sub_count // max(len(editions), 1),
+                "name": name,
+                "tagline": tagline,
+                "description": edition_descriptions.get(slug) or audience,
+                "daily": slug == "daily-action",
+                "subscriber_count": sub_count // max(len(DEFAULT_EDITIONS), 1),
             })
+        audience_editions = [e for e in edition_data if not e["daily"]]
+        daily_edition = next((e for e in edition_data if e["daily"]), None)
 
         # Engagement rates come from measured sends only. Before the first
         # send there is nothing to report, and these figures are published to
@@ -193,6 +204,8 @@ class RateCardEngine:
             "rates_priced_at": next(iter(rates.values()))["priced_at"],
             "rates_per_thousand": next(iter(rates.values()))["per_thousand"],
             "edition_count": len(edition_data),
+            "audience_editions": audience_editions,
+            "daily_edition": daily_edition,
             "examples": self.example_scenarios(),
             "example_assumptions": self.EXAMPLE_ASSUMPTIONS,
             "available_slots": available_slots,

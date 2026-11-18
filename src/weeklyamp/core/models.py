@@ -961,8 +961,8 @@ class LeadMagnetsConfig(BaseModel):
 class SponsorPortalConfig(BaseModel):
     enabled: bool = False
     public_rates_visible: bool = False
-    base_cpm: float = 30.0
-    premium_position_multiplier: float = 1.5
+    base_cpm: float = 35.0
+    premium_position_multiplier: float = 1.43
     weekly_discount: float = 0.9
     monthly_discount: float = 0.8
 

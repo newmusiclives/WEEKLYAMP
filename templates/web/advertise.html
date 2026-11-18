@@ -38,6 +38,14 @@
         .receipt .neg { color: var(--bad); }
         .receipt .pos { color: var(--good); }
         .est-assume { gap: 12px; }
+        .daily-card { margin-top: 22px; border: 2px solid var(--text); }
+        .daily-card::before { background: var(--text); }
+        .daily-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .daily-tagline { font-style: italic; }
+        .daily-facts { list-style: none; margin: 0; padding: 0; display: grid; font: 400 .9rem/1.3 var(--mono); }
+        .daily-facts li { display: flex; justify-content: space-between; gap: 14px; padding: 9px 0; border-top: 1px solid var(--line); }
+        .daily-facts li span:first-child { color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-size: .74rem; }
+        .daily-facts li span:last-child { text-align: right; }
         .example { display: grid; gap: 14px; align-content: start; }
         .example .big-num { font-size: clamp(2.6rem, 5vw, 3.4rem); }
         .ex-table { font-size: .86rem; }
@@ -111,12 +119,11 @@
         <div class="wrap">
             <div class="section-head">
                 <p class="eyebrow">The editions</p>
-                {% set n_word = ["Zero","One","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten"][media_kit.edition_count] if media_kit.edition_count <= 10 else media_kit.edition_count %}
-                <h2>{{ n_word }} Edition{{ "s" if media_kit.edition_count != 1 }}, {{ n_word }} <em>Audience{{ "s" if media_kit.edition_count != 1 }}</em></h2>
-                <p class="lede">Target the exact segment of the music industry you want to reach.</p>
+                <h2>Five Editions, Five <em>Audiences</em></h2>
+                <p class="lede">Four audience editions go out Monday, Wednesday and Friday. The fifth, the Single Daily Action, is a different format: a thirty-second read every weekday.</p>
             </div>
             <div class="grid-2">
-                {% for ed in media_kit.editions %}
+                {% for ed in media_kit.audience_editions %}
                 <div class="card edition ed-{{ ed.slug }}">
                     <span class="who badge badge-{{ ed.slug }}">{{ ed.slug }}</span>
                     <h3>{{ ed.name }}</h3>
@@ -125,6 +132,25 @@
                 </div>
                 {% endfor %}
             </div>
+            {% set d = media_kit.daily_edition %}
+            {% if d %}
+            <div class="card edition ed-daily daily-card">
+                <div class="daily-head">
+                    <span class="who">The fifth edition &middot; a different format</span>
+                    <span class="tag gold">Every weekday</span>
+                </div>
+                <h3>{{ d.name }}</h3>
+                <p class="daily-tagline">{{ d.tagline }}.</p>
+                <p>{{ d.description }}. Where the four editions above are full issues three times a week, this is one short, specific action sent Monday to Friday.</p>
+                <ul class="daily-facts">
+                    <li><span>Cadence</span><span>Mon&ndash;Fri, 5 sends a week</span></li>
+                    <li><span>Length</span><span>~30-second read</span></li>
+                    <li><span>Format</span><span>One action, why it works, time to do it</span></li>
+                    <li><span>Sponsorship</span><span>Not on the CPM card &middot; ask us</span></li>
+                </ul>
+                {% if d.subscriber_count %}<div class="sub-count">~{{ "{:,}".format(d.subscriber_count) }} subscribers</div>{% endif %}
+            </div>
+            {% endif %}
         </div>
     </section>
 

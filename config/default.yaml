@@ -280,8 +280,8 @@ lead_magnets:
 sponsor_portal:
   enabled: true
   public_rates_visible: false
-  base_cpm: 30.0
-  premium_position_multiplier: 1.5
+  base_cpm: 35.0              # Mid-Content CPM; Top $50, Footer $20 (sponsor_rates.py)
+  premium_position_multiplier: 1.43
   weekly_discount: 0.9
   monthly_discount: 0.8
 
