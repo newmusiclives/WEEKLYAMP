@@ -1066,14 +1066,14 @@ def _default_license_tiers() -> list[LicenseTier]:
     # Annual = 10x monthly (two months free). The previous $999 annual was
     # 45% off the monthly rate, far deeper than the usual discount.
     return [
-        LicenseTier(slug="starter", name="Starter", monthly_fee_cents=10000,
-                    annual_fee_cents=100000, platform_share_pct=75.0,
+        LicenseTier(slug="starter", name="Starter", monthly_fee_cents=5000,
+                    annual_fee_cents=50000, platform_share_pct=75.0,
                     included_sends=2500),
-        LicenseTier(slug="growth", name="Growth", monthly_fee_cents=30000,
-                    annual_fee_cents=300000, platform_share_pct=50.0,
+        LicenseTier(slug="growth", name="Growth", monthly_fee_cents=15000,
+                    annual_fee_cents=150000, platform_share_pct=50.0,
                     included_sends=6000),
-        LicenseTier(slug="pro", name="Pro", monthly_fee_cents=50000,
-                    annual_fee_cents=500000, platform_share_pct=25.0,
+        LicenseTier(slug="pro", name="Pro", monthly_fee_cents=30000,
+                    annual_fee_cents=300000, platform_share_pct=25.0,
                     included_sends=12000),
     ]
 

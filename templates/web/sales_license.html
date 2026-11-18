@@ -6,7 +6,7 @@
     <title>License a City Edition — TrueFans DISPATCH</title>
     <meta name="description" content="Run your own city music newsletter. License a TrueFans city edition — powered by AI, ready to publish. Nashville, LA, NYC, Atlanta, and 30+ markets available.">
     <meta property="og:title" content="Run Your Own City Music Newsletter — TrueFans">
-    <meta property="og:description" content="License a TrueFans city edition. AI-powered content, built-in monetization, full support. Plans from $100/month.">
+    <meta property="og:description" content="License a TrueFans city edition. AI-powered content, built-in monetization, full support. Plans from $50/month.">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
 {% include "partials/site_head.html" %}
@@ -15,6 +15,11 @@
         .lic-hero h1 { max-width: 15ch; }
         .revenue-grid { padding: 8px 26px; gap: 0; }
         .revenue-line .label { font-weight: 500; }
+        .takehome { margin-top: 22px; display: grid; gap: 10px; }
+        .takehome th, .takehome td { white-space: nowrap; }
+        .takehome td + td, .takehome th + th { text-align: right; }
+        .takehome .pos { color: var(--good); font-weight: 600; }
+        .takehome .neg { color: var(--bad); }
         .revenue-line .amount { font: 900 1.7rem/1 var(--display); font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
         .revenue-total { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 16px 0 14px; border-top: 2px solid var(--text); font-weight: 700; }
         .revenue-total .amount { font: 900 clamp(2rem, 4vw, 2.6rem)/1 var(--display); color: var(--accent); white-space: nowrap; font-variant-numeric: tabular-nums; }
@@ -97,12 +102,29 @@
                     <span class="amount">$400 - $2,400</span>
                 </div>
             </div>
+            <div class="card flat takehome">
+                <h3>What you take home, by plan</h3>
+                <p class="muted small">Your share of what you sell, minus your monthly fee. Before overage and the optional affiliate line.</p>
+                <div class="table-scroll">
+                    <table class="data">
+                        <thead>
+                            <tr><th>You sell</th><th>Starter<br><span class="muted">$50 &middot; keep 25%</span></th><th>Growth<br><span class="muted">$150 &middot; keep 50%</span></th><th>Pro<br><span class="muted">$300 &middot; keep 75%</span></th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>~$300/mo &middot; getting started</td><td class="pos">$25</td><td>$0</td><td class="neg">&minus;$75</td></tr>
+                            <tr><td>~$1,000/mo &middot; established</td><td>$200</td><td>$350</td><td class="pos">$450</td></tr>
+                            <tr><td>~$1,950/mo &middot; well sold</td><td>$437.50</td><td>$825</td><td class="pos">$1,162.50</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="muted small">Start on Starter while you sign your first sponsors. Move to Growth past about $400 a month in sales, and to Pro past about $600. You can change plans as the list grows.</p>
+            </div>
             <p class="revenue-note">
                 Assumes $175 per sponsor position and $60 per ad slot &mdash; rates a local venue,
                 studio or gear shop pays for a genuinely local audience, and which rise with your
                 list. That works out to roughly $0.40&ndash;$0.95 per subscriber per month, the band
                 local newsletters actually land in. Selling is the work; the writing is ours.
-                Keep up to 75% of it. Plans from $100/month.
+                Keep up to 75% of it. Plans from $50/month.
             </p>
         </div>
     </section>
@@ -178,7 +200,7 @@
             <div class="grid-3 pricing-grid">
                 <div class="card pricing-card">
                     <h3>Starter</h3>
-                    <div class="pricing-price"><span class="price-amount" data-monthly="$100" data-annual="$1,000">$100</span></div>
+                    <div class="pricing-price"><span class="price-amount" data-monthly="$50" data-annual="$500">$50</span></div>
                     <div class="pricing-period"><span class="price-period" data-monthly="per month" data-annual="per year &middot; 2 months free">per month</span></div>
                     <div class="pricing-detail">Keep <strong>25%</strong> of ad revenue</div>
                     <ul class="pricing-features">
@@ -193,7 +215,7 @@
                 </div>
                 <div class="card pricing-card picked popular">
                     <h3>Growth</h3>
-                    <div class="pricing-price"><span class="price-amount" data-monthly="$300" data-annual="$3,000">$300</span></div>
+                    <div class="pricing-price"><span class="price-amount" data-monthly="$150" data-annual="$1,500">$150</span></div>
                     <div class="pricing-period"><span class="price-period" data-monthly="per month" data-annual="per year &middot; 2 months free">per month</span></div>
                     <div class="pricing-detail">Keep <strong>50%</strong> of ad revenue</div>
                     <ul class="pricing-features">
@@ -209,7 +231,7 @@
                 </div>
                 <div class="card pricing-card">
                     <h3>Pro</h3>
-                    <div class="pricing-price"><span class="price-amount" data-monthly="$500" data-annual="$5,000">$500</span></div>
+                    <div class="pricing-price"><span class="price-amount" data-monthly="$300" data-annual="$3,000">$300</span></div>
                     <div class="pricing-period"><span class="price-period" data-monthly="per month" data-annual="per year &middot; 2 months free">per month</span></div>
                     <div class="pricing-detail">Keep <strong>75%</strong> of ad revenue</div>
                     <ul class="pricing-features">
@@ -363,7 +385,7 @@
                 </details>
                 <details>
                     <summary>How does revenue sharing work?</summary>
-                    <p>Your revenue share is set by your plan: keep 25% on Starter ($100/mo), 50% on Growth ($300/mo), or 75% on Pro ($500/mo) &mdash; across subscriber revenue, sponsor payments, affiliate commissions, and paid tier upgrades. The platform share covers infrastructure, AI content generation, email delivery, and ongoing development. Each plan includes a monthly send allowance (2,500 / 6,000 / 12,000); beyond it, delivery is $15 per 1,000 sends per month. Choose annual billing on any tier and get 2 months free.</p>
+                    <p>Your revenue share is set by your plan: keep 25% on Starter ($50/mo), 50% on Growth ($150/mo), or 75% on Pro ($300/mo) &mdash; across subscriber revenue, sponsor payments, affiliate commissions, and paid tier upgrades. The platform share covers infrastructure, AI content generation, email delivery, and ongoing development. Each plan includes a monthly send allowance (2,500 / 6,000 / 12,000); beyond it, delivery is $15 per 1,000 sends per month. Choose annual billing on any tier and get 2 months free.</p>
                 </details>
                 <details>
                     <summary>Can I choose any city?</summary>
